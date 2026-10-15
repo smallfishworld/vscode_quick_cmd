@@ -13,8 +13,15 @@ const DRAFT_KEY = 'quickCmd.editorDraft.v1';
 
 /** One editing session shared by the sidebar and wide editor. Drafts never execute. */
 class CommandEditorProvider {
-  constructor(vscode, context, store, onSaved, onRun) {
-    Object.assign(this, { vscode, context, store, onSaved, onRun });
+  constructor(vscode, context, store, onSaved, onRun, onModeChange) {
+    Object.assign(this, {
+      vscode,
+      context,
+      store,
+      onSaved,
+      onRun,
+      onModeChange,
+    });
     this.surfaces = new Set();
     this.disposables = [];
     this.openQueue = Promise.resolve();
@@ -254,11 +261,7 @@ class CommandEditorProvider {
       if (focus || !this.view) {
         await this.focus();
       } else {
-        await this.vscode.commands.executeCommand(
-          'setContext',
-          'quickCmd.editing',
-          true,
-        );
+        await this.showView();
         this.view.show?.(true);
       }
       return;
@@ -311,21 +314,21 @@ class CommandEditorProvider {
     if (focus || !this.view) {
       await this.focus();
     } else {
-      await this.vscode.commands.executeCommand(
-        'setContext',
-        'quickCmd.editing',
-        true,
-      );
+      await this.showView();
       this.view.show?.(true);
     }
     await this.load();
   }
-  async focus() {
+  async showView() {
+    await this.onModeChange?.(true);
     await this.vscode.commands.executeCommand(
       'setContext',
       'quickCmd.editing',
       true,
     );
+  }
+  async focus() {
+    await this.showView();
     await this.vscode.commands.executeCommand('quickCmd.editor.focus');
     this.view?.show?.(true);
   }
@@ -386,17 +389,14 @@ class CommandEditorProvider {
           'quickCmd.editing',
           false,
         );
+        await this.onModeChange?.(false);
         return true;
       });
     this.openQueue = job;
     return job;
   }
   async openPanel() {
-    await this.vscode.commands.executeCommand(
-      'setContext',
-      'quickCmd.editing',
-      true,
-    );
+    await this.showView();
     if (this.panel) {
       this.panel.reveal();
       return;

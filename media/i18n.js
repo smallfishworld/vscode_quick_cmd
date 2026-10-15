@@ -2,6 +2,10 @@
   'use strict';
   let chinese = false;
   const messages = {
+    'Edit mode: select a command to edit.':
+      '编辑模式：点击命令进行修改，完成后点击右上角勾选按钮。',
+    'Search commands to edit': '搜索要编辑的命令',
+    'Search commands to send': '搜索要发送到终端的命令',
     'Save changes before closing the editor?': '结束编辑前保存当前修改？',
     'Choose a command to edit': '选择要编辑的命令',
     Groups: '分组',

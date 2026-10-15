@@ -11,10 +11,10 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 1. Open **Quick Cmd** in the Activity Bar.
 2. Choose **New Command**, then a group. The plus button beside a group creates a command directly in that group.
 3. The editor starts hidden and appears when creating or editing a command. Fill in the name, command text, working directory and terminal usage, then save.
-4. **Click a command to inspect/edit it; use its play button to send it to the terminal.** Enable `quickCmd.singleClickRuns` to restore the previous single-click send behavior.
-5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then choose to edit or send.
+4. **Normal mode: click to send using the saved Enter option. Edit mode: enter with the top-right pencil, then click a command to edit it.** Finish with the check button to return to normal mode after handling the draft.
+5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select to send in normal mode or edit in edit mode.
 
-Releases provide `quick-cmd-v0.6.0-en.vsix` (fixed English) and `quick-cmd-v0.6.0-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
+Releases provide `quick-cmd-v0.6.1-en.vsix` (fixed English) and `quick-cmd-v0.6.1-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
@@ -22,12 +22,12 @@ Releases provide `quick-cmd-v0.6.0-en.vsix` (fixed English) and `quick-cmd-v0.6.
 - The list starts directly at **group → command**. All commands use VS Code global extension state, without project/global root nodes.
 - Drag groups or commands to reorder; drop a command onto a group to append it. Drop a group onto empty list space to move it to the end.
 - A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
-- Context menus provide duplication, deletion, movement, keybinding configuration, with import/export in the group view title menu.
+- Context menus provide duplication, deletion, movement, keybinding configuration, with import/export as top-right group toolbar buttons.
 - Running status takes precedence over a custom icon. Unknown status is explicitly reported; sending text is not treated as successful execution.
 
 ## Editor
 
-The top-right toolbar opens or finishes editing. Finishing handles unsaved changes before hiding the editor; saving alone keeps editing open. The editor starts hidden after a window reload, with the draft recoverable through Open Command Editor.
+The top-right toolbar provides New Group, New Command, Edit/Done, Search, Import, Export, Collapse All, Refresh and Settings. Normal mode has no editor pane. Enter edit mode and select a command to open its form. Finishing handles unsaved changes before returning to normal mode; cancelling retains edit mode, and saving alone keeps editing open.
 
 - **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or save commands automatically.
 - **Accurate save state:** edits made while a save is pending remain unsaved after that request completes.

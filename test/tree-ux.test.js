@@ -42,7 +42,7 @@ test('tree selection edits, state overrides custom icons, and reveal resolves pa
     },
     TreeItemCollapsibleState: { Expanded: 1, None: 0 },
   };
-  let status = { monitored: true, busy: true };
+  let status;
   const tree = new CommandTreeProvider(
     vscode,
     { scopes: () => [scope], read: async () => cfg },
@@ -55,6 +55,12 @@ test('tree selection edits, state overrides custom icons, and reveal resolves pa
   assert.equal(group.label, 'Build');
   assert.equal(group.resourceUri.scheme, 'quick-cmd-group');
   let item = (await tree.getChildren(group))[0];
+  assert.equal(item.description, 'echo a');
+  assert.equal(item.command.title, '发送到终端');
+  tree.editMode = true;
+  status = { monitored: true, busy: true };
+  item = (await tree.getChildren(group))[0];
+  assert.equal(item.command.title, '编辑命令');
   assert.equal(item.command.command, 'quickCmd.selectCommand');
   assert.equal(item.iconPath.id, 'loading~spin');
   assert.equal(item.description, '运行中');
