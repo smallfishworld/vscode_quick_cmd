@@ -81,6 +81,7 @@ test('Chinese editor has translated labels, tooltips, placeholders and SVG contr
     );
     assert.equal(f.w.document.querySelectorAll('.icon-choice svg').length, 7);
     assert.equal(f.$('save').disabled, true);
+    assert.ok(!f.$('context').textContent.includes('全局命令'));
     assert.equal(f.$('saveState').textContent.trim(), '已保存');
   } finally {
     await f.close();

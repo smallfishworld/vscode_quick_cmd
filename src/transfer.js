@@ -5,17 +5,11 @@ const os = require('node:os');
 
 async function exportScope(vscode, store, scope) {
   const config = await store.read(scope);
-  const name =
-    scope.type === 'global' ? 'quick-cmd-global.json' : 'quick-cmd.json';
+  const name = 'quick-cmd.json';
   const uri = await vscode.window.showSaveDialog({
     saveLabel: t('Export Quick Cmd configuration'),
     filters: { JSON: ['json'] },
-    defaultUri: vscode.Uri.joinPath(
-      scope.type === 'workspace'
-        ? scope.folder.uri
-        : vscode.Uri.file(os.homedir()),
-      name,
-    ),
+    defaultUri: vscode.Uri.joinPath(vscode.Uri.file(os.homedir()), name),
   });
   if (!uri) {
     return false;
@@ -40,8 +34,7 @@ async function importScope(vscode, store, scope) {
   const incoming = validateConfig(JSON.parse(new TextDecoder().decode(bytes)));
   const confirmation = await vscode.window.showWarningMessage(
     t(
-      'Replace all commands in "{0}" with {1} imported group(s)?',
-      scope.label,
+      'Replace all commands with {0} imported group(s)?',
       incoming.groups.length,
     ),
     { modal: true },

@@ -2,14 +2,14 @@
 
 English | [简体中文](README.zh-CN.md)
 
-Save, organize and edit terminal commands in the VS Code sidebar. Supports global/project groups, multiple steps, variables and Remote SSH, without third-party runtime dependencies.
+Save, organize and edit terminal commands in the VS Code sidebar. All commands are global, with groups, multiple steps, variables and Remote SSH, without third-party runtime dependencies.
 
 ## Install and start
 
 Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.com/smallfishworld/vscode_quick_cmd/releases) and choose **Install from VSIX** in the Extensions view. Pull request checks also produce a VSIX artifact.
 
 1. Open **Quick Cmd** in the Activity Bar.
-2. Choose **New Command**, then a scope and group. The plus button beside a group creates a command directly in that group.
+2. Choose **New Command**, then a group. The plus button beside a group creates a command directly in that group.
 3. Fill in the name, command text, working directory and terminal usage, then save.
 4. **Click a command to inspect/edit it; use its play button to send it to the terminal.** Enable `quickCmd.singleClickRuns` to restore the previous single-click send behavior.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then choose to edit or send.
@@ -18,15 +18,15 @@ The entire interface follows VS Code's display language: Chinese for Chinese loc
 
 ## Command list
 
-- Global commands are available in every workspace; project commands live in `.vscode/quick-cmd.json` and can be shared through Git. Multi-root workspaces and Remote SSH are supported.
-- Drag groups or commands to reorder; drop a command onto a group to append it. Moves stay within one configuration scope.
+- The list starts directly at **group → command**. All commands use VS Code global extension state, without project/global root nodes.
+- Drag groups or commands to reorder; drop a command onto a group to append it. Drop a group onto empty list space to move it to the end.
 - A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
-- Context menus provide duplication, deletion, movement, keybinding configuration, and scope-level import/export.
+- Context menus provide duplication, deletion, movement, keybinding configuration, with import/export in the group view title menu.
 - Running status takes precedence over a custom icon. Unknown status is explicitly reported; sending text is not treated as successful execution.
 
 ## Editor
 
-- **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or write project configuration automatically.
+- **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or save commands automatically.
 - **Accurate save state:** edits made while a save is pending remain unsaved after that request completes.
 - **Persistent footer:** Save and Save and Send stay visible while content scrolls. Use `Ctrl+S` / `Cmd+S` while the editor has focus.
 - **Wide editor:** open the same draft in the main editor area. While it is open, the sidebar mirrors the draft read-only; closing the wide editor restores sidebar editing.
@@ -57,7 +57,7 @@ Untrusted workspaces allow editing but cannot send commands. Startup and configu
 
 ## Configuration and variables
 
-Project configuration is strict JSON; comments are unsupported. Global commands use VS Code extension state. Legacy `command` strings and `version: 1` remain compatible; the editor writes `steps` on save.
+Commands use global extension state. Import/export uses strict JSON; comments are unsupported. Project `.vscode/quick-cmd.json` files are not read or written, and no project-command migration is performed. Exported configuration has this structure:
 
 ```json
 {
@@ -98,7 +98,7 @@ Variables: `${workspaceFolder}`, `${file}`, `${fileDirname}`, `${fileBasename}`,
 
 Command variables are Shell-quoted automatically; do not add quotes around the placeholders. Directory and environment values use plain-text expansion. `quickCmd.shellType` supports `auto`, `posix`, `powershell` and `cmd`.
 
-Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"command-id","scopeId":"scope-id"}` arguments.
+Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"command-id"}` arguments.
 
 ## Development
 

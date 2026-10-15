@@ -1,7 +1,7 @@
 {
   "description": "Manage and edit saved terminal commands in the VS Code sidebar.",
   "trust": "Saved commands can be edited, but sending them requires a trusted workspace.",
-  "quickCmd.commands": "Commands",
+  "quickCmd.commands": "Groups",
   "quickCmd.editor": "Command Editor",
   "quickCmd.addCommand": "Quick Cmd: Add Command",
   "quickCmd.addGroup": "Quick Cmd: Add Group",
@@ -11,7 +11,6 @@
   "quickCmd.deleteCommand": "Quick Cmd: Delete Command",
   "quickCmd.renameGroup": "Quick Cmd: Rename Group",
   "quickCmd.deleteGroup": "Quick Cmd: Delete Group",
-  "quickCmd.openConfig": "Quick Cmd: Open Workspace Configuration",
   "quickCmd.duplicateCommand": "Quick Cmd: Duplicate Command",
   "quickCmd.moveCommandUp": "Quick Cmd: Move Command Up",
   "quickCmd.moveCommandDown": "Quick Cmd: Move Command Down",
