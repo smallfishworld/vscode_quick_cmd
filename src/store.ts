@@ -70,8 +70,8 @@ export class ConfigStore implements vscode.Disposable {
   }
 
   async ensureFile(scope: Scope): Promise<vscode.Uri | undefined> {
-    const uri = this.fileUri(scope);
-    if (!uri) { return undefined; }
+    if (scope.kind === 'global') { return undefined; }
+    const uri = this.fileUri(scope)!;
     try { await vscode.workspace.fs.stat(uri); }
     catch (error) {
       if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === 'FileNotFound')) {
