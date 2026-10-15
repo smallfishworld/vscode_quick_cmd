@@ -106,11 +106,10 @@ class TerminalRunner {
     });
     this.changed?.fire();
     terminal.show();
-    for (const step of steps) {
-      // VS Code sendText(text, false) inserts without the trailing Return.
-      // Previous steps must opt into execution; model validation prevents accidental joining.
-      terminal.sendText(step.text, step.execute);
-    }
+    // Send the combined script once, preserving line breaks between steps.
+    // The final checkbox controls whether a trailing Return is sent.
+    // In particular, 'false' never appends an Enter to the final line.
+    terminal.sendText(steps.map(step => step.text).join('\n'), steps[steps.length - 1].execute);
     return { terminal, actualMode };
   }
 
