@@ -47,8 +47,8 @@
           <input id="cwd" type="text" maxlength="2048" autocomplete="off"
             aria-describedby="cwdHint cwdError" placeholder="默认当前工作区目录">
           <div class="variable-chips" aria-label="插入目录变量">
-            <button type="button" class="variable-chip" data-cwd="&#36;{workspaceFolder}" title="插入工作区根目录">&#36;{workspaceFolder}</button>
-            <button type="button" class="variable-chip" data-cwd="&#36;{fileDirname}" title="插入当前文件所在目录">&#36;{fileDirname}</button>
+            <button type="button" class="variable-chip" data-cwd="${workspaceFolder}" title="插入工作区根目录">${workspaceFolder}</button>
+            <button type="button" class="variable-chip" data-cwd="${fileDirname}" title="插入当前文件所在目录">${fileDirname}</button>
           </div>
           <p id="cwdHint" class="field-hint">点击变量即可插入，无需记忆变量名。</p>
           <p id="cwdError" class="field-error" role="alert" hidden></p>
