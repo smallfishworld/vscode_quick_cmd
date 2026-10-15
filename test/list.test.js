@@ -18,7 +18,7 @@ function fixture() {
   const calls = [];
   const packets = [];
   const vscode = {
-    workspace: { getConfiguration: () => ({ get: () => 11 }) },
+    workspace: { getConfiguration: () => ({ get: () => 0 }) },
     commands: { executeCommand: async (...args) => calls.push(args) },
     window: {},
   };
@@ -45,7 +45,7 @@ function fixture() {
 test('list model has compact font and command previews without counts or custom colors', async () => {
   const f = fixture();
   const model = await f.provider.model();
-  assert.equal(model.fontSize, 11);
+  assert.equal(model.fontSize, 0);
   assert.equal(model.groups[0].title, 'Build');
   assert.equal(Object.hasOwn(model.groups[0], 'count'), false);
   assert.equal(Object.hasOwn(model.groups[0], 'color'), false);
@@ -85,6 +85,17 @@ test('list message boundary checks session and current IDs and ignores injected 
   assert.equal(Object.hasOwn(f.calls[0][1], 'command'), false);
   await f.provider.handleMessage({ type: 'run', token: 'session', ...node });
   assert.equal(f.calls[1][0], 'quickCmd.run');
+  await f.provider.handleMessage({ type: 'delete', token: 'session', ...node });
+  assert.equal(f.calls[2][0], 'quickCmd.deleteCommand');
+  await assert.rejects(
+    f.provider.handleMessage({
+      type: 'delete',
+      token: 'session',
+      kind: 'group',
+      groupId: f.group.id,
+    }),
+    /Invalid list/,
+  );
 });
 test('list drag supports order, cross-group moves and group drop onto empty space', async () => {
   const f = fixture();

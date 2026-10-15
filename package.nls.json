@@ -27,5 +27,5 @@
   "quickCmd.closeEditor": "Quick Cmd: Done Editing",
   "quickCmd.collapseAll": "Quick Cmd: Collapse All Groups",
   "quickCmd.openSettings": "Quick Cmd: Settings",
-  "listFontSize": "Command font size in pixels. Group labels are 1px larger. Only affects Quick Cmd."
+  "listFontSize": "Command font size in pixels; 0 follows the VS Code UI font size. Groups are 1px larger. Only affects Quick Cmd."
 }

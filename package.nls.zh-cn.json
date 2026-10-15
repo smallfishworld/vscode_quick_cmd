@@ -27,5 +27,5 @@
   "quickCmd.closeEditor": "Quick Cmd: 完成编辑",
   "quickCmd.collapseAll": "Quick Cmd: 折叠全部分组",
   "quickCmd.openSettings": "Quick Cmd: 设置",
-  "listFontSize": "命令字体大小（像素），分组文字比命令大 1px，仅影响 Quick Cmd。"
+  "listFontSize": "命令字号（像素），0 表示跟随 VS Code 界面字号。分组大 1 像素，仅影响本插件。"
 }

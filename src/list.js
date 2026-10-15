@@ -108,11 +108,12 @@ class CommandListProvider {
     const requested = Number(
       this.vscode.workspace
         .getConfiguration?.('quickCmd')
-        ?.get('listFontSize', 11) ?? 11,
+        ?.get('listFontSize', 0) ?? 0,
     );
-    const fontSize = Number.isFinite(requested)
-      ? Math.max(10, Math.min(18, requested))
-      : 11;
+    const fontSize =
+      Number.isFinite(requested) && requested > 0
+        ? Math.max(10, Math.min(18, requested))
+        : 0;
     return {
       groups: cfg.groups.map((group) => ({
         id: group.id,
@@ -226,6 +227,7 @@ class CommandListProvider {
     const actions = {
       run: 'quickCmd.run',
       edit: 'quickCmd.editCommand',
+      delete: 'quickCmd.deleteCommand',
       add: 'quickCmd.addCommand',
     };
     if (actions[message.type]) {

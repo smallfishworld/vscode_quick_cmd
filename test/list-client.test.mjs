@@ -20,6 +20,12 @@ function fixture() {
     .replace(/<link[^>]+>/g, '');
   w.document.write(html);
   w.scrollTo = () => {};
+  w.document.documentElement.style.setProperty(
+    '--vscode-font-family',
+    '"Segoe UI", sans-serif',
+  );
+  w.document.documentElement.style.setProperty('--vscode-font-size', '13px');
+  w.document.documentElement.style.setProperty('--vscode-font-weight', '400');
   const style = w.document.createElement('style');
   style.textContent = fs.readFileSync(
     path.join(root, 'media/list.css'),
@@ -40,7 +46,7 @@ function fixture() {
   const model = {
     type: 'model',
     token: 'session',
-    fontSize: 11,
+    fontSize: 0,
     groups: [
       {
         id: 'g',
@@ -69,27 +75,36 @@ function fixture() {
   send(model);
   return { w, model, send, messages, close: () => w.happyDOM.abort() };
 }
-test('compact list uses font hierarchy and persistent row edit without count or blue decoration', async () => {
+test('list inherits the host UI font and hides localized row actions by default', async () => {
   const f = fixture();
   try {
     const doc = f.w.document;
     assert.equal(
       doc.documentElement.style.getPropertyValue('--command-size'),
-      '11px',
+      '',
     );
     assert.equal(
-      doc.documentElement.style.getPropertyValue('--group-size'),
-      '12px',
+      f.w.getComputedStyle(doc.body).fontFamily,
+      '"Segoe UI", sans-serif',
+    );
+    assert.equal(
+      f.w.getComputedStyle(doc.querySelector('.preview')).fontFamily,
+      '"Segoe UI", sans-serif',
     );
     assert.equal(doc.querySelector('.group-row .name').textContent, 'Build');
     assert.equal(doc.querySelectorAll('.edit-button').length, 2);
     assert.equal(
-      f.w.getComputedStyle(doc.querySelector('.edit-button')).visibility,
-      'visible',
+      f.w.getComputedStyle(doc.querySelector('.row-actions')).visibility,
+      'hidden',
+    );
+    assert.equal(doc.querySelectorAll('.run-button,.delete-button').length, 4);
+    assert.equal(
+      doc.querySelector('.run-button').getAttribute('aria-label'),
+      '运行命令',
     );
     assert.equal(
-      f.w.getComputedStyle(doc.querySelector('.edit-button')).opacity,
-      '1',
+      doc.querySelector('.delete-button').getAttribute('aria-label'),
+      '删除命令',
     );
     assert.equal(
       doc.querySelector('.edit-button').getAttribute('aria-label'),
@@ -112,8 +127,13 @@ test('editing a row never runs it; clicking its body sends exactly once', async 
     row.querySelector('.edit-button').click();
     assert.equal(f.messages.filter((m) => m.type === 'edit').length, 1);
     assert.equal(f.messages.filter((m) => m.type === 'run').length, 0);
-    row.querySelector('.name').click();
+    row.querySelector('.delete-button').click();
+    assert.equal(f.messages.filter((m) => m.type === 'delete').length, 1);
+    assert.equal(f.messages.filter((m) => m.type === 'run').length, 0);
+    row.querySelector('.run-button').click();
     assert.equal(f.messages.filter((m) => m.type === 'run').length, 1);
+    row.querySelector('.name').click();
+    assert.equal(f.messages.filter((m) => m.type === 'run').length, 2);
     assert.equal(f.messages.at(-1).commandId, 'a');
   } finally {
     await f.close();
@@ -171,7 +191,7 @@ test('dragging sends only record identities and defers model refresh until drop'
     f.send({ ...f.model, fontSize: 14 });
     assert.equal(
       doc.documentElement.style.getPropertyValue('--command-size'),
-      '11px',
+      '',
     );
     doc.querySelector('.group-row').dispatchEvent(event('drop'));
     assert.deepEqual(f.messages.at(-1), {
@@ -188,6 +208,36 @@ test('dragging sends only record identities and defers model refresh until drop'
     doc.querySelector('#list').dispatchEvent(event('drop'));
     assert.equal(f.messages.at(-1).target.kind, 'root');
     assert.equal(f.messages.filter((m) => m.type === 'run').length, 0);
+  } finally {
+    await f.close();
+  }
+});
+
+test('focused row reveals actions and model refresh preserves the focused action', async () => {
+  const f = fixture();
+  try {
+    const row = f.w.document.querySelector('.command-row');
+    row.focus();
+    assert.equal(
+      f.w.getComputedStyle(row.querySelector('.row-actions')).visibility,
+      'visible',
+    );
+    row.querySelector('.delete-button').focus();
+    f.send({ ...f.model, fontSize: 12 });
+    assert.equal(f.w.document.activeElement.dataset.action, 'delete');
+    assert.equal(
+      f.w.document.documentElement.style.getPropertyValue('--command-size'),
+      '12px',
+    );
+    f.send(f.model);
+    assert.equal(
+      f.w.document.documentElement.style.getPropertyValue('--command-size'),
+      '',
+    );
+    assert.equal(
+      f.messages.filter((m) => m.type === 'delete' || m.type === 'run').length,
+      0,
+    );
   } finally {
     await f.close();
   }
