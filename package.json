@@ -1,8 +1,8 @@
 {
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
-  "description": "Organize, drag, edit and run multi-step terminal commands directly from the VS Code sidebar.",
-  "version": "0.3.0",
+  "description": "Fast VS Code sidebar command editor with Chinese UI, reorderable named steps, and terminal input controls.",
+  "version": "0.3.1",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
