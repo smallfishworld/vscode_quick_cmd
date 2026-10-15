@@ -1,0 +1,172 @@
+{
+  "name": "vscode-quick-cmd",
+  "displayName": "Quick Cmd",
+  "description": "Run saved shell commands from a dedicated VS Code sidebar.",
+  "version": "0.1.0",
+  "publisher": "smallfishworld",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smallfishworld/vscode_quick_cmd.git"
+  },
+  "homepage": "https://github.com/smallfishworld/vscode_quick_cmd",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Productivity"
+  ],
+  "keywords": [
+    "commands",
+    "terminal",
+    "sidebar",
+    "shell"
+  ],
+  "main": "./src/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onView:quickCmd.commands"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": false,
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Saved commands can be viewed and edited, but cannot run until the workspace is trusted."
+    }
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "quickCmd",
+          "title": "Quick Cmd",
+          "icon": "media/activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "quickCmd": [
+        {
+          "id": "quickCmd.commands",
+          "name": "Commands"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "quickCmd.addCommand",
+        "title": "Quick Cmd: Add Command",
+        "icon": "$(add)"
+      },
+      {
+        "command": "quickCmd.addGroup",
+        "title": "Quick Cmd: Add Group",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "quickCmd.refresh",
+        "title": "Quick Cmd: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "quickCmd.run",
+        "title": "Quick Cmd: Run",
+        "icon": "$(play)"
+      },
+      {
+        "command": "quickCmd.editCommand",
+        "title": "Quick Cmd: Edit Command",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "quickCmd.deleteCommand",
+        "title": "Quick Cmd: Delete Command",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "quickCmd.renameGroup",
+        "title": "Quick Cmd: Rename Group",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "quickCmd.deleteGroup",
+        "title": "Quick Cmd: Delete Group",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "quickCmd.openConfig",
+        "title": "Quick Cmd: Open Workspace Configuration",
+        "icon": "$(json)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "quickCmd.addCommand",
+          "when": "view == quickCmd.commands",
+          "group": "navigation@1"
+        },
+        {
+          "command": "quickCmd.addGroup",
+          "when": "view == quickCmd.commands",
+          "group": "navigation@2"
+        },
+        {
+          "command": "quickCmd.refresh",
+          "when": "view == quickCmd.commands",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "quickCmd.run",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "inline@1"
+        },
+        {
+          "command": "quickCmd.editCommand",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@2"
+        },
+        {
+          "command": "quickCmd.deleteCommand",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@3"
+        },
+        {
+          "command": "quickCmd.addCommand",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
+          "group": "inline@1"
+        },
+        {
+          "command": "quickCmd.renameGroup",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
+          "group": "navigation@2"
+        },
+        {
+          "command": "quickCmd.deleteGroup",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
+          "group": "navigation@3"
+        },
+        {
+          "command": "quickCmd.addGroup",
+          "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
+          "group": "inline@1"
+        },
+        {
+          "command": "quickCmd.openConfig",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.scope.workspace",
+          "group": "navigation@2"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/terminal.js && node --check src/extension.js",
+    "package": "npx --yes @vscode/vsce package"
+  }
+}
