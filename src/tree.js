@@ -3,7 +3,7 @@ const { t, errorText } = require('./i18n');
 const { commandSteps, moveDrop } = require('./model');
 const TREE_MIME = 'application/vnd.code.tree.quickCmd.commands';
 
-/** Native VS Code Tree View: scope → group → runnable command. */
+/** Native VS Code Tree View: group → runnable command. */
 class CommandTreeProvider {
   constructor(vscode, store, runner) {
     this.vscode = vscode;
@@ -37,6 +37,7 @@ class CommandTreeProvider {
 
   async handleDrop(target, data) {
     const transfer = data.get(TREE_MIME);
+    target = target || { kind: 'scope', scope: this.store.scopes()[0] };
     if (
       !transfer ||
       !target ||
@@ -69,9 +70,7 @@ class CommandTreeProvider {
       }
       this.refresh();
       if (this.tree) {
-        const roots = await this.getChildren();
-        const scopeNode = roots.find((n) => n.scope.id === source.scopeId);
-        const groups = await this.getChildren(scopeNode);
+        const groups = await this.getChildren();
         const groupId =
           source.kind === 'group' ? source.groupId : target.groupId;
         const groupNode = groups.find((n) => n.groupId === groupId);
@@ -87,7 +86,7 @@ class CommandTreeProvider {
       }
       const undo = t('Undo');
       const action = await this.vscode.window.showInformationMessage?.(
-        t('Moved to {0}.', target.label || target.scope.label),
+        t('Moved to {0}.', target.label || t('Groups')),
         undo,
       );
       if (action === undo) {
@@ -108,16 +107,10 @@ class CommandTreeProvider {
     }
   }
   async getParent(item) {
-    if (item.kind === 'scope') {
+    if (item.kind !== 'command') {
       return undefined;
     }
-    const root = (await this.getChildren()).find(
-      (node) => node.scope.id === item.scope.id,
-    );
-    if (item.kind === 'group' || item.kind === 'error') {
-      return root;
-    }
-    return (await this.getChildren(root)).find(
+    return (await this.getChildren()).find(
       (node) => node.groupId === item.groupId,
     );
   }
@@ -126,37 +119,22 @@ class CommandTreeProvider {
   }
   async getChildren(parent) {
     const vscode = this.vscode;
-    if (!parent) {
-      return this.store.scopes().map((scope) => {
-        const item = new vscode.TreeItem(
-          scope.label,
-          vscode.TreeItemCollapsibleState.Expanded,
-        );
-        item.kind = 'scope';
-        item.scope = scope;
-        item.id = `scope:${scope.id}`;
-        item.contextValue = `quickCmd.scope.${scope.type}`;
-        item.iconPath = new vscode.ThemeIcon(
-          scope.type === 'global' ? 'globe' : 'root-folder',
-        );
-        return item;
-      });
-    }
-    if (parent.kind === 'error' || parent.kind === 'command') {
+    if (parent?.kind === 'error' || parent?.kind === 'command') {
       return [];
     }
-    if (parent.kind === 'scope') {
+    if (!parent) {
+      const scope = this.store.scopes()[0];
       try {
-        const config = await this.store.read(parent.scope);
+        const config = await this.store.read(this.store.scopes()[0]);
         return config.groups.map((group) => {
           const item = new vscode.TreeItem(
             group.title,
             vscode.TreeItemCollapsibleState.Expanded,
           );
           item.kind = 'group';
-          item.id = `group:${parent.scope.id}:${group.id}`;
+          item.id = `group:${scope.id}:${group.id}`;
           item.contextValue = 'quickCmd.group';
-          item.scope = parent.scope;
+          item.scope = scope;
           item.groupId = group.id;
           item.iconPath = new vscode.ThemeIcon('folder');
           item.description = `${group.commands.length}`;
@@ -167,14 +145,14 @@ class CommandTreeProvider {
           t('Invalid configuration — see tooltip'),
         );
         item.kind = 'error';
-        item.scope = parent.scope;
+        item.scope = scope;
         item.iconPath = new vscode.ThemeIcon('error');
         item.tooltip = errorText(error);
         return [item];
       }
     }
     if (parent.kind === 'group') {
-      const config = await this.store.read(parent.scope);
+      const config = await this.store.read(this.store.scopes()[0]);
       const group = config.groups.find((item) => item.id === parent.groupId);
       return (group?.commands || []).map((command) => {
         const item = new vscode.TreeItem(

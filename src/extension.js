@@ -71,23 +71,8 @@ function activate(context) {
       }),
     );
   }
-  async function pickScope() {
-    const scopes = store.scopes();
-    if (scopes.length === 1) {
-      return scopes[0];
-    }
-    const selected = await vscode.window.showQuickPick(
-      scopes.map((scope) => ({
-        label: scope.label,
-        description:
-          scope.type === 'global'
-            ? t('Available in all workspaces')
-            : t('Stored in .vscode/quick-cmd.json'),
-        scope,
-      })),
-      { placeHolder: t('Choose configuration scope') },
-    );
-    return selected?.scope;
+  function globalScope() {
+    return store.scopes()[0];
   }
   async function promptTitle(prompt, value = '') {
     return vscode.window.showInputBox({
@@ -206,14 +191,14 @@ function activate(context) {
 
   register('quickCmd.refresh', () => provider.refresh());
   register('quickCmd.addGroup', async (node) => {
-    const scope = node?.scope || (await pickScope());
+    const scope = node?.scope || globalScope();
     if (scope) {
       await createGroup(scope);
     }
   });
   register('quickCmd.addCommand', async (node) => {
     node = node || selectedNode;
-    const scope = node?.scope || (await pickScope());
+    const scope = node?.scope || globalScope();
     if (!scope) {
       return;
     }
@@ -358,32 +343,8 @@ function activate(context) {
       provider.refresh();
     });
   }
-  register('quickCmd.openConfig', async (node) => {
-    const scope = node?.kind === 'scope' ? node.scope : await pickScope();
-    if (!scope) {
-      return;
-    }
-    if (scope.type === 'global') {
-      await vscode.window.showInformationMessage(
-        t('Use Export to save global configuration as JSON.'),
-      );
-      return;
-    }
-    // Only create the config if it does not exist. Opening must never overwrite edits on disk.
-    try {
-      await vscode.workspace.fs.stat(store.configUri(scope));
-    } catch (e) {
-      if (e.code !== 'FileNotFound') {
-        throw e;
-      }
-      await store.write(scope, await store.read(scope));
-    }
-    await vscode.window.showTextDocument(
-      await vscode.workspace.openTextDocument(store.configUri(scope)),
-    );
-  });
   register('quickCmd.exportConfig', async (node) => {
-    const scope = node?.scope || (await pickScope());
+    const scope = node?.scope || globalScope();
     if (scope && (await exportScope(vscode, store, scope))) {
       vscode.window.showInformationMessage(
         t('Quick Cmd configuration exported.'),
@@ -391,7 +352,7 @@ function activate(context) {
     }
   });
   register('quickCmd.importConfig', async (node) => {
-    const scope = node?.scope || (await pickScope());
+    const scope = node?.scope || globalScope();
     if (scope && (await importScope(vscode, store, scope))) {
       provider.refresh();
     }
@@ -405,7 +366,7 @@ function activate(context) {
           entries.push({
             groupId: group.id,
             label: `$(terminal) ${cmd.title}`,
-            description: `${scope.label} / ${group.title}`,
+            description: group.title,
             detail: commandSteps(cmd)
               .map((step) => step.command)
               .join(' ; '),
@@ -441,9 +402,8 @@ function activate(context) {
       }
     }
   });
-  register('quickCmd.runById', async (id, scopeId) => {
+  register('quickCmd.runById', async (id) => {
     if (id && typeof id === 'object') {
-      scopeId = id.scopeId;
       id = id.id;
     }
     if (typeof id !== 'string' || !id) {
@@ -451,24 +411,12 @@ function activate(context) {
         'Provide a command id; see the Quick Cmd shortcut documentation.',
       );
     }
-    const matches = [];
-    for (const scope of store.scopes()) {
-      if (scopeId && scope.id !== scopeId) {
-        continue;
-      }
-      const config = await store.read(scope);
-      const found = findCommand(config, id);
-      if (found) {
-        matches.push({ scope, cmd: found.command });
-      }
-    }
-    if (!matches.length) {
+    const scope = store.scopes()[0];
+    const found = findCommand(await store.read(scope), id);
+    if (!found) {
       throw new Error(`Command id not found: ${id}`);
     }
-    if (matches.length !== 1) {
-      throw new Error(`Ambiguous command id: ${id}. Specify a scope id.`);
-    }
-    await execute(matches[0].scope, matches[0].cmd);
+    await execute(scope, found.command);
   });
   register('quickCmd.copyShortcut', async (node) => {
     const cmd = await commandFromNode(node);
@@ -479,7 +427,7 @@ function activate(context) {
       {
         key: 'ctrl+alt+shift+r',
         command: 'quickCmd.runById',
-        args: { id: cmd.id, scopeId: node.scope.id },
+        args: { id: cmd.id },
       },
       null,
       2,
@@ -512,17 +460,6 @@ function activate(context) {
       runner.stop(node.scope, cmd);
     }
   });
-
-  const watcher = vscode.workspace.createFileSystemWatcher(
-    '**/.vscode/quick-cmd.json',
-  );
-  context.subscriptions.push(watcher);
-  for (const name of ['onDidChange', 'onDidCreate', 'onDidDelete']) {
-    context.subscriptions.push(watcher[name](() => provider.refresh()));
-  }
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeWorkspaceFolders(() => provider.refresh()),
-  );
 }
 function deactivate() {}
 module.exports = { activate, deactivate };

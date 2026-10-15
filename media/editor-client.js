@@ -676,11 +676,7 @@ window.addEventListener('message', (event) => {
     baseline = msg.baseline;
     form.dataset.groupId = msg.groupId;
     byId('context').textContent =
-      msg.scopeLabel +
-      ' / ' +
-      msg.groupTitle +
-      ' · ' +
-      t(msg.isEdit ? 'Edit command' : 'New command');
+      msg.groupTitle + ' · ' + t(msg.isEdit ? 'Edit command' : 'New command');
     form.hidden = false;
     byId('empty').hidden = true;
     busy = false;

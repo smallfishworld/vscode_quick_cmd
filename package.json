@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -104,11 +104,6 @@
         "icon": "$(trash)"
       },
       {
-        "command": "quickCmd.openConfig",
-        "title": "%quickCmd.openConfig%",
-        "icon": "$(json)"
-      },
-      {
         "command": "quickCmd.duplicateCommand",
         "title": "%quickCmd.duplicateCommand%",
         "icon": "$(copy)"
@@ -184,7 +179,7 @@
         {
           "command": "quickCmd.addGroup",
           "when": "view == quickCmd.commands",
-          "group": "manage"
+          "group": "navigation@2"
         },
         {
           "command": "quickCmd.refresh",
@@ -200,6 +195,16 @@
           "command": "quickCmd.openEditorPanel",
           "when": "view == quickCmd.editor",
           "group": "navigation"
+        },
+        {
+          "command": "quickCmd.importConfig",
+          "when": "view == quickCmd.commands",
+          "group": "transfer"
+        },
+        {
+          "command": "quickCmd.exportConfig",
+          "when": "view == quickCmd.commands",
+          "group": "transfer"
         }
       ],
       "view/item/context": [
@@ -237,11 +242,6 @@
           "command": "quickCmd.addGroup",
           "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
           "group": "inline@1"
-        },
-        {
-          "command": "quickCmd.openConfig",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.scope.workspace",
-          "group": "navigation@2"
         },
         {
           "command": "quickCmd.duplicateCommand",

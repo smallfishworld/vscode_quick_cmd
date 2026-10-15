@@ -42,14 +42,17 @@ test('tree selection edits, state overrides custom icons, and reveal resolves pa
     { scopes: () => [scope], read: async () => cfg },
     { status: () => status },
   );
-  const root = (await tree.getChildren())[0];
-  const group = (await tree.getChildren(root))[0];
+  const roots = await tree.getChildren();
+  assert.equal(roots.length, 1);
+  const group = roots[0];
+  assert.equal(group.kind, 'group');
+  assert.equal(group.label, 'Build');
   let item = (await tree.getChildren(group))[0];
   assert.equal(item.command.command, 'quickCmd.selectCommand');
   assert.equal(item.iconPath.id, 'loading~spin');
   assert.equal(item.description, '运行中');
   assert.equal((await tree.getParent(item)).groupId, 'g');
-  assert.equal((await tree.getParent(group)).scope.id, 'global');
+  assert.equal(await tree.getParent(group), undefined);
   status = { monitored: true, busy: false, exitCode: 2 };
   item = (await tree.getChildren(group))[0];
   assert.equal(item.iconPath.id, 'error');

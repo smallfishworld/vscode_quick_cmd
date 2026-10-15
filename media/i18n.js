@@ -2,6 +2,9 @@
   'use strict';
   let chinese = false;
   const messages = {
+    Groups: '分组',
+    'Replace all commands with {0} imported group(s)?':
+      '用导入的 {0} 个分组替换全部命令？',
     'More actions': '更多操作',
     'Editing in the wide editor.': '正在主编辑区编辑。',
     'Reopen saved version': '重新打开已保存版本',

@@ -1,3 +1,13 @@
+# v0.5.0 — Global groups only
+
+- All commands now use one global collection; the tree starts directly at group → command.
+- Removed project/global root nodes, scope selection, project JSON editing and project-file watching.
+- Group view title is now Groups; import/export remains available in its title menu.
+- Editor breadcrumbs and search results show only the group; keybindings need only the command ID.
+- No project-command migration is included.
+
+中文：命令统一全局保存，直接显示“分组 → 命令”，移除项目/全局范围选择和项目配置入口，不增加迁移逻辑。
+
 # v0.4.0 — Command panel interaction and localization
 
 - Single-click selects and edits; sending uses a separate play button. An optional setting restores single-click sending.
