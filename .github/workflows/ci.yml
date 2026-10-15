@@ -1,28 +1,29 @@
-name: Validate and Package VSIX
+name: Test and Package Quick Cmd
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test-and-package:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check JavaScript syntax
+      - name: Check JS syntax
         run: npm run check
       - name: Run unit tests
         run: npm test
       - name: Package VSIX
-        run: npx --yes @vscode/vsce package --out quick-cmd.vsix
-      - name: Upload installable extension
+        run: npx --yes @vscode/vsce package --out quick-cmd-${{ github.sha }}.vsix
+      - name: Upload extension
         uses: actions/upload-artifact@v4
         with:
           name: quick-cmd-vsix
-          path: quick-cmd.vsix
+          path: '*.vsix'

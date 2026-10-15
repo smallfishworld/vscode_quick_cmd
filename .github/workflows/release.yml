@@ -1,0 +1,54 @@
+name: Release Quick Cmd
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'src/**'
+      - 'test/**'
+      - '.github/workflows/release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate and test
+        run: |
+          npm run check
+          npm test
+      - name: Determine release version
+        id: version
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Package VSIX
+        run: npx --yes @vscode/vsce package --out quick-cmd-v${{ steps.version.outputs.version }}.vsix
+      - name: Upload VSIX as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: quick-cmd-v${{ steps.version.outputs.version }}-vsix
+          path: '*.vsix'
+      - name: Publish GitHub Release if version not already released
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping publish."
+          else
+            gh release create "$TAG" quick-cmd-v${{ steps.version.outputs.version }}.vsix \
+              --target "$GITHUB_SHA" --title "Quick Cmd $TAG" \
+              --notes-file RELEASE_NOTES.md --latest
+          fi

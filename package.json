@@ -1,8 +1,8 @@
 {
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
-  "description": "Run saved shell commands from a dedicated VS Code sidebar.",
-  "version": "0.1.0",
+  "description": "Manage, search, and execute saved shell commands from the VS Code sidebar.",
+  "version": "0.2.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -11,7 +11,7 @@
   },
   "homepage": "https://github.com/smallfishworld/vscode_quick_cmd",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.93.0"
   },
   "categories": [
     "Other",
@@ -21,7 +21,8 @@
     "commands",
     "terminal",
     "sidebar",
-    "shell"
+    "shell",
+    "quick run"
   ],
   "main": "./src/extension.js",
   "extensionKind": [
@@ -34,7 +35,7 @@
     "virtualWorkspaces": false,
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Saved commands can be viewed and edited, but cannot run until the workspace is trusted."
+      "description": "Saved commands can be viewed and edited, but they cannot run until the workspace is trusted."
     }
   },
   "contributes": {
@@ -100,6 +101,61 @@
         "command": "quickCmd.openConfig",
         "title": "Quick Cmd: Open Workspace Configuration",
         "icon": "$(json)"
+      },
+      {
+        "command": "quickCmd.duplicateCommand",
+        "title": "Quick Cmd: Duplicate Command",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "quickCmd.moveCommandUp",
+        "title": "Quick Cmd: Move Command Up",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "quickCmd.moveCommandDown",
+        "title": "Quick Cmd: Move Command Down",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "quickCmd.moveGroupUp",
+        "title": "Quick Cmd: Move Group Up",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "quickCmd.moveGroupDown",
+        "title": "Quick Cmd: Move Group Down",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "quickCmd.exportConfig",
+        "title": "Quick Cmd: Export JSON Configuration",
+        "icon": "$(export)"
+      },
+      {
+        "command": "quickCmd.importConfig",
+        "title": "Quick Cmd: Import JSON Configuration",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "quickCmd.searchCommands",
+        "title": "Quick Cmd: Search Commands",
+        "icon": "$(search)"
+      },
+      {
+        "command": "quickCmd.runById",
+        "title": "Quick Cmd: Run Command by ID",
+        "icon": "$(play)"
+      },
+      {
+        "command": "quickCmd.copyShortcut",
+        "title": "Quick Cmd: Copy Keybinding Snippet",
+        "icon": "$(keyboard)"
+      },
+      {
+        "command": "quickCmd.stop",
+        "title": "Quick Cmd: Stop Command (Close Terminal)",
+        "icon": "$(debug-stop)"
       }
     ],
     "menus": {
@@ -118,6 +174,11 @@
           "command": "quickCmd.refresh",
           "when": "view == quickCmd.commands",
           "group": "navigation@3"
+        },
+        {
+          "command": "quickCmd.searchCommands",
+          "when": "view == quickCmd.commands",
+          "group": "navigation@0"
         }
       ],
       "view/item/context": [
@@ -160,13 +221,82 @@
           "command": "quickCmd.openConfig",
           "when": "view == quickCmd.commands && viewItem == quickCmd.scope.workspace",
           "group": "navigation@2"
+        },
+        {
+          "command": "quickCmd.duplicateCommand",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@4"
+        },
+        {
+          "command": "quickCmd.moveCommandUp",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@5"
+        },
+        {
+          "command": "quickCmd.moveCommandDown",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@6"
+        },
+        {
+          "command": "quickCmd.copyShortcut",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@7"
+        },
+        {
+          "command": "quickCmd.stop",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@8"
+        },
+        {
+          "command": "quickCmd.moveGroupUp",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
+          "group": "navigation@4"
+        },
+        {
+          "command": "quickCmd.moveGroupDown",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
+          "group": "navigation@5"
+        },
+        {
+          "command": "quickCmd.importConfig",
+          "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
+          "group": "navigation@3"
+        },
+        {
+          "command": "quickCmd.exportConfig",
+          "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
+          "group": "navigation@4"
         }
       ]
-    }
+    },
+    "configuration": {
+      "title": "Quick Cmd",
+      "properties": {
+        "quickCmd.shellType": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "posix",
+            "powershell",
+            "cmd"
+          ],
+          "default": "auto",
+          "description": "Shell quoting mode used when interpolating command variables. Auto uses PowerShell or cmd.exe on Windows and POSIX quoting elsewhere."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "quickCmd.searchCommands",
+        "key": "ctrl+alt+q",
+        "mac": "cmd+alt+q",
+        "when": "editorTextFocus || view == quickCmd.commands"
+      }
+    ]
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/terminal.js && node --check src/extension.js",
-    "package": "npx --yes @vscode/vsce package"
+    "check": "node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js",
+    "package": "npx --yes @vscode/vsce package --out quick-cmd.vsix"
   }
 }
