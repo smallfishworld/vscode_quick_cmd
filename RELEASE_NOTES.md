@@ -1,3 +1,18 @@
+# v0.4.0 — Command panel interaction and localization
+
+- Single-click selects and edits; sending uses a separate play button. An optional setting restores single-click sending.
+- Complete Chinese/English UI follows the VS Code display language, including menus, search, status and error messages.
+- Consistent local SVG controls, a command-list Activity Bar mark and a common command icon picker.
+- Protected, recoverable drafts; accurate save acknowledgements; external-edit conflict detection.
+- Persistent save footer, compact expandable steps, drag/keyboard reordering, deletion undo and variable insertion.
+- Group-level trailing Enter setting survives step insertion/deletion/reordering; terminal behavior is explained explicitly.
+- Wide editor shares the sidebar draft; sidebar becomes read-only while the wide editor is open.
+- Working directory and terminal usage are visible; environment variables support table and JSON editing.
+- Tree drag-and-drop retains selection and offers guarded undo.
+- Added draft-session and DOM interaction regressions; test-only dependencies are excluded from the VSIX.
+
+中文：统一界面文案与图标，优化命令选中/发送、编辑布局、草稿保护、主编辑区模式和多步骤交互。详见中文使用说明。
+
 # Quick Cmd v0.3.1
 
 ## Command editor UX improvements

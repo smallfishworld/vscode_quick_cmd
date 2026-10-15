@@ -1,92 +1,231 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}}; script-src {{cspSource}}; img-src {{cspSource}} data:;">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="{{cssUri}}" rel="stylesheet">
-  <title>Quick Cmd · 编辑命令</title>
-</head>
-<body>
-  <div id="empty" class="empty-state">
-    <div class="empty-icon" aria-hidden="true">⌘</div>
-    <strong>还没有选中命令</strong>
-    <p>点击命令分组旁的 <b>＋</b> 新建，或右键已有命令选择“编辑”。</p>
-  </div>
-
-  <form id="form" novalidate hidden>
-    <div id="context" class="context" aria-live="polite"></div>
-
-    <section class="field">
-      <label for="title">命令名称 <span class="required" aria-hidden="true">*</span></label>
-      <input id="title" type="text" maxlength="128" autocomplete="off" required
-        aria-required="true" aria-describedby="titleError" placeholder="例如：编译项目">
-      <p id="titleError" class="field-error" role="alert" hidden></p>
-    </section>
-
-    <section class="steps-section" aria-labelledby="stepsHeading">
-      <div class="steps-heading">
-        <label id="stepsHeading">命令步骤 <span class="required" aria-hidden="true">*</span></label>
-        <div id="stepNav" class="step-nav" aria-label="快速定位步骤"></div>
-      </div>
-      <div id="steps" class="steps-list"></div>
-      <button type="button" id="addStep" class="add-step">
-        <span aria-hidden="true">＋</span> 添加步骤
-      </button>
-      <p id="stepsError" class="field-error" role="alert" hidden></p>
-      <p class="hint"><span class="hint-symbol" aria-hidden="true">ⓘ</span>
-        取消最后一步的“换行执行”，命令将留在终端输入行，不自动执行。前面的步骤始终需要换行执行。
-      </p>
-    </section>
-
-    <details id="advanced" class="advanced">
-      <summary><span>高级设置</span><span class="chevron" aria-hidden="true">⌄</span></summary>
-      <div class="advanced-content">
-        <div class="field">
-          <label for="cwd">工作目录</label>
-          <input id="cwd" type="text" maxlength="2048" autocomplete="off"
-            aria-describedby="cwdHint cwdError" placeholder="默认当前工作区目录">
-          <div class="variable-chips" aria-label="插入目录变量">
-            <button type="button" class="variable-chip" data-cwd="${workspaceFolder}" title="插入工作区根目录">${workspaceFolder}</button>
-            <button type="button" class="variable-chip" data-cwd="${fileDirname}" title="插入当前文件所在目录">${fileDirname}</button>
-          </div>
-          <p id="cwdHint" class="field-hint">点击变量即可插入，无需记忆变量名。</p>
-          <p id="cwdError" class="field-error" role="alert" hidden></p>
-        </div>
-        <div class="field">
-          <label for="terminal">终端策略</label>
-          <select id="terminal">
-            <option value="new">每次新建终端</option>
-            <option value="reuse">空闲时复用专用终端</option>
-            <option value="active">使用当前活动终端</option>
-          </select>
-        </div>
-        <label class="check confirm-row"><input type="checkbox" id="confirm"> 发送前再次确认</label>
-        <div class="field">
-          <label for="description">命令描述</label>
-          <input id="description" type="text" maxlength="512" placeholder="可选：描述用途">
-        </div>
-        <div class="field">
-          <label for="icon">图标（Codicon）</label>
-          <input id="icon" type="text" maxlength="80" aria-describedby="iconError" placeholder="例如：tools、rocket">
-          <p id="iconError" class="field-error" role="alert" hidden></p>
-        </div>
-        <div class="field">
-          <label for="env">环境变量（JSON）</label>
-          <textarea id="env" rows="3" spellcheck="false" aria-describedby="envError">{}</textarea>
-          <p id="envError" class="field-error" role="alert" hidden></p>
-        </div>
-      </div>
-    </details>
-
-    <p id="error" class="field-error form-error" role="alert" aria-live="assertive" hidden></p>
-    <div class="save-area">
-      <button type="submit" id="save" class="save-button"><span aria-hidden="true">▣</span> 保存命令</button>
-      <div id="saved" class="saved" role="status" aria-live="polite" hidden>
-        <span aria-hidden="true">✓</span> 已保存，2 秒后自动消失
-      </div>
+<!doctype html>
+<html lang="{{language}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src {{cspSource}}; script-src {{cspSource}}; img-src {{cspSource}} data:;"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="{{cssUri}}" rel="stylesheet" />
+    <title>Quick Cmd</title>
+  </head>
+  <body>
+    <div id="empty" class="empty-state">
+      <span data-icon="list" class="empty-icon" aria-hidden="true"></span>
+      <strong data-i18n="Select a command to edit"></strong>
+      <p data-i18n="Select a command in the list, or create one below."></p>
+      <button
+        type="button"
+        id="new"
+        class="primary"
+        data-i18n="New command"
+      ></button>
     </div>
-  </form>
-  <script src="{{jsUri}}" nonce="{{nonce}}"></script>
-</body>
+    <form id="form" novalidate hidden>
+      <header class="editor-header">
+        <div id="context" class="context"></div>
+        <button
+          type="button"
+          id="expand"
+          class="icon-button"
+          data-label="Open wide editor"
+          data-icon="expand"
+        ></button>
+        <button
+          type="button"
+          id="reopen"
+          class="icon-button"
+          data-label="Reopen saved version"
+          data-icon="reload"
+        ></button>
+      </header>
+      <main>
+        <fieldset id="editorFields">
+          <section class="field">
+            <label for="title" data-i18n="Command name"></label>
+            <input
+              id="title"
+              maxlength="128"
+              autocomplete="off"
+              required
+              aria-required="true"
+              aria-describedby="titleError"
+              data-placeholder="For example: Build project"
+            />
+            <p id="titleError" class="field-error" role="alert" hidden></p>
+          </section>
+          <section class="steps-section" aria-labelledby="stepsHeading">
+            <div class="section-heading">
+              <h2 id="stepsHeading" data-i18n="Command steps"></h2>
+              <span id="stepCount" class="muted"></span>
+            </div>
+            <div id="steps" class="steps-list"></div>
+            <button type="button" id="addStep" class="add-step">
+              <span data-icon="add" aria-hidden="true"></span
+              ><span data-i18n="Add step"></span>
+            </button>
+            <p id="stepsError" class="field-error" role="alert" hidden></p>
+            <div id="stepUndo" class="undo-row" hidden>
+              <span data-i18n="Step deleted."></span
+              ><button
+                type="button"
+                id="undo"
+                class="text-button"
+                data-i18n="Undo"
+              ></button>
+            </div>
+            <label class="check"
+              ><input type="checkbox" id="trailingEnter" checked /><span
+                data-i18n="Send trailing Enter"
+              ></span
+            ></label>
+            <p id="enterHint" class="field-hint" aria-live="polite"></p>
+            <p class="hint">
+              <span data-icon="info" aria-hidden="true"></span
+              ><span
+                data-i18n="Steps are joined with newlines and sent together. They do not wait for completion or stop on failure. Embedded newlines may execute commands even without a trailing Enter."
+              ></span>
+            </p>
+          </section>
+          <section class="field">
+            <label for="cwd" data-i18n="Working directory"></label>
+            <input
+              id="cwd"
+              maxlength="2048"
+              autocomplete="off"
+              data-placeholder="Default: current workspace folder"
+            />
+            <div class="variable-chips">
+              <button
+                type="button"
+                class="variable-chip"
+                data-cwd="${workspaceFolder}"
+              >
+                ${workspaceFolder}</button
+              ><button
+                type="button"
+                class="variable-chip"
+                data-cwd="${fileDirname}"
+              >
+                ${fileDirname}
+              </button>
+            </div>
+            <p id="cwdError" class="field-error" role="alert" hidden></p>
+          </section>
+          <section class="field">
+            <label for="terminal" data-i18n="Terminal usage"></label>
+            <select id="terminal">
+              <option value="new" data-i18n="New terminal each time"></option>
+              <option
+                value="reuse"
+                data-i18n="Prefer an idle dedicated terminal"
+              ></option>
+              <option
+                value="active"
+                data-i18n="Use the active terminal"
+              ></option>
+            </select>
+            <p
+              id="terminalHint"
+              class="field-hint"
+              data-i18n="The active terminal uses its existing directory and environment."
+              hidden
+            ></p>
+          </section>
+          <details id="advanced" class="advanced">
+            <summary>
+              <span data-i18n="Advanced settings"></span
+              ><span data-icon="chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="advanced-content">
+              <label class="check"
+                ><input type="checkbox" id="confirm" /><span
+                  data-i18n="Confirm before sending to terminal"
+                ></span
+              ></label>
+              <section class="field">
+                <label for="description" data-i18n="Description"></label
+                ><input
+                  id="description"
+                  maxlength="512"
+                  data-placeholder="Optional description"
+                />
+              </section>
+              <section class="field">
+                <label id="iconLabel" data-i18n="Command icon"></label>
+                <div
+                  id="iconPicker"
+                  class="icon-picker"
+                  role="group"
+                  aria-labelledby="iconLabel"
+                ></div>
+                <input
+                  id="icon"
+                  maxlength="80"
+                  data-placeholder="Custom icon"
+                  aria-labelledby="iconLabel"
+                  aria-describedby="iconError"
+                />
+                <p id="iconError" class="field-error" role="alert" hidden></p>
+              </section>
+              <section class="field">
+                <div class="section-heading">
+                  <label for="env" data-i18n="Environment variables"></label
+                  ><button
+                    type="button"
+                    id="envMode"
+                    class="text-button"
+                    data-i18n="Edit as JSON"
+                  ></button>
+                </div>
+                <div id="envTable"></div>
+                <button
+                  type="button"
+                  id="addEnv"
+                  class="secondary"
+                  data-i18n="Add variable"
+                ></button>
+                <textarea
+                  id="env"
+                  rows="4"
+                  spellcheck="false"
+                  aria-describedby="envError"
+                  hidden
+                >
+{}</textarea>
+                <p id="envError" class="field-error" role="alert" hidden></p>
+              </section>
+            </div>
+          </details>
+        </fieldset>
+      </main>
+      <footer class="save-area">
+        <p
+          id="readOnlyHint"
+          class="field-hint"
+          data-i18n="Editing in the wide editor."
+          hidden
+        ></p>
+        <div
+          id="saveState"
+          class="save-state"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <p id="error" class="field-error" role="alert" hidden></p>
+        <div class="save-actions">
+          <button type="submit" id="save" class="primary">
+            <span data-icon="save" aria-hidden="true"></span
+            ><span data-i18n="Save command"></span></button
+          ><button type="button" id="saveRun" class="secondary">
+            <span data-icon="play" aria-hidden="true"></span
+            ><span data-i18n="Save and send"></span>
+          </button>
+        </div>
+      </footer>
+    </form>
+    <script src="{{i18nUri}}" nonce="{{nonce}}"></script>
+    <script src="{{jsUri}}" nonce="{{nonce}}"></script>
+  </body>
 </html>

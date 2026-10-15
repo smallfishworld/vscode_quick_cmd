@@ -2,32 +2,62 @@
 
 简体中文 | [English](README.md)
 
-**Quick Cmd** 是一个轻量级 VS Code 插件：在左侧活动栏显示自定义命令列表，按分组管理，点击即可在 VS Code 内置终端执行。使用官方 Tree View 和 Terminal API，不依赖 Webview，也没有第三方运行时依赖。
+在 VS Code 侧栏保存、管理和编辑常用终端命令。支持全局与项目分组、多步骤、变量插入及远程开发；无第三方运行时依赖。
 
-## 第一版功能（v0.1.0）
+## 安装和使用
 
-- 左侧 Activity Bar 独立 **Quick Cmd** 图标及树形命令面板。
-- **全局命令**：所有项目可用；**项目命令**：保存在项目的 `.vscode/quick-cmd.json`，可提交 Git 分享；支持多工作区文件夹。
-- 新增、编辑、删除命令；新增、重命名、删除分组。
-- 点击命令条目或行内执行按钮，在 **VS Code 内置终端** 运行。
-- 每条命令单独配置工作目录：默认为项目根目录，也支持绝对路径、相对路径、`${workspaceFolder}`。
-- 每次运行创建**独立终端**，避免把新命令输入到尚未执行完成的终端里；原来的输出会保留。
-- 工作区未被信任（Workspace Trust）时禁止运行命令。
-- 同时适用于本地开发及 VS Code Remote SSH 扩展宿主环境。
+需要 VS Code **1.93 或更新版本**。从 [Releases](https://github.com/smallfishworld/vscode_quick_cmd/releases) 下载 `.vsix`，在扩展视图选择“从 VSIX 安装”。也可以下载合并请求检查生成的安装包。
 
-## 如何使用
+1. 点击活动栏 **Quick Cmd** 图标。
+2. 点击“新建命令”，选择保存范围和分组；在分组旁点击 `＋` 可以直接在该分组新建。
+3. 在编辑栏一次填写名称、命令内容、工作目录和终端使用方式，点击“保存命令”。
+4. **单击命令查看或编辑；点击行尾播放按钮发送到终端。** 需要保留旧版单击发送行为时，启用设置 `quickCmd.singleClickRuns`。
+5. 搜索按钮或 `Ctrl+Alt+Q`（macOS：`Cmd+Alt+Q`）可查找命令，然后选择编辑或发送。
 
-1. 使用 VS Code 1.85 或更新版本打开本仓库，按 **F5** 启动扩展开发宿主；或者安装 GitHub Actions 产出的 `.vsix` 文件。
-2. 点击左侧 **Quick Cmd** 图标。
-3. 点击上方 **+**，选择保存位置（全局或具体项目文件夹），选择或创建命令分组。
-4. 依次填写显示名称、Shell 命令、可选工作目录。
-5. 点击命令即可执行；右键可编辑或删除。分组右键支持重命名、删除，项目根节点支持打开配置文件。
+界面跟随 VS Code 显示语言：中文环境统一中文，其他语言环境使用英文。用户填写的命令名称、Shell 代码和变量名不会被翻译。
 
-典型命令：`cmake --build build -j8`、`make clean`、`git status`、`ssh user@host`、`python3 scripts/build.py`。
+## 命令列表
 
-## 项目配置示例
+- **全局命令**在所有项目中可用；项目命令存入 `.vscode/quick-cmd.json`，可通过 Git 分享，支持多工作区文件夹和 Remote SSH。
+- 命令、分组支持拖拽排序；命令可以拖入其他分组。仅允许同一保存范围内拖动。
+- 拖动后保留选中位置，提供撤销。之后配置已变化时，撤销会被拒绝，避免覆盖其他修改。
+- 右键提供创建副本、删除、上移/下移、快捷键配置等操作；范围节点提供导入/导出。
+- 运行状态优先于自定义图标显示。没有可靠状态信息时显示“状态未知”，不把发送成功当成执行成功。
 
-文件路径：`<项目根目录>/.vscode/quick-cmd.json`
+## 编辑栏
+
+- **草稿保护**：切换命令前，可选择保存、放弃修改或取消。草稿保存在当前 VS Code 工作区状态中，重新加载扩展后可恢复；草稿不会自动执行或自动写入项目配置。
+- **准确保存状态**：显示未保存、保存中和已保存。保存期间继续输入的内容仍标记为未保存。
+- **固定底部操作区**：提供保存和“保存并发送”；编辑栏获得焦点时可用 `Ctrl+S` / `Cmd+S` 保存。
+- **主编辑区模式**：点击顶部展开按钮打开宽编辑器，和侧栏共用草稿。宽编辑器打开期间，侧栏同步显示但暂时只读，关闭宽编辑器后恢复编辑。
+- **步骤操作**：支持拖拽、上移/下移、折叠和删除后撤销；命令输入框内 `Alt+↑` / `Alt+↓` 移动步骤。窄侧栏通过“更多操作”按钮展开操作菜单。
+- **命令输入**：自动调整输入高度，支持插入常用文件和工作区变量。步骤名称可选。
+- **常用设置前置**：工作目录、终端使用方式直接显示；确认发送、描述、图标、环境变量放入高级设置。
+- **图标选择**：内置常用图标预览；也可以填写自定义 Codicon 标识。
+- **环境变量**：默认通过名称/值表格编辑，可切换为 JSON；错误或未完成的输入会保留。
+- **外部修改保护**：命令被配置文件或其他窗口修改后，保存会提示冲突；顶部“重新打开已保存版本”可在确认后重新载入。
+
+## 多步骤与末尾回车
+
+每条命令最多 **32 个步骤**。所有步骤用换行连接，**一次发送到同一个终端**；不是等待前一步完成的任务工作流，也不会自动在失败后停止。需要失败即停止时，请自行使用适合所用 Shell 的组合语法，例如 POSIX Shell 的 `&&`。
+
+“发送末尾回车”是整组命令的选项：增删或移动步骤不会改变它。保存时，中间步骤的 `execute` 均为 `true`，最后一步保存该选项的值。
+
+**取消末尾回车不保证整段内容不会执行**：中间步骤及命令文本本身仍可含换行，具体行为取决于终端和 Shell。需要仅预填时，建议使用单步骤、单行命令。交互式程序可能消费后续输入，不适合作为这种多步骤组合的中间步骤。
+
+## 终端使用方式
+
+| 方式                   | 行为                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| 每次新建终端           | 默认值；每次创建专用终端，保留原有输出                                               |
+| 优先复用空闲的专用终端 | 仅在 Shell 集成确认空闲且目录、环境配置一致时复用，否则新建                          |
+| 使用当前活动终端       | 沿用活动终端的目录和环境；不能同时配置自定义工作目录或环境变量，无法确认空闲时会提示 |
+
+工作区未被信任时可以编辑，但不能发送命令。插件不会在启动或配置变化时自动执行命令。“停止命令并关闭终端”仅适用于专用终端，不能停止用户的非专用活动终端。
+
+## 配置和变量
+
+项目配置采用严格 JSON，不支持注释；全局配置保存在 VS Code 扩展状态中。原有 `command` 字符串与 `version: 1` 配置兼容，编辑器保存后使用 `steps`。
 
 ```json
 {
@@ -39,14 +69,24 @@
       "commands": [
         {
           "id": "debug-build",
-          "title": "Debug 编译",
-          "command": "cmake --build build -j8",
-          "cwd": "${workspaceFolder}"
-        },
-        {
-          "id": "clean",
-          "title": "清理",
-          "command": "make clean"
+          "title": "编译并准备查看日志",
+          "steps": [
+            {
+              "title": "编译",
+              "command": "cmake --build build -j8",
+              "execute": true
+            },
+            {
+              "title": "日志",
+              "command": "tail -f build/build.log",
+              "execute": false
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "new",
+          "icon": "tools",
+          "confirm": false,
+          "env": { "CMAKE_BUILD_PARALLEL_LEVEL": "8" }
         }
       ]
     }
@@ -54,107 +94,27 @@
 }
 ```
 
-字段说明：
+支持 `${workspaceFolder}`、`${file}`、`${fileDirname}`、`${fileBasename}`、`${fileBasenameNoExtension}`、`${relativeFile}`、`${env:NAME}`、`${input:name}`。
 
-- `version`：配置格式版本，当前为 `1`。
-- `groups`：分组数组；各分组包含唯一 `id`、展示用 `title` 和 `commands` 数组。
-- `commands`：命令对象数组；各命令包含唯一 `id`、`title`、`command`，以及可选 `cwd`。
-- `cwd`：省略表示当前工作区根目录；相对路径以工作区根目录为基准。`${workspaceFolder}` 会展开为工作区绝对路径。全局命令运行时优先使用当前编辑器所在的工作区，否则使用第一个工作区。
-- `command`：原样交给 VS Code 默认配置的终端 Shell 执行。不同平台请使用对应 Shell 语法；插件不会对命令字符串做额外变量替换。
+命令内容中的变量按 Shell 规则自动加引号，不需要自行在变量两侧加引号；工作目录、环境变量按纯文本展开。`quickCmd.shellType` 支持 `auto`、`posix`、`powershell`、`cmd`。
 
-项目配置是**严格 JSON**，不支持注释。遇到配置格式错误，插件会提示并阻止覆盖，避免数据丢失。全局命令存于 VS Code 插件全局状态，使用侧边栏编辑，不存到项目 JSON 中。
+右键“复制快捷键配置”可以生成 `quickCmd.runById` 的按键配置，参数为 `{"id":"命令标识","scopeId":"范围标识"}`。
 
-## 安全性与第一版边界
+## 开发与验证
 
-命令是可执行的 Shell 代码。执行陌生项目共享的命令前，请先检查配置内容。插件**不会**在启动、切换项目或配置文件变化时自动执行命令；未信任的工作区禁止执行。
-
-第一版采用**每次执行创建新终端**的策略，不复用繁忙终端。运行状态检测、停止运行、终端复用、搜索、拖拽排序和多命令工作流作为后续迭代功能。执行失败后，终端仍保留输出，可直接查看错误信息。
-
-不支持纯虚拟文件系统工作区（例如没有真实文件路径的部分远程仓库视图）。
-
-## 开发与打包
-
-工程基于 JavaScript (CommonJS) 开发，无需安装运行时第三方依赖。建议使用 Node.js 22：
+建议使用 Node.js 22：
 
 ```bash
-npm run check  # 语法检查
-npm test       # 单元测试
-npm run package  # 打包 VSIX，需要联网下载 @vscode/vsce
+npm ci
+npm run check
+npm test
+npm run package
 ```
 
-GitHub Actions 在提交到 `main`、Pull Request 或手动触发时执行语法检查、单元测试并打包。构建成功后可从 Actions 的 **quick-cmd-vsix** Artifact 获取 `quick-cmd.vsix`，在 VS Code 扩展界面选择「从 VSIX 安装」。
+测试包括配置、终端发送、草稿会话以及通过 Happy DOM 运行的编辑器交互。Happy DOM 仅用于开发测试，不打入扩展运行包。界面测试不能代替实际 VS Code 中的主题、字体、拖拽和尺寸验收。
 
-## 开源协议
+GitHub Actions 在合并请求和主分支上检查并打包；主分支版本更新通过发布工作流生成 GitHub Release。
+
+## 协议
 
 MIT，详见 [LICENSE](LICENSE)。
-
-## P1 功能（v0.2.0）
-
-新增以下能力，兼容旧版 `version: 1` 配置：
-
-- **命令搜索**：`Ctrl+Alt+Q`（macOS `Cmd+Alt+Q`）或命令面板的 `Quick Cmd: Search Commands`。
-- **终端模式**：`new` 每次新建（默认）；`reuse` 仅在 Shell Integration 确认终端空闲时复用，否则安全新建；`active` 使用当前活动终端，无法确认空闲时要求明确二次确认。
-- **运行状态**：在支持 Shell Integration 的终端中显示运行中及退出码；右键可通过关闭专用终端停止最新命令，**不会停止非专用活动终端**。
-- **变量与参数**：`${workspaceFolder}`、`${file}`、`${fileDirname}`、`${fileBasename}`、`${fileBasenameNoExtension}`、`${relativeFile}`、`${env:NAME}` 和 `${input:name}`；同一输入参数仅询问一次。
-- **安全插值**：参数和文件路径按 Shell 类型自动加引号，不需要在命令模板中手动加引号；`quickCmd.shellType` 可选择 `auto/posix/powershell/cmd`。在 Windows 的 cmd.exe 模式，危险字符会拒绝插值。
-- **命令属性**：支持 `description`、`icon`（Codicon 名称）、`confirm`（执行前确认）、`env`（字符串环境变量字典）、`terminal`。
-- **命令管理**：右键复制命令、上移/下移命令与分组、作用域级 JSON 导入/导出（替换前确认）。
-- **快捷键**：右键单个命令 `Copy Keybinding Snippet`，将 JSON 片段复制到剪贴板并打开 VS Code 的 `keybindings.json`，粘贴后自定义 `key`；插件也支持命令 `quickCmd.runById`，参数格式 `{"id":"命令ID","scopeId":"作用域ID"}`。
-
-新增配置示例：
-
-```json
-{
-  "id": "build-debug",
-  "title": "Debug build",
-  "command": "cmake --build ${workspaceFolder} --config ${input:config}",
-  "cwd": "${workspaceFolder}",
-  "description": "编译 Debug/Release",
-  "icon": "tools",
-  "terminal": "reuse",
-  "confirm": false,
-  "env": {"CMAKE_BUILD_PARALLEL_LEVEL": "8"}
-}
-```
-
-`command` 是 Shell 文本，变量插值时自动加引号；不要在 `${...}` 两侧再加 Shell 引号。`cwd` 和 `env` 值使用纯文本替换。特殊字符不能用于 cmd.exe 参数插值的场景，建议切换到 PowerShell。
-
-> VS Code 最低版本从 1.85 提升到 1.93，以使用 Shell Integration 事件 API。插件不自动执行任何项目命令，也不把命令是否发出误判为运行成功。
-
----
-
-## v0.3.0：侧栏直接编辑、拖拽排序、多命令组合
-
-打开左侧 **Quick Cmd**，点击分组旁的 **+**，将在同一侧栏下方的
-**Command Editor** 表单中创建命令。命令名称、工作目录、描述等字段可以一次填写，
-无需连续弹出输入框。右键已有命令选择 **Edit** 即可修改。
-
-- **拖拽排序**：将分组拖到另一个分组上方，将命令拖到另一条命令上方；
-  将命令拖到分组上，则追加到目标分组末尾。仅支持同一配置范围内的拖拽，
-  不会意外移动全局和项目配置之间的条目。
-- **多个命令组合**：点击 **+ Add** 添加步骤，单个条目最多 32 步。
-  各步骤按顺序填入同一个终端。
-- **换行执行**：每行命令后面都有「换行执行」复选框。勾选表示在命令后发送回车，
-  不勾选表示仅输入、不发送末尾回车。为避免拼接误执行，中间步骤必须勾选，
-  最后一步可以不勾选。
-- **兼容性**：原有 `"command": "make"` 格式仍可直接加载；
-  通过新编辑器保存时改成 `steps` 数组格式。
-
-示例：
-
-```json
-{
-  "title": "编译并准备查看日志",
-  "steps": [
-    { "command": "cmake --build build -j8", "execute": true },
-    { "command": "tail -f build/build.log", "execute": false }
-  ],
-  "terminal": "new"
-}
-```
-
-**执行机制**：所有步骤以换行连接后一次性调用 VS Code 的
-`Terminal.sendText(text, shouldExecute)`。最后一步的 Checkbox 决定
-是否自动按下最后一次回车。普通 Shell 命令组合适合此方式；对于会读取
-标准输入的交互式命令，后续输入可能被交互程序消费，不应当将它们组成一条组合命令。
-
