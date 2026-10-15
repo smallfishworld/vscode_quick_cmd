@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}}; script-src {{cspSource}}; img-src {{cspSource}} data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="{{cssUri}}" rel="stylesheet">
+  <title>Quick Cmd Editor</title>
+</head>
+<body>
+  <div id="empty">Select <strong>+</strong> to create a command, or right-click a command and choose <strong>Edit</strong>.</div>
+  <form id="form" hidden>
+    <div id="context"></div>
+    <label for="title">Command name <span class="required">*</span></label>
+    <input id="title" maxlength="128" required placeholder="Build project">
+    <div class="heading"><label>Command steps <span class="required">*</span></label><button type="button" id="addStep" class="secondary">+ Add</button></div>
+    <div id="steps"></div>
+    <p class="hint">勾选「换行执行」= 发送并回车；不勾选 = 仅输入终端。为了避免误执行，只有最后一步可以不勾选。</p>
+    <details>
+      <summary>Advanced settings</summary>
+      <label for="cwd">Working directory</label>
+      <input id="cwd" placeholder="&#36;{workspaceFolder}">
+      <label for="terminal">Terminal</label>
+      <select id="terminal">
+        <option value="new">New terminal</option>
+        <option value="reuse">Reuse if idle</option>
+        <option value="active">Active terminal</option>
+      </select>
+      <label class="check"><input type="checkbox" id="confirm"> Confirm before sending</label>
+      <label for="description">Description</label>
+      <input id="description" maxlength="512" placeholder="Optional">
+      <label for="icon">Codicon</label>
+      <input id="icon" maxlength="80" placeholder="terminal">
+      <label for="env">Environment (JSON object)</label>
+      <textarea id="env" rows="3" spellcheck="false">{}</textarea>
+    </details>
+    <div id="error" role="alert" aria-live="polite"></div>
+    <div class="buttons"><button type="submit" id="save">Save command</button><span id="saved" role="status"></span></div>
+  </form>
+  <script src="{{jsUri}}" nonce="{{nonce}}"></script>
+</body>
+</html>
