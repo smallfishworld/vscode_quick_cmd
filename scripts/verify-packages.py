@@ -18,8 +18,17 @@ for locale in ('zh-cn', 'en'):
         assert catalog['quickCmd.commands'] == ('分组' if locale == 'zh-cn' else 'Groups')
         assert 'extension/package.nls.zh-cn.json' not in archive.namelist()
         assert not any('/node_modules/' in name for name in archive.namelist())
-        for resource in ('src/i18n.js', 'src/group-decoration.js', 'media/editor.html', 'media/i18n.js'):
+        for resource in ('src/i18n.js', 'src/list.js', 'media/list.html', 'media/list-client.js', 'media/codicons/codicon.css', 'media/codicons/codicon.ttf', 'media/editor.html', 'media/i18n.js'):
             assert 'extension/' + resource in archive.namelist()
+        # Every runtime file must match this checkout; reject stale staging files.
+        for folder in ('src', 'media'):
+            expected = {f'extension/{p.relative_to(root).as_posix()}' for p in (root / folder).rglob('*') if p.is_file()}
+            actual = {name for name in archive.namelist() if name.startswith('extension/' + folder + '/') and not name.endswith('/')}
+            if folder == 'media':
+                actual = {name for name in actual if not name.startswith('extension/media/codicons/')}
+            assert actual == expected, f'Unexpected or missing runtime files in {artifact.name}: {actual ^ expected}'
+            for name in expected:
+                assert archive.read(name) == (root / name.removeprefix('extension/')).read_bytes(), f'Stale runtime file: {name}'
         identities.append((manifest['publisher'], manifest['name']))
     print(f'Verified {artifact.name}: {artifact.stat().st_size} bytes')
 assert identities[0] == identities[1], 'Language editions must share extension identity.'

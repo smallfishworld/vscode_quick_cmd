@@ -13,14 +13,13 @@ const DRAFT_KEY = 'quickCmd.editorDraft.v1';
 
 /** One editing session shared by the sidebar and wide editor. Drafts never execute. */
 class CommandEditorProvider {
-  constructor(vscode, context, store, onSaved, onRun, onModeChange) {
+  constructor(vscode, context, store, onSaved, onRun) {
     Object.assign(this, {
       vscode,
       context,
       store,
       onSaved,
       onRun,
-      onModeChange,
     });
     this.surfaces = new Set();
     this.disposables = [];
@@ -320,7 +319,6 @@ class CommandEditorProvider {
     await this.load();
   }
   async showView() {
-    await this.onModeChange?.(true);
     await this.vscode.commands.executeCommand(
       'setContext',
       'quickCmd.editing',
@@ -389,7 +387,6 @@ class CommandEditorProvider {
           'quickCmd.editing',
           false,
         );
-        await this.onModeChange?.(false);
         return true;
       });
     this.openQueue = job;

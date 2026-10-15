@@ -17,6 +17,10 @@ function stageVariant(root, buildRoot, locale) {
       recursive: true,
     });
   }
+  const icons = path.join(stage, 'media', 'codicons');
+  fs.mkdirSync(icons, { recursive: true });
+  for (const name of ['codicon.css', 'codicon.ttf']) { fs.copyFileSync(path.join(root, 'node_modules', '@vscode', 'codicons', 'dist', name), path.join(icons, name)); }
+  fs.copyFileSync(path.join(root, 'node_modules', '@vscode', 'codicons', 'LICENSE'), path.join(icons, 'LICENSE'));
   const readme = locale === 'zh-cn' ? 'README.zh-CN.md' : 'README.md';
   // Include both linked READMEs, with the chosen language as the package landing page.
   fs.copyFileSync(path.join(root, readme), path.join(stage, 'README.md'));

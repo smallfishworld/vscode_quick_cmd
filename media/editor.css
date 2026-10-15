@@ -510,3 +510,24 @@ details[open] > summary > .icon {
     visibility: visible;
   }
 }
+
+/* Compact form density matches the command list without changing VS Code globally. */
+body { font-size:12px; line-height:1.35; }
+.editor-header { padding:5px 8px; gap:4px; }
+main { padding:8px; }
+.field { margin-bottom:10px; }
+.field > label { margin-bottom:4px; }
+input:not([type='checkbox']), select, textarea { padding:4px 6px; }
+.steps-list { gap:6px; }
+.step-card { padding:6px; }
+.step-head { margin-bottom:4px; }
+.icon-button { min-width:22px; height:22px; padding:3px; }
+.step-command { min-height:32px; }
+.add-step { min-height:27px; margin:6px 0 8px; }
+.check { margin:7px 0; gap:6px; }
+.hint { margin:6px 0 10px; }
+summary { min-height:28px; }
+.save-area { padding:5px 8px 8px; }
+.save-state { min-height:17px; }
+.primary, .secondary { min-height:28px; padding:4px 8px; }
+@media (min-width:650px) { main { padding:12px 16px; } .editor-header, .save-area { padding-left:16px; padding-right:16px; } }

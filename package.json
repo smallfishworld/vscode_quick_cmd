@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -53,7 +53,8 @@
       "quickCmd": [
         {
           "id": "quickCmd.commands",
-          "name": "%quickCmd.commands%"
+          "name": "%quickCmd.commands%",
+          "type": "webview"
         },
         {
           "id": "quickCmd.editor",
@@ -132,12 +133,12 @@
       {
         "command": "quickCmd.exportConfig",
         "title": "%quickCmd.exportConfig%",
-        "icon": "$(export)"
+        "icon": "$(arrow-up)"
       },
       {
         "command": "quickCmd.importConfig",
         "title": "%quickCmd.importConfig%",
-        "icon": "$(import)"
+        "icon": "$(arrow-down)"
       },
       {
         "command": "quickCmd.searchCommands",
@@ -163,16 +164,6 @@
         "command": "quickCmd.openEditorPanel",
         "title": "%quickCmd.openEditorPanel%",
         "icon": "$(open-in-editor)"
-      },
-      {
-        "command": "quickCmd.selectCommand",
-        "title": "%quickCmd.selectCommand%",
-        "icon": "$(edit)"
-      },
-      {
-        "command": "quickCmd.showEditor",
-        "title": "%quickCmd.showEditor%",
-        "icon": "$(edit)"
       },
       {
         "command": "quickCmd.closeEditor",
@@ -228,16 +219,6 @@
           "group": "navigation@5"
         },
         {
-          "command": "quickCmd.showEditor",
-          "when": "view == quickCmd.commands && !quickCmd.editMode",
-          "group": "navigation@2"
-        },
-        {
-          "command": "quickCmd.closeEditor",
-          "when": "view == quickCmd.commands && quickCmd.editMode",
-          "group": "navigation@2"
-        },
-        {
           "command": "quickCmd.closeEditor",
           "when": "view == quickCmd.editor",
           "group": "navigation@2"
@@ -251,83 +232,6 @@
           "command": "quickCmd.openSettings",
           "when": "view == quickCmd.commands",
           "group": "navigation@8"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "quickCmd.run",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command && !quickCmd.editMode",
-          "group": "inline@1"
-        },
-        {
-          "command": "quickCmd.editCommand",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command && quickCmd.editMode",
-          "group": "inline@2"
-        },
-        {
-          "command": "quickCmd.deleteCommand",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@3"
-        },
-        {
-          "command": "quickCmd.addCommand",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
-          "group": "inline@1"
-        },
-        {
-          "command": "quickCmd.renameGroup",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
-          "group": "navigation@2"
-        },
-        {
-          "command": "quickCmd.deleteGroup",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
-          "group": "navigation@3"
-        },
-        {
-          "command": "quickCmd.duplicateCommand",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@4"
-        },
-        {
-          "command": "quickCmd.moveCommandUp",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@5"
-        },
-        {
-          "command": "quickCmd.moveCommandDown",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@6"
-        },
-        {
-          "command": "quickCmd.copyShortcut",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@7"
-        },
-        {
-          "command": "quickCmd.stop",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@8"
-        },
-        {
-          "command": "quickCmd.moveGroupUp",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
-          "group": "navigation@4"
-        },
-        {
-          "command": "quickCmd.moveGroupDown",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.group",
-          "group": "navigation@5"
-        },
-        {
-          "command": "quickCmd.run",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@1"
-        },
-        {
-          "command": "quickCmd.deleteCommand",
-          "when": "view == quickCmd.commands && viewItem == quickCmd.command && quickCmd.editMode",
-          "group": "inline@3"
         }
       ]
     },
@@ -344,6 +248,13 @@
           ],
           "default": "auto",
           "description": "%shellType%"
+        },
+        "quickCmd.listFontSize": {
+          "type": "number",
+          "default": 11,
+          "minimum": 10,
+          "maximum": 18,
+          "description": "%listFontSize%"
         }
       }
     },
@@ -354,26 +265,15 @@
         "mac": "cmd+alt+q",
         "when": "editorTextFocus || view == quickCmd.commands"
       }
-    ],
-    "colors": [
-      {
-        "id": "quickCmd.groupForeground",
-        "description": "%groupForeground%",
-        "defaults": {
-          "dark": "#75BEFF",
-          "light": "#0067A8",
-          "highContrast": "#FFFFFF",
-          "highContrastLight": "#005A9E"
-        }
-      }
     ]
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js && node --check src/group-decoration.js && node --check scripts/package-variants.js",
+    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/list.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js && node --check scripts/package-variants.js && node --check media/list-client.js",
     "package": "node scripts/package-variants.js"
   },
   "devDependencies": {
+    "@vscode/codicons": "0.0.46-24",
     "@vscode/vsce": "4.0.0",
     "happy-dom": "21.0.1"
   }

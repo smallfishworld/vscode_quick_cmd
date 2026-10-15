@@ -23,11 +23,9 @@
   "quickCmd.copyShortcut": "Quick Cmd: 复制快捷键配置",
   "quickCmd.stop": "Quick Cmd: 停止命令并关闭终端",
   "quickCmd.openEditorPanel": "Quick Cmd: 在主编辑区打开",
-  "quickCmd.selectCommand": "Quick Cmd: 选择命令",
   "shellType": "命令变量插值时使用的 Shell 引号规则。自动模式在 Windows 上使用 PowerShell 或 cmd.exe，在其他系统上使用 POSIX 规则。",
-  "groupForeground": "命令分组的文字和文件夹图标颜色。",
-  "quickCmd.showEditor": "Quick Cmd: 进入编辑模式",
   "quickCmd.closeEditor": "Quick Cmd: 完成编辑",
   "quickCmd.collapseAll": "Quick Cmd: 折叠全部分组",
-  "quickCmd.openSettings": "Quick Cmd: 设置"
+  "quickCmd.openSettings": "Quick Cmd: 设置",
+  "listFontSize": "命令字体大小（像素），分组文字比命令大 1px，仅影响 Quick Cmd。"
 }

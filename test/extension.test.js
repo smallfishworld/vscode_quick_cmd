@@ -12,7 +12,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
   const modes = new Map();
   const answers = [];
   let loads = 0;
-  let editorProvider;
+  let editorProvider, listProvider;
   let onMessage;
   let latest;
   let webviewResolved = false;
@@ -57,8 +57,8 @@ test('extension activates the embedded editor, saves a multi-step command, then 
       registerFileDecorationProvider: () => event(),
       createTreeView: () => ({ dispose() {} }),
       registerWebviewViewProvider: (id, provider) => {
-        assert.equal(id, 'quickCmd.editor');
-        editorProvider = provider;
+        if (id === 'quickCmd.commands') { listProvider = provider; }
+        else { assert.equal(id, 'quickCmd.editor'); editorProvider = provider; }
         return event();
       },
       showInputBox: async () => inputs.shift(),
@@ -101,6 +101,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
         if (id === 'setContext') {
           modes.set(args[0], args[1]);
         }
+        if (callbacks.has(id)) { return callbacks.get(id)(...args); }
         if (id === 'quickCmd.editor.focus' && !webviewResolved) {
           webviewResolved = true;
           editorProvider.resolveWebviewView({ webview, show() {} });
@@ -131,7 +132,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     };
     activate(context);
     assert.equal(typeof callbacks.get('quickCmd.runById'), 'function');
-    assert.equal(modes.get('quickCmd.editMode'), false);
+
     assert.equal(modes.get('quickCmd.editing'), false);
     await callbacks.get('quickCmd.addGroup')();
     await callbacks.get('quickCmd.addCommand')();
@@ -160,50 +161,36 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     const cmd = state.get('quickCmd.globalConfig').groups[0].commands[0];
     assert.equal(cmd.command, undefined);
     assert.equal(cmd.steps.length, 2);
-    // Creating a command explicitly enters edit mode; searching here edits only.
-    assert.equal(modes.get('quickCmd.editMode'), true);
-    await callbacks.get('quickCmd.searchCommands')();
-    assert.equal(terminals.length, 0);
+    assert.equal(callbacks.has('quickCmd.showEditor'), false);
     await callbacks.get('quickCmd.closeEditor')();
-    assert.equal(modes.get('quickCmd.editMode'), false);
     assert.equal(modes.get('quickCmd.editing'), false);
-    const node = {
-      kind: 'command',
-      scope: { id: 'global', type: 'global' },
-      groupId: state.get('quickCmd.globalConfig').groups[0].id,
-      commandId: cmd.id,
-    };
+    let listMessage, listModel;
+    const listPackets = [];
+    listProvider.resolveWebviewView({ webview: {
+      cspSource: 'vscode-resource:', asWebviewUri: uri => uri.fsPath,
+      onDidReceiveMessage: fn => { listMessage = fn; return event(); },
+      postMessage: packet => { listPackets.push(packet); if (packet.type === 'model') { listModel = packet; } return Promise.resolve(); }
+    }});
+    await listMessage({ type: 'ready' });
+    const node = { kind: 'command', groupId: listModel.groups[0].id, commandId: cmd.id };
     const beforeLoads = loads;
-    await callbacks.get('quickCmd.selectCommand')(node);
-    assert.equal(terminals.length, 1, 'normal clicks send');
-    assert.equal(loads, beforeLoads, 'normal clicks never open the editor');
+    await listMessage({ type: 'run', token: listModel.token, ...node });
+    assert.equal(terminals.length, 1);
+    assert.equal(loads, beforeLoads, 'clicking the row never opens an editor');
     assert.equal(modes.get('quickCmd.editing'), false);
     assert.deepEqual(terminals[0].calls, [['echo first\necho second', false]]);
+    await listMessage({ type: 'edit', token: listModel.token, ...node });
+    assert.equal(terminals.length, 1, 'row edit never sends');
+    assert.equal(modes.get('quickCmd.editing'), true);
+    await onMessage({ type: 'draft', token: latest.token, baseRevision: latest.revision, fields: { ...latest.raw, title: 'Dirty' } });
+    answers.push('Cancel'); assert.equal(await callbacks.get('quickCmd.closeEditor')(), false);
+    assert.equal(modes.get('quickCmd.editing'), true);
+    answers.push('Discard'); assert.equal(await callbacks.get('quickCmd.closeEditor')(), true);
+    assert.equal(modes.get('quickCmd.editing'), false);
     await callbacks.get('quickCmd.searchCommands')();
-    assert.equal(terminals.length, 2, 'normal search sends directly');
-    await callbacks.get('quickCmd.showEditor')();
-    assert.equal(modes.get('quickCmd.editMode'), true);
-    assert.equal(
-      modes.get('quickCmd.editing'),
-      false,
-      'entering mode alone need not open a form',
-    );
-    await callbacks.get('quickCmd.selectCommand')(node);
-    assert.equal(terminals.length, 2, 'edit-mode clicks never send');
-    assert.equal(modes.get('quickCmd.editing'), true);
-    await onMessage({
-      type: 'draft',
-      token: latest.token,
-      baseRevision: latest.revision,
-      fields: { ...latest.raw, title: 'Dirty' },
-    });
-    answers.push('Cancel');
-    assert.equal(await callbacks.get('quickCmd.closeEditor')(), false);
-    assert.equal(modes.get('quickCmd.editMode'), true);
-    assert.equal(modes.get('quickCmd.editing'), true);
-    answers.push('Discard');
-    assert.equal(await callbacks.get('quickCmd.closeEditor')(), true);
-    assert.equal(modes.get('quickCmd.editMode'), false);
+    assert.equal(terminals.length, 2);
+    await callbacks.get('quickCmd.collapseAll')();
+    assert.equal(listPackets.at(-1).type, 'collapseAll');
     await callbacks.get('quickCmd.runById')({ id: cmd.id });
     assert.equal(terminals.length, 3);
   } finally {

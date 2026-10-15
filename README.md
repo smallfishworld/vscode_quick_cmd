@@ -11,14 +11,15 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 1. Open **Quick Cmd** in the Activity Bar.
 2. Choose **New Command**, then a group. The plus button beside a group creates a command directly in that group.
 3. The editor starts hidden and appears when creating or editing a command. Fill in the name, command text, working directory and terminal usage, then save.
-4. **Normal mode: click to send using the saved Enter option. Edit mode: enter with the top-right pencil, then click a command to edit it.** Finish with the check button to return to normal mode after handling the draft.
-5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select to send in normal mode or edit in edit mode.
+4. **Click a command to send using its saved Enter option. Click the always-visible pencil at the far right of that command to edit without sending.** Close the editor with its own toolbar button after handling the draft.
+5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-Releases provide `quick-cmd-v0.6.1-en.vsix` (fixed English) and `quick-cmd-v0.6.1-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
+Releases provide `quick-cmd-v0.7.0-en.vsix` (fixed English) and `quick-cmd-v0.7.0-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
-- Group labels and folder icons use a dedicated theme color; commands retain their normal foreground. Customize `quickCmd.groupForeground` through `workbench.colorCustomizations`; label colors respect `explorer.decorations.colors`.
+- Groups and commands use the same theme foreground, without command counts. Compact rows use 12 px group labels and 11 px command labels. Set `quickCmd.listFontSize` (10–18 px) to adjust commands; groups remain one pixel larger.
+- Move the command view into Explorer or another container through the native view title **Move View** menu. Sizing only affects this extension.
 - The list starts directly at **group → command**. All commands use VS Code global extension state, without project/global root nodes.
 - Drag groups or commands to reorder; drop a command onto a group to append it. Drop a group onto empty list space to move it to the end.
 - A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
@@ -27,7 +28,7 @@ Releases provide `quick-cmd-v0.6.1-en.vsix` (fixed English) and `quick-cmd-v0.6.
 
 ## Editor
 
-The top-right toolbar provides New Group, New Command, Edit/Done, Search, Import, Export, Collapse All, Refresh and Settings. Normal mode has no editor pane. Enter edit mode and select a command to open its form. Finishing handles unsaved changes before returning to normal mode; cancelling retains edit mode, and saving alone keeps editing open.
+The top-right toolbar provides New Group, New Command, Search, Import, Export, Collapse All, Refresh and Settings. Import uses a supported down-arrow icon. The editor stays hidden until creating a command or clicking its row pencil; there is no global edit-mode switch. The compact form reduces padding and control sizes. Closing handles unsaved changes; cancelling keeps the form open, and saving alone keeps editing open.
 
 - **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or save commands automatically.
 - **Accurate save state:** edits made while a save is pending remain unsaved after that request completes.
@@ -115,7 +116,7 @@ npm run package
 python3 scripts/verify-packages.py
 ```
 
-Tests cover configuration, terminal sending, draft sessions and editor interactions executed in Happy DOM. Happy DOM is a development-only dependency and is excluded from the extension package. DOM tests do not replace visual, font, drag-and-drop or sizing checks in a real VS Code window.
+Tests cover configuration, terminal sending, draft sessions, list interactions and editor interactions executed in Happy DOM. Happy DOM is a development-only dependency and is excluded from the extension package. DOM tests do not replace visual, font, drag-and-drop or sizing checks in a real VS Code window.
 
 Outputs in `dist/` contain both language installers and `SHA256SUMS`. GitHub Actions builds and verifies both editions; release automation prepares a complete draft before publishing the bilingual assets.
 

@@ -3,7 +3,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { emptyConfig, addGroup, addCommand, validateConfig, commandSteps, moveDrop } = require('../src/model');
 const { TerminalRunner } = require('../src/terminal');
-const { CommandTreeProvider } = require('../src/tree');
 const { CommandEditorProvider } = require('../src/editor');
 
 test('legacy commands map to one executed step; new steps preserve the final checkbox', () => {
@@ -53,33 +52,6 @@ test('terminal sends false for the unchecked final checkbox (no enter)', () => {
     { command: 'echo first', execute: true }, { command: 'echo second', execute: false }
   ] });
   assert.deepEqual(sent, [['echo first\necho second', false]]);
-});
-
-test('TreeView drag data uses scope validation and updates same-scope command order', async () => {
-  const cfg = emptyConfig(); const group = addGroup(cfg, 'Build');
-  const a = addCommand(cfg, group.id, { title: 'A', command: 'a' });
-  const b = addCommand(cfg, group.id, { title: 'B', command: 'b' });
-  const scope = { type: 'global', id: 'global', label: 'Global' };
-  const store = {
-    scopes: () => [scope],
-    async read() { return cfg; },
-    async update(_, fn) { return fn(cfg); }
-  };
-  const errors = [];
-  const vscode = {
-    EventEmitter: class { constructor() { this.event = () => {}; } fire() {} dispose() {} },
-    DataTransferItem: class { constructor(value) { this.value = value; } asString() { return this.value; } },
-    window: { async showErrorMessage(msg) { errors.push(msg); } }
-  };
-  const provider = new CommandTreeProvider(vscode, store);
-  const source = [{ kind: 'command', scope, groupId: group.id, commandId: b.id }];
-  const target = { kind: 'command', scope, groupId: group.id, commandId: a.id };
-  const entries = new Map();
-  const data = { set: (key, value) => entries.set(key, value), get: key => entries.get(key) };
-  await provider.handleDrag(source, data);
-  await provider.handleDrop(target, data);
-  assert.deepEqual(cfg.groups[0].commands.map(c => c.id), [b.id, a.id]);
-  assert.deepEqual(errors, []);
 });
 
 test('embedded editor saves new steps and converts a legacy record without losing id', async () => {

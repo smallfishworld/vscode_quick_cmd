@@ -3,8 +3,7 @@
 const vscode = require('vscode');
 const { t, setLocale, errorText } = require('./i18n');
 const { ConfigStore } = require('./store');
-const { CommandTreeProvider } = require('./tree');
-const { GroupDecorationProvider } = require('./group-decoration');
+const { CommandListProvider } = require('./list');
 const { CommandEditorProvider } = require('./editor');
 const { TerminalRunner } = require('./terminal');
 const {
@@ -23,50 +22,19 @@ const { importScope, exportScope } = require('./transfer');
 function activate(context) {
   setLocale(vscode.env?.language || 'en');
   void vscode.commands.executeCommand('setContext', 'quickCmd.editing', false);
-  void vscode.commands.executeCommand('setContext', 'quickCmd.editMode', false);
-  context.subscriptions.push(
-    vscode.window.registerFileDecorationProvider(
-      new GroupDecorationProvider(vscode),
-    ),
-  );
   const store = new ConfigStore(vscode, context);
   const runner = new TerminalRunner(vscode);
-  const provider = new CommandTreeProvider(vscode, store, runner);
-  const tree = vscode.window.createTreeView('quickCmd.commands', {
-    treeDataProvider: provider,
-    dragAndDropController: provider,
-  });
-  context.subscriptions.push(tree);
-  provider.tree = tree;
   let selectedNode;
-  let editMode = false;
-  async function setEditMode(value) {
-    editMode = value;
-    provider.editMode = value;
-    tree.message = value
-      ? t('Edit mode: select a command to edit.')
-      : undefined;
-    await vscode.commands.executeCommand(
-      'setContext',
-      'quickCmd.editMode',
-      value,
-    );
-    provider.refresh();
-  }
-  if (tree.onDidChangeSelection) {
-    context.subscriptions.push(
-      tree.onDidChangeSelection((e) => {
-        selectedNode = e.selection[0];
-      }),
-    );
-  }
+  const provider = new CommandListProvider(vscode, context, store, runner, node => { selectedNode = node; });
+  context.subscriptions.push(vscode.window.registerWebviewViewProvider('quickCmd.commands', provider, {
+    webviewOptions: { retainContextWhenHidden: true }
+  }));
   const editor = new CommandEditorProvider(
     vscode,
     context,
     store,
     () => provider.refresh(),
     (scope, cmd) => execute(scope, cmd),
-    setEditMode,
   );
   context.subscriptions.push(editor);
   context.subscriptions.push(
@@ -241,43 +209,8 @@ function activate(context) {
   });
   register('quickCmd.openEditorPanel', () => editor.openPanel());
   register('quickCmd.closeEditor', () => editor.close());
-  register('quickCmd.collapseAll', () =>
-    vscode.commands.executeCommand(
-      'workbench.actions.treeView.quickCmd.commands.collapseAll',
-    ),
-  );
-  register('quickCmd.openSettings', () =>
-    vscode.commands.executeCommand(
-      'workbench.action.openSettings',
-      '@ext:smallfishworld.vscode-quick-cmd',
-    ),
-  );
-  register('quickCmd.showEditor', async () => {
-    await setEditMode(true);
-    if (editor.session) {
-      await editor.focus();
-      await editor.load();
-    } else if (selectedNode?.kind === 'command') {
-      await editor.open(
-        selectedNode.scope,
-        selectedNode.groupId,
-        selectedNode.commandId,
-      );
-    }
-  });
-  register('quickCmd.selectCommand', async (node) => {
-    if (node?.kind !== 'command') {
-      return;
-    }
-    if (editMode) {
-      await editor.open(node.scope, node.groupId, node.commandId, false);
-    } else {
-      const cmd = await commandFromNode(node);
-      if (cmd) {
-        await execute(node.scope, cmd);
-      }
-    }
-  });
+  register('quickCmd.collapseAll', () => provider.collapseAll());
+  register('quickCmd.openSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:smallfishworld.vscode-quick-cmd'));
   register('quickCmd.editCommand', async (node) => {
     node = node || selectedNode;
     const current = await commandFromNode(node);
@@ -433,18 +366,12 @@ function activate(context) {
       return;
     }
     const item = await vscode.window.showQuickPick(entries, {
-      placeHolder: t(
-        editMode ? 'Search commands to edit' : 'Search commands to send',
-      ),
+      placeHolder: t('Search commands to send'),
       matchOnDescription: true,
       matchOnDetail: true,
     });
     if (item) {
-      if (editMode) {
-        await editor.open(item.scope, item.groupId, item.cmd.id);
-      } else {
-        await execute(item.scope, item.cmd);
-      }
+      await execute(item.scope, item.cmd);
     }
   });
   register('quickCmd.runById', async (id) => {
@@ -505,6 +432,9 @@ function activate(context) {
       runner.stop(node.scope, cmd);
     }
   });
+  if (vscode.workspace.onDidChangeConfiguration) { context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
+    if (event.affectsConfiguration('quickCmd.listFontSize')) { void provider.refresh(); }
+  })); }
 }
 function deactivate() {}
 module.exports = { activate, deactivate };
