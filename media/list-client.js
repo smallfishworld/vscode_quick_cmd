@@ -56,6 +56,13 @@ function bindRow(row, node) {
   row.classList.add('row');
   row.dataset.key = key(node);
   row.dataset.kind = node.kind;
+  row.dataset.vscodeContext = JSON.stringify({
+    ...node,
+    webviewSection: node.kind,
+    quickCmdListContext: true,
+    quickCmdToken: token,
+    preventDefaultContextMenuItems: true,
+  });
   row.dataset.groupId = node.groupId;
   if (node.commandId) {
     row.dataset.commandId = node.commandId;
@@ -65,10 +72,9 @@ function bindRow(row, node) {
   row.setAttribute('aria-selected', String(selected === key(node)));
   row.classList.toggle('selected', selected === key(node));
   row.draggable = true;
-  row.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
+  // Let VS Code show its native menu at the pointer; right-click only selects.
+  row.addEventListener('contextmenu', () => {
     choose(row, node);
-    send('context', node);
   });
   row.addEventListener('dragstart', (event) => {
     if (event.target.closest('button')) {

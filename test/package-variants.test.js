@@ -22,10 +22,29 @@ test('language packages pin host and editor language without changing source or 
       );
       assert.equal(manifest.quickCmdBuildLanguage, locale);
       assert.equal(manifest.devDependencies, undefined);
-      assert.ok(fs.statSync(path.join(stage, 'media/codicons/codicon.ttf')).size > 0);
+      assert.ok(
+        fs.statSync(path.join(stage, 'media/codicons/codicon.ttf')).size > 0,
+      );
       assert.equal(manifest.contributes.views.quickCmd[0].type, 'webview');
-      assert.ok(!manifest.contributes.commands.some(cmd => cmd.command === 'quickCmd.showEditor'));
-      assert.ok(manifest.contributes.commands.find(cmd => cmd.command === 'quickCmd.importConfig').icon === '$(arrow-down)');
+      const contextMenus = manifest.contributes.menus['webview/context'];
+      assert.equal(contextMenus.length, 13);
+      assert.ok(
+        contextMenus.every(
+          (item) =>
+            item.when.includes("webviewId == 'quickCmd.commands'") &&
+            item.when.includes('webviewSection'),
+        ),
+      );
+      assert.ok(
+        !manifest.contributes.commands.some(
+          (cmd) => cmd.command === 'quickCmd.showEditor',
+        ),
+      );
+      assert.ok(
+        manifest.contributes.commands.find(
+          (cmd) => cmd.command === 'quickCmd.importConfig',
+        ).icon === '$(arrow-down)',
+      );
       assert.equal(
         catalog['quickCmd.commands'],
         locale === 'zh-cn' ? '分组' : 'Groups',

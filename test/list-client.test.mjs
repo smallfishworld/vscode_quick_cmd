@@ -242,3 +242,37 @@ test('focused row reveals actions and model refresh preserves the focused action
     await f.close();
   }
 });
+
+test('right-click leaves the native menu event intact and exposes only row identity', async () => {
+  const f = fixture();
+  try {
+    const row = f.w.document.querySelector('.command-row');
+    const event = new f.w.MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 90,
+      clientY: 140,
+    });
+    row.querySelector('.preview').dispatchEvent(event);
+    assert.equal(event.defaultPrevented, false);
+    const ctx = JSON.parse(row.dataset.vscodeContext);
+    assert.equal(ctx.webviewSection, 'command');
+    assert.equal(ctx.commandId, 'a');
+    assert.equal(ctx.groupId, 'g');
+    assert.equal(ctx.quickCmdToken, 'session');
+    assert.equal(ctx.preventDefaultContextMenuItems, true);
+    assert.equal(Object.hasOwn(ctx, 'command'), false);
+    assert.equal(f.messages.at(-1).type, 'select');
+    assert.equal(
+      f.messages.some((m) => m.type === 'context' || m.type === 'run'),
+      false,
+    );
+    assert.equal(
+      JSON.parse(f.w.document.querySelector('.group-row').dataset.vscodeContext)
+        .webviewSection,
+      'group',
+    );
+  } finally {
+    await f.close();
+  }
+});

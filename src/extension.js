@@ -25,10 +25,20 @@ function activate(context) {
   const store = new ConfigStore(vscode, context);
   const runner = new TerminalRunner(vscode);
   let selectedNode;
-  const provider = new CommandListProvider(vscode, context, store, runner, node => { selectedNode = node; });
-  context.subscriptions.push(vscode.window.registerWebviewViewProvider('quickCmd.commands', provider, {
-    webviewOptions: { retainContextWhenHidden: true }
-  }));
+  const provider = new CommandListProvider(
+    vscode,
+    context,
+    store,
+    runner,
+    (node) => {
+      selectedNode = node;
+    },
+  );
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('quickCmd.commands', provider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
+  );
   const editor = new CommandEditorProvider(
     vscode,
     context,
@@ -53,6 +63,9 @@ function activate(context) {
     context.subscriptions.push(
       vscode.commands.registerCommand(id, async (...args) => {
         try {
+          if (args[0]?.quickCmdListContext === true) {
+            args[0] = await provider.contextNode(id, args[0]);
+          }
           return await fn(...args);
         } catch (error) {
           await vscode.window.showErrorMessage(
@@ -210,7 +223,12 @@ function activate(context) {
   register('quickCmd.openEditorPanel', () => editor.openPanel());
   register('quickCmd.closeEditor', () => editor.close());
   register('quickCmd.collapseAll', () => provider.collapseAll());
-  register('quickCmd.openSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:smallfishworld.vscode-quick-cmd'));
+  register('quickCmd.openSettings', () =>
+    vscode.commands.executeCommand(
+      'workbench.action.openSettings',
+      '@ext:smallfishworld.vscode-quick-cmd',
+    ),
+  );
   register('quickCmd.editCommand', async (node) => {
     node = node || selectedNode;
     const current = await commandFromNode(node);
@@ -432,9 +450,15 @@ function activate(context) {
       runner.stop(node.scope, cmd);
     }
   });
-  if (vscode.workspace.onDidChangeConfiguration) { context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
-    if (event.affectsConfiguration('quickCmd.listFontSize')) { void provider.refresh(); }
-  })); }
+  if (vscode.workspace.onDidChangeConfiguration) {
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration('quickCmd.listFontSize')) {
+          void provider.refresh();
+        }
+      }),
+    );
+  }
 }
 function deactivate() {}
 module.exports = { activate, deactivate };

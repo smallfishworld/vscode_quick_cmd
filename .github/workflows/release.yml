@@ -54,6 +54,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
+          # Explicit one-time replacement of the inspected 0.7.1 release only.
+          # Both installers have passed verification and are archived above.
+          if [ "$TAG" = v0.7.1 ]; then
+            OLD_ID="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.id' 2>/dev/null || true)"
+            if [ "$OLD_ID" = 413791301 ]; then
+              OLD_TARGET="$(gh release view "$TAG" --json targetCommitish --jq '.targetCommitish')"
+              test "$OLD_TARGET" = a9bc0c492691435170fee1507ae935a348d0d9b7
+              test "$GITHUB_SHA" != "$OLD_TARGET"
+              gh release delete "$TAG" --yes --cleanup-tag
+            fi
+          fi
           if gh release view "$TAG" --json isDraft >/dev/null 2>&1; then
             DRAFT="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
             if [ "$DRAFT" = false ]; then
