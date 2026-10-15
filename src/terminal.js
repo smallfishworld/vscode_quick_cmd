@@ -1,6 +1,7 @@
 'use strict';
 const path = require('node:path');
 const { expand } = require('./variables');
+const { commandSteps } = require('./model');
 
 function resolveCwd(configured, folderPath, ctx) {
   if (!configured || !configured.trim()) { return folderPath || undefined; }
@@ -65,7 +66,13 @@ class TerminalRunner {
     if (folder && folder.uri.scheme !== 'file') { throw new Error('Commands require a file-system workspace.'); }
     const ctx = options.context || { workspaceFolder: folder?.uri.fsPath };
     const cwd = resolveCwd(command.cwd, folder?.uri.fsPath, ctx);
-    const text = options.text || command.command;
+    const steps = options.steps || (options.text === undefined
+      ? commandSteps(command).map(step => ({ text: step.command, execute: step.execute }))
+      : [{ text: options.text, execute: command.execute !== false }]);
+    if (!Array.isArray(steps) || !steps.length || steps.some(step => typeof step.text !== 'string'
+      || typeof step.execute !== 'boolean')) {
+      throw new Error('Invalid terminal steps.');
+    }
     const mode = command.terminal || 'new';
     const key = `${scope.id || scope.type}:${command.id || command.title}`;
     const signature = JSON.stringify({ cwd, env: command.env || {} });
@@ -92,10 +99,17 @@ class TerminalRunner {
     }
     // Only a monitored, idle terminal is reused. Fresh terminals are always safe to send to.
     if (mode !== 'active' || actualMode === 'new') { this.terminals.set(key, terminal); this.signatures.set(key, signature); }
-    this.states.set(terminal, { busy: true, monitored: this.states.get(terminal)?.monitored || false });
+    this.states.set(terminal, {
+      busy: steps.some(step => step.execute),
+      monitored: this.states.get(terminal)?.monitored || false,
+      staged: steps[steps.length - 1].execute === false
+    });
     this.changed?.fire();
     terminal.show();
-    terminal.sendText(text, true);
+    // Send the combined script once, preserving line breaks between steps.
+    // The final checkbox controls whether a trailing Return is sent.
+    // In particular, 'false' never appends an Enter to the final line.
+    terminal.sendText(steps.map(step => step.text).join('\n'), steps[steps.length - 1].execute);
     return { terminal, actualMode };
   }
 
