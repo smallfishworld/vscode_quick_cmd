@@ -1,27 +1,17 @@
-# Quick Cmd v0.3.0
+# Quick Cmd v0.3.1
 
-## What's new
+## Command editor UX improvements
 
-- **Inline command editor** in the Quick Cmd activity bar. Create and edit commands in
-  one sidebar form instead of clicking through several Quick Input dialogs.
-- **Native drag-and-drop ordering** of groups and commands, including moving a
-  command into another group in the same configuration scope.
-- **Multiple command steps** in a single saved command (up to 32 steps).
-- **"换行执行" checkbox** alongside each step. The final unchecked step is
-  inserted into the integrated terminal **without a trailing Enter**.
-- **Backwards compatibility** with v0.1/v0.2 `command` configuration.
+- Reorganized the embedded sidebar editor to match the suggested compact card layout.
+- Fully Chinese labels and helper text, 4/8/12/16 spacing and theme-aware controls.
+- Named steps with numbered badges and hover/focus actions to move up, move down or delete.
+- Full-width dashed **添加步骤** action instead of a small Add button.
+- Clear inline validation errors, with highlighted fields and readable messages.
+- Collapsible advanced settings, and one-click \`\${workspaceFolder}\` / \`\${fileDirname}\` insertion for the working directory.
+- Full-width Save button and a confirmation that dismisses after two seconds without resetting the editor.
+- The final-step **换行执行** checkbox retains its v0.3.0 send-vs-run semantics.
 
-## Notes
+## Compatibility and verification
 
-Steps are sent together as a newline-delimited shell input. Avoid combining
-interactive commands that consume stdin. Only the last step may leave the
-"Send Enter" checkbox unchecked.
-
-## Verify
-
-- `npm run check`
-- `npm test`
-- GitHub Actions packages `quick-cmd-v0.3.0.vsix`.
-
-Install the `.vsix` from the GitHub Release assets using VS Code's
-**Extensions → ... → Install from VSIX**.
+- Still uses config schema version 1; step titles are optional, so older projects require no migration.
+- Run \`npm run check\` and \`npm test\`. CI packages a \`quick-cmd-v0.3.1.vsix\` for GitHub Release.

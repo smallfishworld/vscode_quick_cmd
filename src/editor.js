@@ -83,10 +83,14 @@ class CommandEditorProvider {
         result = addCommand(cfg, groupId, clean);
       }
     });
-    this.selection.commandId = result.id;
+    // Do not reload a successfully saved form: it would discard focus and
+    // immediately erase the success toast. A new selection re-renders via open().
+    if (this.selection && this.selection.scopeId === scopeId &&
+        this.selection.groupId === groupId && this.selection.commandId === commandId) {
+      this.selection.commandId = result.id;
+      this.view?.webview.postMessage({ type: 'saved', commandId: result.id });
+    }
     this.onSaved();
-    this.view?.webview.postMessage({ type: 'saved' });
-    await this.load();
   }
   dispose() { this.disposable?.dispose(); }
 }

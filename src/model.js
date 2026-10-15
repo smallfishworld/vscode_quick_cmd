@@ -8,7 +8,7 @@ const MAX_STEPS = 32;
 
 /** Legacy commands use one implicit step; new commands save steps[] instead. */
 function commandSteps(cmd) {
-  if (Array.isArray(cmd.steps)) { return cmd.steps.map(step => ({ command: step.command, execute: step.execute !== false })); }
+  if (Array.isArray(cmd.steps)) { return cmd.steps.map(step => ({ ...(step.title ? { title: step.title } : {}), command: step.command, execute: step.execute !== false })); }
   return [{ command: cmd.command, execute: cmd.execute !== false }];
 }
 
@@ -31,6 +31,9 @@ function checkFields(cmd) {
     for (const [index, step] of cmd.steps.entries()) {
       if (!isObject(step)) { throw new Error('Each step must be an object.'); }
       checkText(step.command, 'Shell step', 8192);
+      if (step.title !== undefined && (typeof step.title !== 'string' || step.title.length > 64)) {
+        throw new Error('Step title must be a string of at most 64 characters.');
+      }
       if (step.execute !== undefined && typeof step.execute !== 'boolean') { throw new Error('Step execute must be a boolean.'); }
       if (index < cmd.steps.length - 1 && step.execute === false) {
         throw new Error('Only the final step can disable newline execution, to avoid accidental execution of combined input.');

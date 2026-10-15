@@ -1,41 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}}; script-src {{cspSource}}; img-src {{cspSource}} data:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="{{cssUri}}" rel="stylesheet">
-  <title>Quick Cmd Editor</title>
+  <title>Quick Cmd · 编辑命令</title>
 </head>
 <body>
-  <div id="empty">Select <strong>+</strong> to create a command, or right-click a command and choose <strong>Edit</strong>.</div>
-  <form id="form" hidden>
-    <div id="context"></div>
-    <label for="title">Command name <span class="required">*</span></label>
-    <input id="title" maxlength="128" required placeholder="Build project">
-    <div class="heading"><label>Command steps <span class="required">*</span></label><button type="button" id="addStep" class="secondary">+ Add</button></div>
-    <div id="steps"></div>
-    <p class="hint">勾选「换行执行」= 发送并回车；不勾选 = 仅输入终端。为了避免误执行，只有最后一步可以不勾选。</p>
-    <details>
-      <summary>Advanced settings</summary>
-      <label for="cwd">Working directory</label>
-      <input id="cwd" placeholder="&#36;{workspaceFolder}">
-      <label for="terminal">Terminal</label>
-      <select id="terminal">
-        <option value="new">New terminal</option>
-        <option value="reuse">Reuse if idle</option>
-        <option value="active">Active terminal</option>
-      </select>
-      <label class="check"><input type="checkbox" id="confirm"> Confirm before sending</label>
-      <label for="description">Description</label>
-      <input id="description" maxlength="512" placeholder="Optional">
-      <label for="icon">Codicon</label>
-      <input id="icon" maxlength="80" placeholder="terminal">
-      <label for="env">Environment (JSON object)</label>
-      <textarea id="env" rows="3" spellcheck="false">{}</textarea>
+  <div id="empty" class="empty-state">
+    <div class="empty-icon" aria-hidden="true">⌘</div>
+    <strong>还没有选中命令</strong>
+    <p>点击命令分组旁的 <b>＋</b> 新建，或右键已有命令选择“编辑”。</p>
+  </div>
+
+  <form id="form" novalidate hidden>
+    <div id="context" class="context" aria-live="polite"></div>
+
+    <section class="field">
+      <label for="title">命令名称 <span class="required" aria-hidden="true">*</span></label>
+      <input id="title" type="text" maxlength="128" autocomplete="off" required
+        aria-required="true" aria-describedby="titleError" placeholder="例如：编译项目">
+      <p id="titleError" class="field-error" role="alert" hidden></p>
+    </section>
+
+    <section class="steps-section" aria-labelledby="stepsHeading">
+      <div class="steps-heading">
+        <label id="stepsHeading">命令步骤 <span class="required" aria-hidden="true">*</span></label>
+        <div id="stepNav" class="step-nav" aria-label="快速定位步骤"></div>
+      </div>
+      <div id="steps" class="steps-list"></div>
+      <button type="button" id="addStep" class="add-step">
+        <span aria-hidden="true">＋</span> 添加步骤
+      </button>
+      <p id="stepsError" class="field-error" role="alert" hidden></p>
+      <p class="hint"><span class="hint-symbol" aria-hidden="true">ⓘ</span>
+        取消最后一步的“换行执行”，命令将留在终端输入行，不自动执行。前面的步骤始终需要换行执行。
+      </p>
+    </section>
+
+    <details id="advanced" class="advanced">
+      <summary><span>高级设置</span><span class="chevron" aria-hidden="true">⌄</span></summary>
+      <div class="advanced-content">
+        <div class="field">
+          <label for="cwd">工作目录</label>
+          <input id="cwd" type="text" maxlength="2048" autocomplete="off"
+            aria-describedby="cwdHint cwdError" placeholder="默认当前工作区目录">
+          <div class="variable-chips" aria-label="插入目录变量">
+            <button type="button" class="variable-chip" data-cwd="${workspaceFolder}" title="插入工作区根目录">${workspaceFolder}</button>
+            <button type="button" class="variable-chip" data-cwd="${fileDirname}" title="插入当前文件所在目录">${fileDirname}</button>
+          </div>
+          <p id="cwdHint" class="field-hint">点击变量即可插入，无需记忆变量名。</p>
+          <p id="cwdError" class="field-error" role="alert" hidden></p>
+        </div>
+        <div class="field">
+          <label for="terminal">终端策略</label>
+          <select id="terminal">
+            <option value="new">每次新建终端</option>
+            <option value="reuse">空闲时复用专用终端</option>
+            <option value="active">使用当前活动终端</option>
+          </select>
+        </div>
+        <label class="check confirm-row"><input type="checkbox" id="confirm"> 发送前再次确认</label>
+        <div class="field">
+          <label for="description">命令描述</label>
+          <input id="description" type="text" maxlength="512" placeholder="可选：描述用途">
+        </div>
+        <div class="field">
+          <label for="icon">图标（Codicon）</label>
+          <input id="icon" type="text" maxlength="80" aria-describedby="iconError" placeholder="例如：tools、rocket">
+          <p id="iconError" class="field-error" role="alert" hidden></p>
+        </div>
+        <div class="field">
+          <label for="env">环境变量（JSON）</label>
+          <textarea id="env" rows="3" spellcheck="false" aria-describedby="envError">{}</textarea>
+          <p id="envError" class="field-error" role="alert" hidden></p>
+        </div>
+      </div>
     </details>
-    <div id="error" role="alert" aria-live="polite"></div>
-    <div class="buttons"><button type="submit" id="save">Save command</button><span id="saved" role="status"></span></div>
+
+    <p id="error" class="field-error form-error" role="alert" aria-live="assertive" hidden></p>
+    <div class="save-area">
+      <button type="submit" id="save" class="save-button"><span aria-hidden="true">▣</span> 保存命令</button>
+      <div id="saved" class="saved" role="status" aria-live="polite" hidden>
+        <span aria-hidden="true">✓</span> 已保存，2 秒后自动消失
+      </div>
+    </div>
   </form>
   <script src="{{jsUri}}" nonce="{{nonce}}"></script>
 </body>
