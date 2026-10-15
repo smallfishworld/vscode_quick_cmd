@@ -140,3 +140,46 @@ test('an older asynchronous refresh cannot replace newer list state', async () =
   assert.equal(f.packets.length, 1);
   assert.equal(f.packets[0].fontSize, 12);
 });
+
+test('native context actions validate current target, session and per-kind action whitelist', async () => {
+  const f = fixture();
+  const ctx = {
+    webview: 'quickCmd.commands',
+    webviewSection: 'command',
+    quickCmdToken: 'session',
+    groupId: f.group.id,
+    commandId: f.b.id,
+    scope: { id: 'untrusted' },
+    command: 'injected text',
+  };
+  const node = await f.provider.contextNode('quickCmd.editCommand', ctx);
+  assert.equal(node.commandId, f.b.id);
+  assert.equal(node.scope.id, 'global');
+  assert.equal(Object.hasOwn(node, 'command'), false);
+  await assert.rejects(
+    f.provider.contextNode('quickCmd.deleteGroup', ctx),
+    /Invalid list/,
+  );
+  await assert.rejects(
+    f.provider.contextNode('quickCmd.run', { ...ctx, quickCmdToken: 'old' }),
+    /Invalid list/,
+  );
+  await assert.rejects(
+    f.provider.contextNode('quickCmd.run', { ...ctx, commandId: 'deleted' }),
+    /no longer exists/,
+  );
+  assert.equal(
+    (
+      await f.provider.contextNode('quickCmd.addCommand', {
+        ...ctx,
+        webviewSection: 'group',
+      })
+    ).kind,
+    'group',
+  );
+  assert.equal(
+    f.calls.length,
+    0,
+    'resolving a right-click target never executes',
+  );
+});

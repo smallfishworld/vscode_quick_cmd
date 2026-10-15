@@ -233,6 +233,73 @@
           "when": "view == quickCmd.commands",
           "group": "navigation@8"
         }
+      ],
+      "webview/context": [
+        {
+          "command": "quickCmd.run",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "1_primary@0"
+        },
+        {
+          "command": "quickCmd.editCommand",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "1_primary@1"
+        },
+        {
+          "command": "quickCmd.duplicateCommand",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "1_primary@2"
+        },
+        {
+          "command": "quickCmd.moveCommandUp",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "2_move@0"
+        },
+        {
+          "command": "quickCmd.moveCommandDown",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "2_move@1"
+        },
+        {
+          "command": "quickCmd.copyShortcut",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "3_tools@0"
+        },
+        {
+          "command": "quickCmd.stop",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "3_tools@1"
+        },
+        {
+          "command": "quickCmd.deleteCommand",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'command'",
+          "group": "4_delete@0"
+        },
+        {
+          "command": "quickCmd.addCommand",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'group'",
+          "group": "1_primary@0"
+        },
+        {
+          "command": "quickCmd.renameGroup",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'group'",
+          "group": "1_primary@1"
+        },
+        {
+          "command": "quickCmd.moveGroupUp",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'group'",
+          "group": "2_move@0"
+        },
+        {
+          "command": "quickCmd.moveGroupDown",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'group'",
+          "group": "2_move@1"
+        },
+        {
+          "command": "quickCmd.deleteGroup",
+          "when": "webviewId == 'quickCmd.commands' && webviewSection == 'group'",
+          "group": "4_delete@0"
+        }
       ]
     },
     "configuration": {

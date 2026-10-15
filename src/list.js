@@ -235,49 +235,49 @@ class CommandListProvider {
         throw new Error('Invalid list request.');
       }
       await this.vscode.commands.executeCommand(actions[message.type], node);
-    } else if (message.type === 'context') {
-      await this.contextMenu(node);
     } else {
       throw new Error('Invalid list request.');
     }
   }
-  async contextMenu(node) {
-    const definitions =
-      node.kind === 'group'
-        ? [
-            ['New command', 'addCommand'],
-            ['Rename group', 'renameGroup'],
-            ['Move up', 'moveGroupUp'],
-            ['Move down', 'moveGroupDown'],
-            ['Delete', 'deleteGroup'],
-          ]
-        : [
-            ['Send to terminal', 'run'],
-            ['Edit command', 'editCommand'],
-            ['Duplicate command', 'duplicateCommand'],
-            ['Move up', 'moveCommandUp'],
-            ['Move down', 'moveCommandDown'],
-            ['Copy keybinding', 'copyShortcut'],
-            ['Stop command', 'stop'],
-            ['Delete command', 'deleteCommand'],
-          ];
-    const picked = await this.vscode.window.showQuickPick(
-      definitions.map(([label, command]) => ({ label: t(label), command })),
-      {
-        placeHolder: t(
-          node.kind === 'group' ? 'Group actions' : 'Command actions',
-        ),
-      },
-    );
+  async contextNode(command, context) {
     if (
-      picked &&
-      definitions.some(([, command]) => command === picked.command)
+      !this.view ||
+      context.webview !== 'quickCmd.commands' ||
+      context.quickCmdToken !== this.token
     ) {
-      await this.vscode.commands.executeCommand(
-        'quickCmd.' + picked.command,
-        node,
-      );
+      throw new Error('Invalid list request.');
     }
+    const allowed =
+      context.webviewSection === 'group'
+        ? [
+            'addCommand',
+            'renameGroup',
+            'moveGroupUp',
+            'moveGroupDown',
+            'deleteGroup',
+          ]
+        : context.webviewSection === 'command'
+          ? [
+              'run',
+              'editCommand',
+              'duplicateCommand',
+              'moveCommandUp',
+              'moveCommandDown',
+              'copyShortcut',
+              'stop',
+              'deleteCommand',
+            ]
+          : [];
+    if (!allowed.some((action) => command === 'quickCmd.' + action)) {
+      throw new Error('Invalid list request.');
+    }
+    const node = await this.node({
+      kind: context.webviewSection,
+      groupId: context.groupId,
+      commandId: context.commandId,
+    });
+    this.onSelection(node);
+    return node;
   }
   async drop(source, target) {
     const from = await this.node(source);

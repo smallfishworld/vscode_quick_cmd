@@ -23,7 +23,7 @@ Releases provide `quick-cmd-v0.7.1-en.vsix` (fixed English) and `quick-cmd-v0.7.
 - The list starts directly at **group → command**. All commands use VS Code global extension state, without project/global root nodes.
 - Drag groups or commands to reorder; drop a command onto a group to append it. Drop a group onto empty list space to move it to the end.
 - A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
-- Context menus provide duplication, deletion, movement, keybinding configuration, with import/export as top-right group toolbar buttons.
+- Right-click a command or group to open a native menu beside the pointer, with duplication, deletion, movement and keybinding actions. Import/export remain in the top-right toolbar.
 - Running status takes precedence over a custom icon. Unknown status is explicitly reported; sending text is not treated as successful execution.
 
 ## Editor
