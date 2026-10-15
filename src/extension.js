@@ -3,8 +3,9 @@
 const vscode = require('vscode');
 const { ConfigStore } = require('./store');
 const { CommandTreeProvider } = require('./tree');
+const { CommandEditorProvider } = require('./editor');
 const { TerminalRunner } = require('./terminal');
-const { addGroup, addCommand, requireGroup, requireCommand, findCommand, moveItem } = require('./model');
+const { addGroup, addCommand, requireGroup, requireCommand, findCommand, moveItem, commandSteps } = require('./model');
 const { expand, extractInputs, detectShell } = require('./variables');
 const { importScope, exportScope } = require('./transfer');
 
@@ -13,7 +14,14 @@ function activate(context) {
   const store = new ConfigStore(vscode, context);
   const runner = new TerminalRunner(vscode);
   const provider = new CommandTreeProvider(vscode, store, runner);
-  context.subscriptions.push(vscode.window.createTreeView('quickCmd.commands', { treeDataProvider: provider }));
+  context.subscriptions.push(vscode.window.createTreeView('quickCmd.commands', {
+    treeDataProvider: provider, dragAndDropController: provider
+  }));
+  const editor = new CommandEditorProvider(vscode, context, store, () => provider.refresh());
+  context.subscriptions.push(editor);
+  context.subscriptions.push(vscode.window.registerWebviewViewProvider('quickCmd.editor', editor, {
+    webviewOptions: { retainContextWhenHidden: true }
+  }));
   context.subscriptions.push(provider, runner);
   if (runner.onDidChangeStatus) { context.subscriptions.push(runner.onDidChangeStatus(() => provider.refresh())); }
 
@@ -55,68 +63,14 @@ function activate(context) {
     if (!selected) { return undefined; }
     return selected.create ? createGroup(scope) : selected.group;
   }
-  async function promptCommand(existing = {}) {
-    const title = await promptTitle('Command display name', existing.title || '');
-    if (title === undefined) { return undefined; }
-    const command = await vscode.window.showInputBox({
-      prompt: 'Shell command; variables such as ${file} and ${input:name} are supported',
-      value: existing.command || '', ignoreFocusOut: true,
-      validateInput: text => !text.trim() ? 'Command cannot be blank' : text.length > 8192 ? 'Maximum 8192 characters' : undefined
-    });
-    if (command === undefined) { return undefined; }
-    const cwd = await vscode.window.showInputBox({
-      prompt: 'Working directory (optional; relative to workspace root)',
-      value: existing.cwd || '', ignoreFocusOut: true,
-      validateInput: text => text.length > 2048 ? 'Maximum 2048 characters' : undefined
-    });
-    if (cwd === undefined) { return undefined; }
-    const terminal = await vscode.window.showQuickPick([
-      { label: 'New terminal', description: 'Safe: one terminal per run', value: 'new' },
-      { label: 'Reuse dedicated terminal', description: 'Only when Shell Integration confirms idle', value: 'reuse' },
-      { label: 'Active terminal', description: 'Prompts when terminal may be busy', value: 'active' }
-    ], { placeHolder: 'Terminal strategy', ignoreFocusOut: true });
-    if (!terminal) { return undefined; }
-    const confirm = await vscode.window.showQuickPick([
-      { label: 'No confirmation', value: false }, { label: 'Confirm before running', value: true }
-    ], { placeHolder: 'Execution confirmation', ignoreFocusOut: true });
-    if (!confirm) { return undefined; }
-    const description = await vscode.window.showInputBox({
-      prompt: 'Optional description', value: existing.description || '', ignoreFocusOut: true,
-      validateInput: text => text.length > 512 ? 'Maximum 512 characters' : undefined
-    });
-    if (description === undefined) { return undefined; }
-    const icon = await vscode.window.showInputBox({
-      prompt: 'Optional VS Code Codicon name (e.g. tools, rocket, debug)',
-      value: existing.icon || '', ignoreFocusOut: true,
-      validateInput: text => text && !/^[a-z][a-z0-9-]*$/.test(text) ? 'Enter a Codicon name' : undefined
-    });
-    if (icon === undefined) { return undefined; }
-    const env = await vscode.window.showInputBox({
-      prompt: 'Optional environment variables as JSON object (e.g. {"DEBUG":"1"})',
-      value: JSON.stringify(existing.env || {}), ignoreFocusOut: true,
-      validateInput: text => {
-        try { const parsed = JSON.parse(text); if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') { return 'Must be a JSON object'; } }
-        catch { return 'Invalid JSON'; }
-        return undefined;
-      }
-    });
-    if (env === undefined) { return undefined; }
-    const fields = {
-      title: title.trim(), command, terminal: terminal.value, confirm: confirm.value,
-      ...(cwd.trim() ? { cwd: cwd.trim() } : {}),
-      ...(description.trim() ? { description: description.trim() } : {}),
-      ...(icon.trim() ? { icon: icon.trim() } : {}),
-      ...(Object.keys(JSON.parse(env)).length ? { env: JSON.parse(env) } : {})
-    };
-    return fields;
-  }
 
   async function execute(scope, cmd) {
     runner.ensureTrusted();
     const folder = runner.getFolder(scope);
     const current = vscode.window.activeTextEditor?.document.uri;
     const inputs = {};
-    for (const name of extractInputs(cmd.command, cmd.cwd, ...Object.values(cmd.env || {}))) {
+    const steps = commandSteps(cmd);
+    for (const name of extractInputs(...steps.map(step => step.command), cmd.cwd, ...Object.values(cmd.env || {}))) {
       const value = await vscode.window.showInputBox({ prompt: `Input parameter: ${name}`, ignoreFocusOut: true });
       if (value === undefined) { return; }
       inputs[name] = value;
@@ -126,10 +80,11 @@ function activate(context) {
       file: current?.scheme === 'file' ? current.fsPath : undefined,
       env: { ...process.env }, inputs, shell: detectShell(vscode)
     };
-    const text = expand(cmd.command, ctx);
+    const resolvedSteps = steps.map(step => ({ text: expand(step.command, ctx), execute: step.execute }));
+    const preview = resolvedSteps.map(step => step.text + (step.execute ? ' ↵' : ' (input only)')).join('\n');
     if (cmd.confirm) {
       const result = await vscode.window.showWarningMessage(
-        `Run "${cmd.title}"?\n${text.slice(0, 500)}`, { modal: true }, 'Run Command'
+        `Send "${cmd.title}"?\n${preview.slice(0, 500)}`, { modal: true }, 'Run Command'
       );
       if (result !== 'Run Command') { return; }
     }
@@ -140,7 +95,7 @@ function activate(context) {
       );
       if (result !== 'Send Anyway') { return; }
     }
-    runner.run(scope, cmd, { text, context: ctx });
+    runner.run(scope, cmd, { steps: resolvedSteps, context: ctx });
     provider.refresh();
   }
 
@@ -160,10 +115,7 @@ function activate(context) {
     if (!scope) { return; }
     const group = node?.kind === 'group' ? { id: node.groupId } : await pickGroup(scope);
     if (!group) { return; }
-    const fields = await promptCommand();
-    if (!fields) { return; }
-    await store.update(scope, config => addCommand(config, group.id, fields));
-    provider.refresh();
+    await editor.open(scope, group.id);
   });
   register('quickCmd.run', async node => {
     const cmd = await commandFromNode(node);
@@ -171,15 +123,7 @@ function activate(context) {
   });
   register('quickCmd.editCommand', async node => {
     const current = await commandFromNode(node);
-    if (!current) { return; }
-    const fields = await promptCommand(current);
-    if (!fields) { return; }
-    await store.update(node.scope, latest => {
-      const cmd = requireCommand(latest, node.groupId, node.commandId);
-      for (const key of ['cwd', 'description', 'icon', 'env']) { delete cmd[key]; }
-      Object.assign(cmd, fields);
-    });
-    provider.refresh();
+    if (current) { await editor.open(node.scope, node.groupId, node.commandId); }
   });
   register('quickCmd.duplicateCommand', async node => {
     const original = await commandFromNode(node);
@@ -261,7 +205,7 @@ function activate(context) {
       for (const group of config.groups) {
         for (const cmd of group.commands) {
           entries.push({ label: `$(terminal) ${cmd.title}`, description: `${scope.label} / ${group.title}`,
-            detail: cmd.command, scope, cmd });
+            detail: commandSteps(cmd).map(step => step.command).join(' ; '), scope, cmd });
         }
       }
     }
