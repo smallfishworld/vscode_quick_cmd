@@ -195,3 +195,30 @@ test('UI language and domain errors follow the selected locale', () => {
   setLocale('en');
   assert.equal(t('Working directory'), 'Working directory');
 });
+
+test('finishing editing cancels or handles dirty data before hiding the editor', async () => {
+  const f = fixture();
+  const contexts = [];
+  f.vscode.commands.executeCommand = async (...args) => contexts.push(args);
+  await f.editor.open(f.scope, f.group.id, f.a.id);
+  assert.ok(
+    contexts.some((args) => args[0] === 'setContext' && args[2] === true),
+  );
+  f.editor.session.raw.title = 'Pending';
+  f.answers.push('Cancel');
+  assert.equal(await f.editor.close(), false);
+  assert.equal(f.editor.session.raw.title, 'Pending');
+  f.answers.push('Save');
+  assert.equal(await f.editor.close(), true);
+  assert.equal(f.editor.session, undefined);
+  assert.equal(
+    (await f.store.read(f.scope)).groups[0].commands[0].title,
+    'Pending',
+  );
+  assert.deepEqual(contexts.at(-1), ['setContext', 'quickCmd.editing', false]);
+  await f.editor.open(f.scope, f.group.id, f.b.id);
+  f.editor.session.raw.title = 'Discarded';
+  f.answers.push('Discard');
+  assert.equal(await f.editor.close(), true);
+  assert.equal((await f.store.read(f.scope)).groups[0].commands[1].title, 'B');
+});

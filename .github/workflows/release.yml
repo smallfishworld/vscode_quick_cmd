@@ -4,14 +4,17 @@ on:
   push:
     branches: [main]
     paths:
-      - 'package.json'
+      - 'package*.json'
       - 'src/**'
+      - 'media/**'
+      - 'scripts/**'
       - 'test/**'
       - '.github/workflows/release.yml'
-
 permissions:
   contents: write
-
+concurrency:
+  group: quick-cmd-release
+  cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -22,35 +25,57 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install test dependencies
-        run: npm ci
+          cache: npm
+      - run: npm ci
       - name: Validate and test
         run: |
           npm run check
           npm test
-      - name: Determine release version
+      - name: Determine version
         id: version
         run: |
           VERSION="$(node -p "require('./package.json').version")"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Package VSIX
-        run: npx --yes @vscode/vsce package --out quick-cmd-v${{ steps.version.outputs.version }}.vsix
-      - name: Upload VSIX as workflow artifact
-        uses: actions/upload-artifact@v4
+      - name: Build and verify both language editions
+        run: |
+          npm run package
+          python3 scripts/verify-packages.py
+      - uses: actions/upload-artifact@v4
         with:
-          name: quick-cmd-v${{ steps.version.outputs.version }}-vsix
-          path: '*.vsix'
-      - name: Publish GitHub Release if version not already released
+          name: quick-cmd-v${{ steps.version.outputs.version }}-bilingual-vsix
+          path: |
+            dist/*.vsix
+            dist/SHA256SUMS
+          if-no-files-found: error
+      - name: Prepare draft, reset requested history, and publish
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; skipping publish."
+          if gh release view "$TAG" --json isDraft >/dev/null 2>&1; then
+            DRAFT="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
+            if [ "$DRAFT" = false ]; then
+              echo "$TAG is already published; leaving published assets unchanged."
+              exit 0
+            fi
+            TARGET="$(gh release view "$TAG" --json targetCommitish --jq '.targetCommitish')"
+            test "$TARGET" = "$GITHUB_SHA"
+            gh release upload "$TAG" dist/*.vsix dist/SHA256SUMS --clobber
           else
-            gh release create "$TAG" quick-cmd-v${{ steps.version.outputs.version }}.vsix \
-              --target "$GITHUB_SHA" --title "Quick Cmd $TAG" \
-              --notes-file RELEASE_NOTES.md --latest
+            gh release create "$TAG" dist/*.vsix dist/SHA256SUMS \
+              --draft --target "$GITHUB_SHA" --title "Quick Cmd $TAG" \
+              --notes-file RELEASE_NOTES.md
           fi
+          # One-time reset explicitly requested for 0.6.0. The allowlist is the
+          # complete release/tag history inspected before this change; future
+          # versions and unrelated tags are never selected for deletion.
+          if [ "$TAG" = v0.6.0 ]; then
+            for OLD_TAG in v0.2.0 v0.3.0 v0.3.1 v0.4.0 v0.5.0; do
+              if gh release view "$OLD_TAG" >/dev/null 2>&1; then
+                gh release delete "$OLD_TAG" --yes --cleanup-tag
+              fi
+            done
+          fi
+          gh release edit "$TAG" --draft=false --latest

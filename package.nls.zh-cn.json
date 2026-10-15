@@ -25,5 +25,8 @@
   "quickCmd.openEditorPanel": "Quick Cmd: 在主编辑区打开",
   "quickCmd.selectCommand": "Quick Cmd: 选择命令",
   "shellType": "命令变量插值时使用的 Shell 引号规则。自动模式在 Windows 上使用 PowerShell 或 cmd.exe，在其他系统上使用 POSIX 规则。",
-  "singleClickRuns": "单击命令直接发送到终端。关闭时，单击查看和编辑，通过行尾按钮发送。"
+  "singleClickRuns": "单击命令直接发送到终端。关闭时，单击查看和编辑，通过行尾按钮发送。",
+  "groupForeground": "命令分组的文字和文件夹图标颜色。",
+  "quickCmd.showEditor": "Quick Cmd: 打开命令编辑",
+  "quickCmd.closeEditor": "Quick Cmd: 结束编辑"
 }

@@ -50,6 +50,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
       }
     },
     window: {
+      registerFileDecorationProvider: () => event(),
       createTreeView: () => ({ dispose() {} }),
       registerWebviewViewProvider: (id, provider) => {
         assert.equal(id, 'quickCmd.editor');

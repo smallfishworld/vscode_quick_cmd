@@ -4,6 +4,7 @@ const vscode = require('vscode');
 const { t, setLocale, errorText } = require('./i18n');
 const { ConfigStore } = require('./store');
 const { CommandTreeProvider } = require('./tree');
+const { GroupDecorationProvider } = require('./group-decoration');
 const { CommandEditorProvider } = require('./editor');
 const { TerminalRunner } = require('./terminal');
 const {
@@ -21,6 +22,12 @@ const { importScope, exportScope } = require('./transfer');
 /** @param {import('vscode').ExtensionContext} context */
 function activate(context) {
   setLocale(vscode.env?.language || 'en');
+  void vscode.commands.executeCommand('setContext', 'quickCmd.editing', false);
+  context.subscriptions.push(
+    vscode.window.registerFileDecorationProvider(
+      new GroupDecorationProvider(vscode),
+    ),
+  );
   const store = new ConfigStore(vscode, context);
   const runner = new TerminalRunner(vscode);
   const provider = new CommandTreeProvider(vscode, store, runner);
@@ -217,6 +224,42 @@ function activate(context) {
     }
   });
   register('quickCmd.openEditorPanel', () => editor.openPanel());
+  register('quickCmd.closeEditor', () => editor.close());
+  register('quickCmd.showEditor', async () => {
+    if (editor.session) {
+      await editor.focus();
+      await editor.load();
+      return;
+    }
+    if (selectedNode?.kind === 'command') {
+      await editor.open(
+        selectedNode.scope,
+        selectedNode.groupId,
+        selectedNode.commandId,
+      );
+      return;
+    }
+    const scope = store.scopes()[0];
+    const config = await store.read(scope);
+    const choices = config.groups.flatMap((group) =>
+      group.commands.map((command) => ({
+        label: command.title,
+        description: group.title,
+        groupId: group.id,
+        commandId: command.id,
+      })),
+    );
+    if (!choices.length) {
+      await vscode.commands.executeCommand('quickCmd.addCommand', selectedNode);
+      return;
+    }
+    const choice = await vscode.window.showQuickPick(choices, {
+      placeHolder: t('Choose a command to edit'),
+    });
+    if (choice) {
+      await editor.open(scope, choice.groupId, choice.commandId);
+    }
+  });
   register('quickCmd.selectCommand', async (node) => {
     const direct = vscode.workspace
       .getConfiguration('quickCmd')

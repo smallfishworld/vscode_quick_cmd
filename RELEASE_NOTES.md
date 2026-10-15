@@ -1,42 +1,25 @@
-# v0.5.0 — Global groups only
+# Quick Cmd v0.6.0
 
-- All commands now use one global collection; the tree starts directly at group → command.
-- Removed project/global root nodes, scope selection, project JSON editing and project-file watching.
-- Group view title is now Groups; import/export remains available in its title menu.
-- Editor breadcrumbs and search results show only the group; keybindings need only the command ID.
-- No project-command migration is included.
+## 中文
 
-中文：命令统一全局保存，直接显示“分组 → 命令”，移除项目/全局范围选择和项目配置入口，不增加迁移逻辑。
+- 同时发布固定中文和英文两份安装包，完整覆盖菜单、编辑栏、状态和错误提示。
+- 编辑栏默认隐藏，新建或编辑时显示；右上角可打开或结束编辑，保留未保存修改保护。
+- 分组文字和文件夹图标使用独立主题颜色，普通命令保持默认颜色。
+- `docs/` 收敛为唯一需求 `spec.md` 与设计 `design.md`，根目录增加 `agent.md` 项目约束和变更流程。
+- 使用隔离构建、锁定打包工具及双包解包校验，提供 `SHA256SUMS`。
+- 按用户要求清理旧发布及其版本标签，重新以 v0.6.0 发布。
 
-# v0.4.0 — Command panel interaction and localization
+选择 `quick-cmd-v0.6.0-zh-cn.vsix`（中文）或 `quick-cmd-v0.6.0-en.vsix`（英文）安装。两包为同一扩展的语言版本，不能同时安装；替换语言包沿用同一宿主/配置档案中的全局命令。
 
-- Single-click selects and edits; sending uses a separate play button. An optional setting restores single-click sending.
-- Complete Chinese/English UI follows the VS Code display language, including menus, search, status and error messages.
-- Consistent local SVG controls, a command-list Activity Bar mark and a common command icon picker.
-- Protected, recoverable drafts; accurate save acknowledgements; external-edit conflict detection.
-- Persistent save footer, compact expandable steps, drag/keyboard reordering, deletion undo and variable insertion.
-- Group-level trailing Enter setting survives step insertion/deletion/reordering; terminal behavior is explained explicitly.
-- Wide editor shares the sidebar draft; sidebar becomes read-only while the wide editor is open.
-- Working directory and terminal usage are visible; environment variables support table and JSON editing.
-- Tree drag-and-drop retains selection and offers guarded undo.
-- Added draft-session and DOM interaction regressions; test-only dependencies are excluded from the VSIX.
+## English
 
-中文：统一界面文案与图标，优化命令选中/发送、编辑布局、草稿保护、主编辑区模式和多步骤交互。详见中文使用说明。
+- Separate Chinese and English installers pin every UI surface to the selected language.
+- The editor starts hidden and opens only for editing; top-right controls open or finish editing with draft protection.
+- Group labels and folder icons use a dedicated theme color; commands retain their normal foreground.
+- Consolidated requirements/design and documented project constraints and change procedures.
+- Isolated builds, locked packaging tools, ZIP validation and SHA-256 checksums for both installers.
+- Existing release history and its version tags are reset for the requested v0.6.0 publication.
 
-# Quick Cmd v0.3.1
+Install either the `zh-cn` or `en` VSIX. Both share one extension identity and stored commands; they are alternatives, not side-by-side extensions.
 
-## Command editor UX improvements
-
-- Reorganized the embedded sidebar editor to match the suggested compact card layout.
-- Fully Chinese labels and helper text, 4/8/12/16 spacing and theme-aware controls.
-- Named steps with numbered badges and hover/focus actions to move up, move down or delete.
-- Full-width dashed **添加步骤** action instead of a small Add button.
-- Clear inline validation errors, with highlighted fields and readable messages.
-- Collapsible advanced settings, and one-click \`\${workspaceFolder}\` / \`\${fileDirname}\` insertion for the working directory.
-- Full-width Save button and a confirmation that dismisses after two seconds without resetting the editor.
-- The final-step **换行执行** checkbox retains its v0.3.0 send-vs-run semantics.
-
-## Compatibility and verification
-
-- Still uses config schema version 1; step titles are optional, so older projects require no migration.
-- Run \`npm run check\` and \`npm test\`. CI packages a \`quick-cmd-v0.3.1.vsix\` for GitHub Release.
+Validation includes automated behavior and package checks. Theme rendering, native drag-and-drop and window sizing still require a real VS Code graphical host.

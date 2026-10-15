@@ -2,6 +2,8 @@
   'use strict';
   let chinese = false;
   const messages = {
+    'Save changes before closing the editor?': '结束编辑前保存当前修改？',
+    'Choose a command to edit': '选择要编辑的命令',
     Groups: '分组',
     'Replace all commands with {0} imported group(s)?':
       '用导入的 {0} 个分组替换全部命令？',
