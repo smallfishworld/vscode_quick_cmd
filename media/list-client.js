@@ -132,21 +132,17 @@ function render(data) {
   model = data;
   token = data.token;
   const activeKey = document.activeElement?.closest?.('.row')?.dataset.key;
-  const editingButton =
-    document.activeElement?.classList?.contains('edit-button');
+  const activeAction = document.activeElement?.dataset?.action;
   const scroll = window.scrollY;
-  document.documentElement.style.setProperty(
-    '--command-size',
-    data.fontSize + 'px',
-  );
-  document.documentElement.style.setProperty(
-    '--group-size',
-    data.fontSize + 1 + 'px',
-  );
-  document.documentElement.style.setProperty(
-    '--row-height',
-    Math.max(22, data.fontSize + 9) + 'px',
-  );
+  // Zero follows the live VS Code UI font size; explicit sizes only affect this view.
+  if (data.fontSize > 0) {
+    document.documentElement.style.setProperty(
+      '--command-size',
+      data.fontSize + 'px',
+    );
+  } else {
+    document.documentElement.style.removeProperty('--command-size');
+  }
   const groups = Array.isArray(data.groups) ? data.groups : [];
   collapsed = new Set(
     [...collapsed].filter((id) => groups.some((group) => group.id === id)),
@@ -203,13 +199,29 @@ function render(data) {
       preview.className = 'preview';
       preview.textContent = command.preview;
       body.append(title, preview);
+      const actions = document.createElement('span');
+      actions.className = 'row-actions';
+      for (const [action, icon, label] of [
+        ['edit', 'edit', 'Edit command'],
+        ['run', 'play', 'Run command'],
+        ['delete', 'trash', 'Delete command'],
+      ]) {
+        const control = button(
+          icon,
+          label,
+          'action-button ' + action + '-button',
+          () => {
+            choose(item, cmd);
+            send(action, cmd);
+          },
+        );
+        control.dataset.action = action;
+        actions.append(control);
+      }
       item.append(
         glyph(command.icon, command.running ? 'spin' : ''),
         body,
-        button('edit', 'Edit command', 'edit-button', () => {
-          choose(item, cmd);
-          send('edit', cmd);
-        }),
+        actions,
       );
       item.addEventListener('click', () => {
         choose(item, cmd);
@@ -227,8 +239,10 @@ function render(data) {
   if (activeKey) {
     const active = rows.find((row) => row.dataset.key === activeKey);
     if (active) {
-      (editingButton
-        ? active.querySelector('.edit-button') || active
+      (activeAction
+        ? [...active.querySelectorAll('.action-button')].find(
+            (button) => button.dataset.action === activeAction,
+          ) || active
         : active
       ).focus({ preventScroll: true });
     }

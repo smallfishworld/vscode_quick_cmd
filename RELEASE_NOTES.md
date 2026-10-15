@@ -1,21 +1,19 @@
-# Quick Cmd v0.7.0
+# Quick Cmd v0.7.1
 
 ## 中文
 
-- 修复导入按钮空白，改用受支持的向下箭头；列表图标随安装包提供本地字体资源。
-- 分组与命令使用相同主题文字颜色，移除分组命令数量。
-- 紧凑列表默认分组 12 像素、命令 11 像素、行高 22 像素；可通过 `quickCmd.listFontSize` 调整，分组始终大 1 像素。
-- 每条命令最右侧常显编辑铅笔；移除列表顶部编辑模式开关。主体点击发送，铅笔点击只编辑，默认隐藏编辑栏。
-- 缩小表单控件及留白，保留原生移动视图能力，可合并到资源管理器等容器。
-- 保留拖拽排序、跨分组移动与撤销、键盘操作、草稿保护和双语安装包。
+- 列表名称和命令摘要统一采用 VS Code 界面字体与字重，移除摘要的等宽字体；默认字号跟随宿主，分组仍大 1 像素。
+- `quickCmd.listFontSize` 默认改为 0（跟随宿主）；显式自定义字号仍可用。
+- 命令行尾在鼠标悬停时显示编辑、运行、删除按钮；键盘聚焦和无悬停能力设备也可访问。
+- 编辑和删除不触发命令发送，运行遵循已保存的末尾回车选项，删除仍需确认。刷新保留当前按钮焦点。
+- 保留紧凑布局、隐藏式编辑栏和中英文发行包。
 
 ## English
 
-- Fix the blank Import icon with a supported down arrow; package local icon-font resources for the list.
-- Use the same theme foreground for groups and commands and remove group command counts.
-- Compact defaults: 12 px groups, 11 px commands and 22 px rows. `quickCmd.listFontSize` adjusts the list while keeping groups one pixel larger.
-- Show a persistent pencil at each command’s far right and remove the global edit-mode switch. Body clicks send; pencil clicks only edit. The editor starts hidden.
-- Reduce form controls and padding. Native Move View support allows merging into Explorer or another container.
-- Retain drag ordering, cross-group moves with Undo, keyboard controls, protected drafts and bilingual installers.
+- Use the VS Code UI font and weight for both names and command previews, removing the preview monospace override. Default size follows the host; groups remain 1px larger.
+- Default `quickCmd.listFontSize` to 0 (follow host), retaining explicit custom sizes.
+- Reveal Edit, Run and Delete at the right of a hovered command row. Keyboard focus and devices without hover also expose the actions.
+- Edit and Delete never send commands; Run respects the saved trailing-Enter option, and Delete retains confirmation. Refresh preserves action focus.
+- Retain compact layout, an editor hidden until needed and both language editions.
 
-Automated host, DOM, localization and package checks cover this release. Actual VS Code font rendering and drag feel still require graphical-host verification.
+Automated interaction and bilingual package checks cover this release. Actual VS Code font rendering has not been visually verified in a graphical host.

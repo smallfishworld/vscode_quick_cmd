@@ -11,6 +11,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
   const terminals = [];
   const modes = new Map();
   const answers = [];
+  const warnings = [];
   let loads = 0;
   let editorProvider, listProvider;
   let onMessage;
@@ -63,7 +64,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
       },
       showInputBox: async () => inputs.shift(),
       showQuickPick: async (choices) => choices[0],
-      showWarningMessage: async () => answers.shift(),
+      showWarningMessage: async (...args) => { warnings.push(args);return answers.shift(); },
       showErrorMessage: (msg) => {
         throw new Error(msg);
       },
@@ -193,6 +194,14 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     assert.equal(listPackets.at(-1).type, 'collapseAll');
     await callbacks.get('quickCmd.runById')({ id: cmd.id });
     assert.equal(terminals.length, 3);
+    answers.push('Cancel');
+    await listMessage({ type: 'delete', token: listModel.token, ...node });
+    assert.equal(warnings.at(-1)[1].modal, true);
+    assert.equal(state.get('quickCmd.globalConfig').groups[0].commands.length, 1);
+    answers.push('Delete');
+    await listMessage({ type: 'delete', token: listModel.token, ...node });
+    assert.equal(state.get('quickCmd.globalConfig').groups[0].commands.length, 0);
+    assert.equal(terminals.length, 3, 'neither cancelled nor confirmed deletion sends commands');
   } finally {
     Module._load = originalLoad;
   }

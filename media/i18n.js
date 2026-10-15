@@ -25,6 +25,7 @@
     'Global commands': '全局命令',
     'New command': '新建命令',
     'Edit command': '编辑命令',
+    'Run command': '运行命令',
     'Send to terminal': '发送到终端',
     'Select a command to edit': '请选择要编辑的命令',
     'Select a command in the list, or create one below.':

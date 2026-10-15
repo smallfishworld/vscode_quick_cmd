@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -251,8 +251,8 @@
         },
         "quickCmd.listFontSize": {
           "type": "number",
-          "default": 11,
-          "minimum": 10,
+          "default": 0,
+          "minimum": 0,
           "maximum": 18,
           "description": "%listFontSize%"
         }
