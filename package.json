@@ -1,8 +1,8 @@
 {
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
-  "description": "Fast VS Code sidebar command editor with Chinese UI, reorderable named steps, and terminal input controls.",
-  "version": "0.3.1",
+  "description": "%description%",
+  "version": "0.4.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -36,7 +36,7 @@
     "virtualWorkspaces": false,
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Saved commands can be viewed and edited, but they cannot run until the workspace is trusted."
+      "description": "%trust%"
     }
   },
   "contributes": {
@@ -53,11 +53,11 @@
       "quickCmd": [
         {
           "id": "quickCmd.commands",
-          "name": "Commands"
+          "name": "%quickCmd.commands%"
         },
         {
           "id": "quickCmd.editor",
-          "name": "Command Editor",
+          "name": "%quickCmd.editor%",
           "type": "webview"
         }
       ]
@@ -65,103 +65,113 @@
     "commands": [
       {
         "command": "quickCmd.addCommand",
-        "title": "Quick Cmd: Add Command",
+        "title": "%quickCmd.addCommand%",
         "icon": "$(add)"
       },
       {
         "command": "quickCmd.addGroup",
-        "title": "Quick Cmd: Add Group",
+        "title": "%quickCmd.addGroup%",
         "icon": "$(new-folder)"
       },
       {
         "command": "quickCmd.refresh",
-        "title": "Quick Cmd: Refresh",
+        "title": "%quickCmd.refresh%",
         "icon": "$(refresh)"
       },
       {
         "command": "quickCmd.run",
-        "title": "Quick Cmd: Run",
+        "title": "%quickCmd.run%",
         "icon": "$(play)"
       },
       {
         "command": "quickCmd.editCommand",
-        "title": "Quick Cmd: Edit Command",
+        "title": "%quickCmd.editCommand%",
         "icon": "$(edit)"
       },
       {
         "command": "quickCmd.deleteCommand",
-        "title": "Quick Cmd: Delete Command",
+        "title": "%quickCmd.deleteCommand%",
         "icon": "$(trash)"
       },
       {
         "command": "quickCmd.renameGroup",
-        "title": "Quick Cmd: Rename Group",
+        "title": "%quickCmd.renameGroup%",
         "icon": "$(edit)"
       },
       {
         "command": "quickCmd.deleteGroup",
-        "title": "Quick Cmd: Delete Group",
+        "title": "%quickCmd.deleteGroup%",
         "icon": "$(trash)"
       },
       {
         "command": "quickCmd.openConfig",
-        "title": "Quick Cmd: Open Workspace Configuration",
+        "title": "%quickCmd.openConfig%",
         "icon": "$(json)"
       },
       {
         "command": "quickCmd.duplicateCommand",
-        "title": "Quick Cmd: Duplicate Command",
+        "title": "%quickCmd.duplicateCommand%",
         "icon": "$(copy)"
       },
       {
         "command": "quickCmd.moveCommandUp",
-        "title": "Quick Cmd: Move Command Up",
+        "title": "%quickCmd.moveCommandUp%",
         "icon": "$(arrow-up)"
       },
       {
         "command": "quickCmd.moveCommandDown",
-        "title": "Quick Cmd: Move Command Down",
+        "title": "%quickCmd.moveCommandDown%",
         "icon": "$(arrow-down)"
       },
       {
         "command": "quickCmd.moveGroupUp",
-        "title": "Quick Cmd: Move Group Up",
+        "title": "%quickCmd.moveGroupUp%",
         "icon": "$(arrow-up)"
       },
       {
         "command": "quickCmd.moveGroupDown",
-        "title": "Quick Cmd: Move Group Down",
+        "title": "%quickCmd.moveGroupDown%",
         "icon": "$(arrow-down)"
       },
       {
         "command": "quickCmd.exportConfig",
-        "title": "Quick Cmd: Export JSON Configuration",
+        "title": "%quickCmd.exportConfig%",
         "icon": "$(export)"
       },
       {
         "command": "quickCmd.importConfig",
-        "title": "Quick Cmd: Import JSON Configuration",
-        "icon": "$(cloud-download)"
+        "title": "%quickCmd.importConfig%",
+        "icon": "$(import)"
       },
       {
         "command": "quickCmd.searchCommands",
-        "title": "Quick Cmd: Search Commands",
+        "title": "%quickCmd.searchCommands%",
         "icon": "$(search)"
       },
       {
         "command": "quickCmd.runById",
-        "title": "Quick Cmd: Run Command by ID",
+        "title": "%quickCmd.runById%",
         "icon": "$(play)"
       },
       {
         "command": "quickCmd.copyShortcut",
-        "title": "Quick Cmd: Copy Keybinding Snippet",
+        "title": "%quickCmd.copyShortcut%",
         "icon": "$(keyboard)"
       },
       {
         "command": "quickCmd.stop",
-        "title": "Quick Cmd: Stop Command (Close Terminal)",
+        "title": "%quickCmd.stop%",
         "icon": "$(debug-stop)"
+      },
+      {
+        "command": "quickCmd.openEditorPanel",
+        "title": "%quickCmd.openEditorPanel%",
+        "icon": "$(open-in-editor)"
+      },
+      {
+        "command": "quickCmd.selectCommand",
+        "title": "%quickCmd.selectCommand%",
+        "icon": "$(edit)"
       }
     ],
     "menus": {
@@ -174,17 +184,22 @@
         {
           "command": "quickCmd.addGroup",
           "when": "view == quickCmd.commands",
-          "group": "navigation@2"
+          "group": "manage"
         },
         {
           "command": "quickCmd.refresh",
           "when": "view == quickCmd.commands",
-          "group": "navigation@3"
+          "group": "manage"
         },
         {
           "command": "quickCmd.searchCommands",
           "when": "view == quickCmd.commands",
           "group": "navigation@0"
+        },
+        {
+          "command": "quickCmd.openEditorPanel",
+          "when": "view == quickCmd.editor",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -196,7 +211,7 @@
         {
           "command": "quickCmd.editCommand",
           "when": "view == quickCmd.commands && viewItem == quickCmd.command",
-          "group": "navigation@2"
+          "group": "inline@2"
         },
         {
           "command": "quickCmd.deleteCommand",
@@ -272,6 +287,11 @@
           "command": "quickCmd.exportConfig",
           "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
           "group": "navigation@4"
+        },
+        {
+          "command": "quickCmd.run",
+          "when": "view == quickCmd.commands && viewItem == quickCmd.command",
+          "group": "navigation@1"
         }
       ]
     },
@@ -287,7 +307,12 @@
             "cmd"
           ],
           "default": "auto",
-          "description": "Shell quoting mode used when interpolating command variables. Auto uses PowerShell or cmd.exe on Windows and POSIX quoting elsewhere."
+          "description": "%shellType%"
+        },
+        "quickCmd.singleClickRuns": {
+          "type": "boolean",
+          "default": false,
+          "description": "%singleClickRuns%"
         }
       }
     },
@@ -302,7 +327,10 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js",
+    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js",
     "package": "npx --yes @vscode/vsce package --out quick-cmd.vsix"
+  },
+  "devDependencies": {
+    "happy-dom": "21.0.1"
   }
 }

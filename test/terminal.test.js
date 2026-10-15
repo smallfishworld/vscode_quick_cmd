@@ -9,27 +9,37 @@ test('resolve absolute, relative and default cwd', () => {
   const root = path.resolve('project');
   assert.equal(resolveCwd(undefined, root), root);
   assert.equal(resolveCwd('build', root), path.join(root, 'build'));
-  assert.equal(resolveCwd('${workspaceFolder}/out', root), path.join(root, 'out'));
+  assert.equal(
+    resolveCwd('${workspaceFolder}/out', root),
+    path.join(root, 'out'),
+  );
   assert.equal(resolveCwd(root), root);
   assert.throws(() => resolveCwd('build'), /require an open workspace/);
-  assert.throws(() => resolveCwd('${workspaceFolder}'), /needs an open workspace/);
+  assert.throws(
+    () => resolveCwd('${workspaceFolder}'),
+    /needs an open workspace/,
+  );
 });
 
 test('launch a fresh integrated terminal for each click', () => {
   const records = [];
   const folder = { uri: { scheme: 'file', fsPath: path.resolve('fixture') } };
   const api = {
-    workspace: { workspaceFolders: [folder], isTrusted: true, getWorkspaceFolder: () => folder },
+    workspace: {
+      workspaceFolders: [folder],
+      isTrusted: true,
+      getWorkspaceFolder: () => folder,
+    },
     window: {
-      createTerminal: options => {
+      createTerminal: (options) => {
         const record = { options, calls: [] };
         records.push(record);
         return {
           show: () => record.calls.push('show'),
-          sendText: (...args) => record.calls.push(args)
+          sendText: (...args) => record.calls.push(args),
         };
-      }
-    }
+      },
+    },
   };
   const runner = new TerminalRunner(api);
   const command = { title: 'Compile', command: 'make -j8' };
@@ -41,6 +51,39 @@ test('launch a fresh integrated terminal for each click', () => {
 });
 
 test('reject command execution for untrusted projects', () => {
-  const api = { workspace: { workspaceFolders: [{}], isTrusted: false }, window: {} };
-  assert.throws(() => new TerminalRunner(api).run({ type: 'global' }, { title: 'X', command: 'x' }), /Trust this workspace/);
+  const api = {
+    workspace: { workspaceFolders: [{}], isTrusted: false },
+    window: {},
+  };
+  assert.throws(
+    () =>
+      new TerminalRunner(api).run(
+        { type: 'global' },
+        { title: 'X', command: 'x' },
+      ),
+    /Trust this workspace/,
+  );
+});
+
+test('wide webview retains the last text document workspace context', () => {
+  let onActive;
+  const uri = { scheme: 'file', fsPath: '/second/src/main.c' };
+  const folder = { uri: { scheme: 'file', fsPath: '/second' } };
+  const vscode = {
+    workspace: {
+      workspaceFolders: [{ uri: { fsPath: '/first' } }, folder],
+      getWorkspaceFolder: (value) => (value === uri ? folder : undefined),
+    },
+    window: {
+      onDidChangeActiveTextEditor: (fn) => {
+        onActive = fn;
+        return { dispose() {} };
+      },
+    },
+  };
+  const runner = new TerminalRunner(vscode);
+  onActive({ document: { uri } });
+  onActive(undefined);
+  assert.equal(runner.getFolder({ type: 'global' }), folder);
+  assert.equal(runner.lastTextUri, uri);
 });

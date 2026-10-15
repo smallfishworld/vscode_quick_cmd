@@ -1,35 +1,63 @@
-# Quick Cmd
+# Quick Cmd — VS Code terminal command panel
 
-[简体中文](README.zh-CN.md) | English
+English | [简体中文](README.zh-CN.md)
 
-**Quick Cmd** is a lightweight VS Code extension that lets you save shell commands, organize them in groups, and execute them with one click from a dedicated Activity Bar sidebar. It uses native VS Code Tree Views and integrated terminals, without Webviews, third-party runtime dependencies, or background command execution.
+Save, organize and edit terminal commands in the VS Code sidebar. Supports global/project groups, multiple steps, variables and Remote SSH, without third-party runtime dependencies.
 
-## Features (v0.1.0)
+## Install and start
 
-- Dedicated **Quick Cmd** icon in the left Activity Bar.
-- **Global** commands (available in all workspaces) and **workspace** commands (saved in `.vscode/quick-cmd.json`). Supports multiple workspace folders.
-- Add, edit, run, and delete commands; create, rename, and delete groups.
-- Click a command row or its **Run** icon to launch it in an integrated terminal.
-- Per-command working directory: project root by default, absolute paths, relative paths, or `${workspaceFolder}`.
-- Each invocation opens a **new terminal**. Existing long-running commands aren't interrupted or accidentally sent extra text.
-- Honors VS Code **Workspace Trust**: commands won't run from an untrusted folder.
-- Workspace configuration can also be maintained as regular JSON in version control.
-- Works in local and Remote SSH VS Code extension hosts (where integrated terminals are available).
+Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.com/smallfishworld/vscode_quick_cmd/releases) and choose **Install from VSIX** in the Extensions view. Pull request checks also produce a VSIX artifact.
 
-## Get started
+1. Open **Quick Cmd** in the Activity Bar.
+2. Choose **New Command**, then a scope and group. The plus button beside a group creates a command directly in that group.
+3. Fill in the name, command text, working directory and terminal usage, then save.
+4. **Click a command to inspect/edit it; use its play button to send it to the terminal.** Enable `quickCmd.singleClickRuns` to restore the previous single-click send behavior.
+5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then choose to edit or send.
 
-1. Open the repository in VS Code (1.85+).
-2. Press **F5** to launch an Extension Development Host. Alternatively install the packaged `.vsix` using **Extensions → ... → Install from VSIX...**.
-3. Click **Quick Cmd** in the left Activity Bar.
-4. Click **+** to add a command, choose Global or a workspace folder, and choose/create a group.
-5. Enter a display name, the shell command, and optionally a working directory.
-6. Click the command to run it. Right-click entries to edit, rename, or delete them.
+The entire interface follows VS Code's display language: Chinese for Chinese locales, English otherwise. User-entered names, Shell code and variable identifiers are never translated.
 
-Example commands: `cmake --build build -j8`, `make clean`, `git status`, `ssh user@host`, or `python3 scripts/build.py`.
+## Command list
 
-## Workspace configuration
+- Global commands are available in every workspace; project commands live in `.vscode/quick-cmd.json` and can be shared through Git. Multi-root workspaces and Remote SSH are supported.
+- Drag groups or commands to reorder; drop a command onto a group to append it. Moves stay within one configuration scope.
+- A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
+- Context menus provide duplication, deletion, movement, keybinding configuration, and scope-level import/export.
+- Running status takes precedence over a custom icon. Unknown status is explicitly reported; sending text is not treated as successful execution.
 
-Workspace commands live in `<workspace>/.vscode/quick-cmd.json` and can be shared with teammates. Example:
+## Editor
+
+- **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or write project configuration automatically.
+- **Accurate save state:** edits made while a save is pending remain unsaved after that request completes.
+- **Persistent footer:** Save and Save and Send stay visible while content scrolls. Use `Ctrl+S` / `Cmd+S` while the editor has focus.
+- **Wide editor:** open the same draft in the main editor area. While it is open, the sidebar mirrors the draft read-only; closing the wide editor restores sidebar editing.
+- **Steps:** drag, move, collapse and delete with undo. `Alt+Up` / `Alt+Down` inside command text moves a step. Narrow sidebars provide a More Actions menu.
+- **Command text:** automatically sized input and common workspace/file variable insertion; optional step names.
+- **Visible common settings:** working directory and terminal usage. Advanced settings contain confirmation, description, icons and environment variables.
+- **Icons:** common icons have previews; custom Codicon identifiers remain supported.
+- **Environment variables:** edit a name/value table or switch to JSON; incomplete and invalid input is retained.
+- **External changes:** saving refuses to overwrite a command changed elsewhere. Reopen Saved Version in the header reloads it after handling the draft.
+
+## Steps and trailing Enter
+
+A command can contain up to **32 steps**. Their text is joined with newlines and **sent once to one terminal**. This is not a workflow engine: steps do not wait for completion and do not stop automatically on failure. Use your Shell's own composition syntax, such as `&&` in a POSIX Shell, when appropriate.
+
+**Send Trailing Enter** applies to the whole group. Adding, deleting and moving steps preserve this choice. Saving sets intermediate steps' `execute` values to `true` and stores the option on the final step.
+
+Disabling trailing Enter **does not guarantee that no commands execute**: intermediate steps and embedded newlines can still trigger execution depending on the terminal and Shell. Use a single-line, single-step command for prefilled input. Interactive programs may consume later input and are unsuitable as intermediate steps.
+
+## Terminal usage
+
+| Mode                              | Behavior                                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| New terminal each time            | Default; creates a dedicated terminal and retains earlier output                                                              |
+| Prefer an idle dedicated terminal | Reuses only after Shell Integration confirms idle and directory/environment settings match; otherwise creates a new terminal  |
+| Use the active terminal           | Uses its existing directory/environment; rejects custom directory/environment settings and asks when idle status is uncertain |
+
+Untrusted workspaces allow editing but cannot send commands. Startup and configuration changes never execute commands. Stop Command closes a dedicated terminal; it cannot stop a non-dedicated active terminal.
+
+## Configuration and variables
+
+Project configuration is strict JSON; comments are unsupported. Global commands use VS Code extension state. Legacy `command` strings and `version: 1` remain compatible; the editor writes `steps` on save.
 
 ```json
 {
@@ -41,14 +69,24 @@ Workspace commands live in `<workspace>/.vscode/quick-cmd.json` and can be share
       "commands": [
         {
           "id": "debug-build",
-          "title": "Debug build",
-          "command": "cmake --build build -j8",
-          "cwd": "${workspaceFolder}"
-        },
-        {
-          "id": "clean",
-          "title": "Clean",
-          "command": "cmake --build build --target clean"
+          "title": "Build and prepare logs",
+          "steps": [
+            {
+              "title": "Build",
+              "command": "cmake --build build -j8",
+              "execute": true
+            },
+            {
+              "title": "Logs",
+              "command": "tail -f build/build.log",
+              "execute": false
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "new",
+          "icon": "tools",
+          "confirm": false,
+          "env": { "CMAKE_BUILD_PARALLEL_LEVEL": "8" }
         }
       ]
     }
@@ -56,89 +94,27 @@ Workspace commands live in `<workspace>/.vscode/quick-cmd.json` and can be share
 }
 ```
 
-- `version`: schema version (currently `1`).
-- `groups`: ordered groups, each with a unique `id`, visible `title`, and `commands` array.
-- `commands`: unique `id`, visible `title`, required nonempty `command`, and optional `cwd`.
-- `cwd`: empty/omitted means workspace root; relative paths are resolved from the workspace root. `${workspaceFolder}` expands to that workspace folder's absolute path. In a global command it means the current editor's workspace (or the first open folder).
-- The command text is passed **as-is** to the configured VS Code terminal shell. Use shell-appropriate syntax (PowerShell, bash, etc.). No variable expansion is performed on the command text by the extension.
-- The file must be **strict JSON**, not JSON with comments. The extension validates it and will not overwrite invalid configurations.
+Variables: `${workspaceFolder}`, `${file}`, `${fileDirname}`, `${fileBasename}`, `${fileBasenameNoExtension}`, `${relativeFile}`, `${env:NAME}`, `${input:name}`.
 
-Global commands are stored in the extension's VS Code global state and edited from the sidebar, not from a project file.
+Command variables are Shell-quoted automatically; do not add quotes around the placeholders. Directory and environment values use plain-text expansion. `quickCmd.shellType` supports `auto`, `posix`, `powershell` and `cmd`.
 
-## Safety and behavior
+Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"command-id","scopeId":"scope-id"}` arguments.
 
-**Commands are executable code.** Inspect project command files before running entries from a repository you do not trust. Nothing runs automatically on startup, file change, or workspace open. The extension refuses to launch commands in an untrusted workspace.
+## Development
 
-In v0.1.0, terminal tabs are intentionally not reused. This makes concurrent build, flash, deploy, and monitor commands safer. Execution success/failure indicators, process stopping, terminal reuse, filtering, drag-to-reorder, and multi-command workflows are planned enhancements rather than v0.1.0 features. If a command fails, its output stays in the terminal.
-
-This extension requires a real local or remote file-system workspace for project-specific commands and does not support virtual-only workspaces.
-
-## Development and packaging
-
-No `npm install` is needed to run or test the extension (Node.js 22 is recommended for development):
+Node.js 22 is recommended:
 
 ```bash
+npm ci
 npm run check
 npm test
-# Package a local VSIX (downloads the packaging CLI if necessary)
 npm run package
 ```
 
-GitHub Actions runs syntax checks, unit tests, and VSIX packaging on `main`, PRs, and manual dispatch. The downloadable `quick-cmd-vsix` artifact contains `quick-cmd.vsix` once CI succeeds.
+Tests cover configuration, terminal sending, draft sessions and editor interactions executed in Happy DOM. Happy DOM is a development-only dependency and is excluded from the extension package. DOM tests do not replace visual, font, drag-and-drop or sizing checks in a real VS Code window.
+
+GitHub Actions checks and packages pull requests and the main branch. Version changes on main trigger GitHub Release packaging.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## P1 (v0.2.0)
-
-- Search commands with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS) or the Command Palette.
-- Shell variables: `${workspaceFolder}`, `${file}`, `${fileDirname}`, `${fileBasename}`, `${fileBasenameNoExtension}`, `${relativeFile}`, `${env:NAME}`, `${input:name}`. Variable values are shell-quoted automatically; don't wrap placeholders in your own shell quotes.
-- Terminal strategies: `new` (default), `reuse` (only after Shell Integration confirms idle; otherwise creates a fresh terminal), `active` (warns if potentially busy).
-- Optional confirmation before running, environment variables (`env`), descriptions, and Codicon icons (`icon`).
-- Shell Integration-based command exit status where supported; stop a command by closing its dedicated terminal.
-- Duplicate, move commands/groups up or down, import/export a JSON scope, and copy a JSON keybinding snippet for any command.
-- Configure quoting using `quickCmd.shellType` (`auto`, `posix`, `powershell`, `cmd`).
-- Use `quickCmd.runById` with keybindings JSON arguments `{ "id": "command-id", "scopeId": "global" }` or the workspace URI as scopeId.
-- Existing v0.1 configurations remain compatible. VS Code 1.93+ is required.
-
-See [RELEASE_NOTES.md](RELEASE_NOTES.md) for installation and change details.
-
----
-
-## v0.3.0: Sidebar editor, drag-to-order, and command steps
-
-Open **Quick Cmd** in the Activity Bar. Use **+** next to a group (or the view title)
-to open the **Command Editor** below the command tree. All command fields now live in
-one form; right-click an existing command and select **Edit** to modify it.
-
-- **Drag and drop** a group before another group, or a command before another
-  command. Drop a command onto a group to append it. Drops are intentionally
-  restricted to the same configuration scope (global or a single workspace).
-- **Multiple steps**: press **+ Add** in the editor to configure up to 32 ordered
-  command lines. Steps run in one integrated terminal, in their stored order.
-- **"换行执行" (Send Enter)**: each row displays a checkbox after the command field.
-  The final row determines whether a trailing Enter is sent. Uncheck it to
-  paste the final line into the terminal **without executing that line**.
-  Earlier rows must remain checked to avoid accidentally combining commands.
-- Existing v0.2.0 JSON files with a single `"command"` string remain supported.
-
-A multi-step command is sent to the terminal as one string with newline characters
-between steps, using `Terminal.sendText(combined, lastStep.execute)`. This is
-best for normal shell commands. Avoid combining commands that prompt for or
-consume standard input, because such programs can consume subsequent terminal input.
-The extension does not claim process-by-process orchestration.
-
-Example:
-
-```json
-{
-  "title": "Build then stage log command",
-  "steps": [
-    { "command": "cmake --build build -j8", "execute": true },
-    { "command": "tail -f build/build.log", "execute": false }
-  ],
-  "terminal": "new"
-}
-```
-
