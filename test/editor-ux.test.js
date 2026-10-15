@@ -59,5 +59,5 @@ test('embedded editor includes accessible step controls and scoped error element
   assert.match(css, /var\(--vscode-button-background\)/);
   for (const action of ['上移步骤', '下移步骤', '删除步骤']) { assert.ok(script.includes(action)); }
   assert.match(script, /setTimeout\(\(\) => \{ byId\('saved'\)\.hidden = true; savedTimer = undefined; \}, 2000\)/);
-  assert.match(script, /step\.title = name/);
+  assert.match(script, /item\.title = name/);
 });
