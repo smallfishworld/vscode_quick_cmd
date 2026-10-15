@@ -1,0 +1,224 @@
+{
+  "name": "vscode-quick-cmd",
+  "displayName": "Command Deck",
+  "description": "Organize and execute custom terminal commands from a native VS Code sidebar.",
+  "version": "0.1.0",
+  "publisher": "smallfishworld",
+  "license": "MIT",
+  "private": false,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "commands",
+    "terminal",
+    "shell",
+    "workflow",
+    "quick commands"
+  ],
+  "main": "./out/src/extension.js",
+  "activationEvents": [
+    "onView:commandDeck.commands"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "commandDeck",
+          "title": "Command Deck",
+          "icon": "media/command-deck.svg"
+        }
+      ]
+    },
+    "views": {
+      "commandDeck": [
+        {
+          "id": "commandDeck.commands",
+          "name": "Commands"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "commandDeck.commands",
+        "contents": "Add your first terminal command.\n[Add Command](command:commandDeck.addCommand)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "commandDeck.addGroup",
+        "title": "Add Group",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "commandDeck.addCommand",
+        "title": "Add Command",
+        "icon": "$(add)"
+      },
+      {
+        "command": "commandDeck.run",
+        "title": "Run Command",
+        "icon": "$(play)"
+      },
+      {
+        "command": "commandDeck.editCommand",
+        "title": "Edit Command",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "commandDeck.renameGroup",
+        "title": "Rename Group",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "commandDeck.toggleCommand",
+        "title": "Enable / Disable Command",
+        "icon": "$(circle-slash)"
+      },
+      {
+        "command": "commandDeck.deleteItem",
+        "title": "Delete",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "commandDeck.moveUp",
+        "title": "Move Up",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "commandDeck.moveDown",
+        "title": "Move Down",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "commandDeck.openConfig",
+        "title": "Open Configuration JSON",
+        "icon": "$(json)"
+      },
+      {
+        "command": "commandDeck.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "commandDeck.addCommand",
+          "when": "view == commandDeck.commands",
+          "group": "navigation@1"
+        },
+        {
+          "command": "commandDeck.addGroup",
+          "when": "view == commandDeck.commands",
+          "group": "navigation@2"
+        },
+        {
+          "command": "commandDeck.refresh",
+          "when": "view == commandDeck.commands",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "commandDeck.addGroup",
+          "when": "view == commandDeck.commands && viewItem == commandDeck.scope",
+          "group": "1_add@1"
+        },
+        {
+          "command": "commandDeck.addCommand",
+          "when": "view == commandDeck.commands && (viewItem == commandDeck.scope || viewItem == commandDeck.group)",
+          "group": "1_add@2"
+        },
+        {
+          "command": "commandDeck.run",
+          "when": "view == commandDeck.commands && viewItem == commandDeck.command",
+          "group": "2_action@1"
+        },
+        {
+          "command": "commandDeck.editCommand",
+          "when": "view == commandDeck.commands && viewItem == commandDeck.command",
+          "group": "2_action@2"
+        },
+        {
+          "command": "commandDeck.toggleCommand",
+          "when": "view == commandDeck.commands && viewItem == commandDeck.command",
+          "group": "2_action@3"
+        },
+        {
+          "command": "commandDeck.renameGroup",
+          "when": "view == commandDeck.commands && viewItem == commandDeck.group",
+          "group": "2_action@2"
+        },
+        {
+          "command": "commandDeck.moveUp",
+          "when": "view == commandDeck.commands && (viewItem == commandDeck.group || viewItem == commandDeck.command)",
+          "group": "3_order@1"
+        },
+        {
+          "command": "commandDeck.moveDown",
+          "when": "view == commandDeck.commands && (viewItem == commandDeck.group || viewItem == commandDeck.command)",
+          "group": "3_order@2"
+        },
+        {
+          "command": "commandDeck.openConfig",
+          "when": "view == commandDeck.commands && viewItem == commandDeck.scope",
+          "group": "4_config@1"
+        },
+        {
+          "command": "commandDeck.deleteItem",
+          "when": "view == commandDeck.commands && (viewItem == commandDeck.group || viewItem == commandDeck.command)",
+          "group": "5_delete@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Command Deck",
+      "properties": {
+        "commandDeck.globalGroups": {
+          "type": "array",
+          "default": [],
+          "description": "Global command groups available in every workspace. Edit here or from the Command Deck sidebar.",
+          "items": {
+            "type": "object"
+          },
+          "scope": "application"
+        }
+      }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": [
+          "/.vscode/command-deck.json"
+        ],
+        "url": "./schemas/command-deck.schema.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "check": "tsc -p . --noEmit",
+    "test": "npm run build && node --test out/tests/*.test.js",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.2",
+    "typescript": "^5.6.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smallfishworld/vscode_quick_cmd.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smallfishworld/vscode_quick_cmd/issues"
+  },
+  "homepage": "https://github.com/smallfishworld/vscode_quick_cmd#readme"
+}

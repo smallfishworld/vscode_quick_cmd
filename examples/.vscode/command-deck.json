@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "build",
+      "name": "Build & Test",
+      "commands": [
+        {
+          "id": "configure",
+          "name": "Configure CMake",
+          "command": "cmake -S . -B build",
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse"
+        },
+        {
+          "id": "compile",
+          "name": "Build Project",
+          "command": "cmake --build build -j8",
+          "description": "Build current project",
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse"
+        },
+        {
+          "id": "unit-test",
+          "name": "Run Tests",
+          "command": "ctest --test-dir build --output-on-failure",
+          "terminal": "new"
+        }
+      ]
+    },
+    {
+      "id": "version-control",
+      "name": "Version Control",
+      "commands": [
+        {"id": "svn-status", "name": "SVN Status", "command": "svn status"},
+        {"id": "git-status", "name": "Git Status", "command": "git status"}
+      ]
+    }
+  ]
+}
