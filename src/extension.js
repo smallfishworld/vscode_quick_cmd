@@ -134,7 +134,8 @@ function activate(context) {
   async function execute(scope, cmd) {
     runner.ensureTrusted();
     const folder = runner.getFolder(scope);
-    const current = vscode.window.activeTextEditor?.document.uri;
+    const current =
+      vscode.window.activeTextEditor?.document.uri || runner.lastTextUri;
     const inputs = {};
     const steps = commandSteps(cmd);
     for (const name of extractInputs(
