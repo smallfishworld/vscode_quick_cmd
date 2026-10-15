@@ -1,8 +1,8 @@
 {
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
-  "description": "Manage, search, and execute saved shell commands from the VS Code sidebar.",
-  "version": "0.2.0",
+  "description": "Organize, drag, edit and run multi-step terminal commands directly from the VS Code sidebar.",
+  "version": "0.3.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -29,7 +29,8 @@
     "workspace"
   ],
   "activationEvents": [
-    "onView:quickCmd.commands"
+    "onView:quickCmd.commands",
+    "onView:quickCmd.editor"
   ],
   "capabilities": {
     "virtualWorkspaces": false,
@@ -53,6 +54,11 @@
         {
           "id": "quickCmd.commands",
           "name": "Commands"
+        },
+        {
+          "id": "quickCmd.editor",
+          "name": "Command Editor",
+          "type": "webview"
         }
       ]
     },
@@ -296,7 +302,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js",
+    "check": "node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js",
     "package": "npx --yes @vscode/vsce package --out quick-cmd.vsix"
   }
 }
