@@ -37,6 +37,11 @@ function renumber() {
   [...stepsElement.children].forEach((row, index) => {
     row.querySelector('.step-label').textContent = 'Step ' + (index + 1);
     row.querySelector('button').disabled = stepsElement.children.length === 1;
+    const checkbox = row.querySelector('.step-execute');
+    const isLast = index === stepsElement.children.length - 1;
+    if (!isLast) { checkbox.checked = true; }
+    checkbox.disabled = !isLast;
+    checkbox.title = isLast ? 'Uncheck to insert the final command without Enter' : 'Intermediate steps must execute';
   });
 }
 function formValues() {
