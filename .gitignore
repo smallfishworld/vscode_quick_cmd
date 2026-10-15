@@ -1,6 +1,7 @@
 node_modules/
 out/
-.vscode-test/
 *.vsix
+*.vsixmanifest
+.vscode-test/
+*.log
 .DS_Store
-*.tsbuildinfo
