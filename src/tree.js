@@ -1,5 +1,6 @@
 'use strict';
 const { t, errorText } = require('./i18n');
+const { GROUP_SCHEME, GROUP_COLOR } = require('./group-decoration');
 const { commandSteps, moveDrop } = require('./model');
 const TREE_MIME = 'application/vnd.code.tree.quickCmd.commands';
 
@@ -136,7 +137,14 @@ class CommandTreeProvider {
           item.contextValue = 'quickCmd.group';
           item.scope = scope;
           item.groupId = group.id;
-          item.iconPath = new vscode.ThemeIcon('folder');
+          item.resourceUri = vscode.Uri.from({
+            scheme: GROUP_SCHEME,
+            path: '/' + encodeURIComponent(group.id),
+          });
+          item.iconPath = new vscode.ThemeIcon(
+            'folder',
+            new vscode.ThemeColor(GROUP_COLOR),
+          );
           item.description = `${group.commands.length}`;
           return item;
         });

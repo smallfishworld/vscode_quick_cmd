@@ -29,6 +29,12 @@ test('tree selection edits, state overrides custom icons, and reveal resolves pa
         this.label = label;
       }
     },
+    Uri: { from: (value) => value },
+    ThemeColor: class {
+      constructor(id) {
+        this.id = id;
+      }
+    },
     ThemeIcon: class {
       constructor(id) {
         this.id = id;
@@ -47,6 +53,7 @@ test('tree selection edits, state overrides custom icons, and reveal resolves pa
   const group = roots[0];
   assert.equal(group.kind, 'group');
   assert.equal(group.label, 'Build');
+  assert.equal(group.resourceUri.scheme, 'quick-cmd-group');
   let item = (await tree.getChildren(group))[0];
   assert.equal(item.command.command, 'quickCmd.selectCommand');
   assert.equal(item.iconPath.id, 'loading~spin');

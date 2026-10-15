@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -58,7 +58,8 @@
         {
           "id": "quickCmd.editor",
           "name": "%quickCmd.editor%",
-          "type": "webview"
+          "type": "webview",
+          "when": "quickCmd.editing"
         }
       ]
     },
@@ -167,6 +168,16 @@
         "command": "quickCmd.selectCommand",
         "title": "%quickCmd.selectCommand%",
         "icon": "$(edit)"
+      },
+      {
+        "command": "quickCmd.showEditor",
+        "title": "%quickCmd.showEditor%",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "quickCmd.closeEditor",
+        "title": "%quickCmd.closeEditor%",
+        "icon": "$(close)"
       }
     ],
     "menus": {
@@ -205,6 +216,21 @@
           "command": "quickCmd.exportConfig",
           "when": "view == quickCmd.commands",
           "group": "transfer"
+        },
+        {
+          "command": "quickCmd.showEditor",
+          "when": "view == quickCmd.commands && !quickCmd.editing",
+          "group": "navigation@3"
+        },
+        {
+          "command": "quickCmd.closeEditor",
+          "when": "view == quickCmd.commands && quickCmd.editing",
+          "group": "navigation@3"
+        },
+        {
+          "command": "quickCmd.closeEditor",
+          "when": "view == quickCmd.editor",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
@@ -237,11 +263,6 @@
           "command": "quickCmd.deleteGroup",
           "when": "view == quickCmd.commands && viewItem == quickCmd.group",
           "group": "navigation@3"
-        },
-        {
-          "command": "quickCmd.addGroup",
-          "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
-          "group": "inline@1"
         },
         {
           "command": "quickCmd.duplicateCommand",
@@ -279,16 +300,6 @@
           "group": "navigation@5"
         },
         {
-          "command": "quickCmd.importConfig",
-          "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
-          "group": "navigation@3"
-        },
-        {
-          "command": "quickCmd.exportConfig",
-          "when": "view == quickCmd.commands && viewItem =~ /^quickCmd\\.scope/",
-          "group": "navigation@4"
-        },
-        {
           "command": "quickCmd.run",
           "when": "view == quickCmd.commands && viewItem == quickCmd.command",
           "group": "navigation@1"
@@ -323,14 +334,27 @@
         "mac": "cmd+alt+q",
         "when": "editorTextFocus || view == quickCmd.commands"
       }
+    ],
+    "colors": [
+      {
+        "id": "quickCmd.groupForeground",
+        "description": "%groupForeground%",
+        "defaults": {
+          "dark": "#75BEFF",
+          "light": "#0067A8",
+          "highContrast": "#FFFFFF",
+          "highContrastLight": "#005A9E"
+        }
+      }
     ]
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js",
-    "package": "npx --yes @vscode/vsce package --out quick-cmd.vsix"
+    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/tree.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js && node --check src/group-decoration.js && node --check scripts/package-variants.js",
+    "package": "node scripts/package-variants.js"
   },
   "devDependencies": {
+    "@vscode/vsce": "4.0.0",
     "happy-dom": "21.0.1"
   }
 }

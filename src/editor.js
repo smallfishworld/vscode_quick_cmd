@@ -8,7 +8,7 @@ const {
   commandSteps,
   findCommand,
 } = require('./model');
-const { t, errorText } = require('./i18n');
+const { t, errorText, resolveLocale } = require('./i18n');
 const DRAFT_KEY = 'quickCmd.editorDraft.v1';
 
 /** One editing session shared by the sidebar and wide editor. Drafts never execute. */
@@ -35,7 +35,9 @@ class CommandEditorProvider {
     const values = {
       cspSource: webview.cspSource,
       nonce: randomBytes(16).toString('base64'),
-      language: /^zh\b/i.test(this.vscode.env?.language || '') ? 'zh-CN' : 'en',
+      language: /^zh\b/i.test(resolveLocale(this.vscode.env?.language))
+        ? 'zh-CN'
+        : 'en',
     };
     for (const [key, file] of [
       ['cssUri', 'editor.css'],
@@ -249,8 +251,15 @@ class CommandEditorProvider {
       this.selection?.commandId === commandId &&
       (commandId || this.selection?.groupId === groupId);
     if (same && this.session && commandId && !force) {
-      if (focus) {
+      if (focus || !this.view) {
         await this.focus();
+      } else {
+        await this.vscode.commands.executeCommand(
+          'setContext',
+          'quickCmd.editing',
+          true,
+        );
+        this.view.show?.(true);
       }
       return;
     }
@@ -302,11 +311,21 @@ class CommandEditorProvider {
     if (focus || !this.view) {
       await this.focus();
     } else {
+      await this.vscode.commands.executeCommand(
+        'setContext',
+        'quickCmd.editing',
+        true,
+      );
       this.view.show?.(true);
     }
     await this.load();
   }
   async focus() {
+    await this.vscode.commands.executeCommand(
+      'setContext',
+      'quickCmd.editing',
+      true,
+    );
     await this.vscode.commands.executeCommand('quickCmd.editor.focus');
     this.view?.show?.(true);
   }
@@ -333,7 +352,51 @@ class CommandEditorProvider {
       }
     }
   }
+  async close() {
+    // Serialize close and selection changes; never hide a dirty or pending save silently.
+    const job = this.openQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.saving) {
+          await this.saving;
+        }
+        while (this.dirty()) {
+          const answer = await this.vscode.window.showWarningMessage(
+            t('Save changes before closing the editor?'),
+            { modal: true },
+            t('Save'),
+            t('Discard'),
+            t('Cancel'),
+          );
+          if (answer === t('Save')) {
+            await this.save(this.session.raw, this.selection.groupId);
+          } else if (answer === t('Discard')) {
+            break;
+          } else {
+            return false;
+          }
+        }
+        this.panel?.dispose();
+        this.session = undefined;
+        this.selection = undefined;
+        this.persist();
+        this.broadcast({ type: 'empty' });
+        await this.vscode.commands.executeCommand(
+          'setContext',
+          'quickCmd.editing',
+          false,
+        );
+        return true;
+      });
+    this.openQueue = job;
+    return job;
+  }
   async openPanel() {
+    await this.vscode.commands.executeCommand(
+      'setContext',
+      'quickCmd.editing',
+      true,
+    );
     if (this.panel) {
       this.panel.reveal();
       return;
