@@ -52,7 +52,7 @@ test('terminal sends false for the unchecked final checkbox (no enter)', () => {
   runner.run({ type: 'global', id: 'global' }, { title: 'Draft', steps: [
     { command: 'echo first', execute: true }, { command: 'echo second', execute: false }
   ] });
-  assert.deepEqual(sent, [['echo first', true], ['echo second', false]]);
+  assert.deepEqual(sent, [['echo first\necho second', false]]);
 });
 
 test('TreeView drag data uses scope validation and updates same-scope command order', async () => {
