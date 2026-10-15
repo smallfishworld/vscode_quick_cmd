@@ -2,9 +2,16 @@
   'use strict';
   let chinese = false;
   const messages = {
-    'Edit mode: select a command to edit.':
-      '编辑模式：点击命令进行修改，完成后点击右上角勾选按钮。',
-    'Search commands to edit': '搜索要编辑的命令',
+    'New group': '新建分组',
+    'No commands yet. Create a group to get started.': '还没有命令，先新建一个分组。',
+    'Command actions': '命令操作',
+    'Group actions': '分组操作',
+    'Duplicate command': '创建命令副本',
+    'Delete command': '删除命令',
+    'Copy keybinding': '复制快捷键配置',
+    'Stop command': '停止命令',
+    'Refresh': '刷新',
+    'Invalid list request.': '列表操作无效，请刷新后重试。',
     'Search commands to send': '搜索要发送到终端的命令',
     'Save changes before closing the editor?': '结束编辑前保存当前修改？',
     'Choose a command to edit': '选择要编辑的命令',
