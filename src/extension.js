@@ -23,6 +23,7 @@ const { importScope, exportScope } = require('./transfer');
 function activate(context) {
   setLocale(vscode.env?.language || 'en');
   void vscode.commands.executeCommand('setContext', 'quickCmd.editing', false);
+  void vscode.commands.executeCommand('setContext', 'quickCmd.editMode', false);
   context.subscriptions.push(
     vscode.window.registerFileDecorationProvider(
       new GroupDecorationProvider(vscode),
@@ -38,6 +39,20 @@ function activate(context) {
   context.subscriptions.push(tree);
   provider.tree = tree;
   let selectedNode;
+  let editMode = false;
+  async function setEditMode(value) {
+    editMode = value;
+    provider.editMode = value;
+    tree.message = value
+      ? t('Edit mode: select a command to edit.')
+      : undefined;
+    await vscode.commands.executeCommand(
+      'setContext',
+      'quickCmd.editMode',
+      value,
+    );
+    provider.refresh();
+  }
   if (tree.onDidChangeSelection) {
     context.subscriptions.push(
       tree.onDidChangeSelection((e) => {
@@ -51,6 +66,7 @@ function activate(context) {
     store,
     () => provider.refresh(),
     (scope, cmd) => execute(scope, cmd),
+    setEditMode,
   );
   context.subscriptions.push(editor);
   context.subscriptions.push(
@@ -225,50 +241,41 @@ function activate(context) {
   });
   register('quickCmd.openEditorPanel', () => editor.openPanel());
   register('quickCmd.closeEditor', () => editor.close());
+  register('quickCmd.collapseAll', () =>
+    vscode.commands.executeCommand(
+      'workbench.actions.treeView.quickCmd.commands.collapseAll',
+    ),
+  );
+  register('quickCmd.openSettings', () =>
+    vscode.commands.executeCommand(
+      'workbench.action.openSettings',
+      '@ext:smallfishworld.vscode-quick-cmd',
+    ),
+  );
   register('quickCmd.showEditor', async () => {
+    await setEditMode(true);
     if (editor.session) {
       await editor.focus();
       await editor.load();
-      return;
-    }
-    if (selectedNode?.kind === 'command') {
+    } else if (selectedNode?.kind === 'command') {
       await editor.open(
         selectedNode.scope,
         selectedNode.groupId,
         selectedNode.commandId,
       );
-      return;
-    }
-    const scope = store.scopes()[0];
-    const config = await store.read(scope);
-    const choices = config.groups.flatMap((group) =>
-      group.commands.map((command) => ({
-        label: command.title,
-        description: group.title,
-        groupId: group.id,
-        commandId: command.id,
-      })),
-    );
-    if (!choices.length) {
-      await vscode.commands.executeCommand('quickCmd.addCommand', selectedNode);
-      return;
-    }
-    const choice = await vscode.window.showQuickPick(choices, {
-      placeHolder: t('Choose a command to edit'),
-    });
-    if (choice) {
-      await editor.open(scope, choice.groupId, choice.commandId);
     }
   });
   register('quickCmd.selectCommand', async (node) => {
-    const direct = vscode.workspace
-      .getConfiguration('quickCmd')
-      .get('singleClickRuns', false);
-    if (direct) {
-      return vscode.commands.executeCommand('quickCmd.run', node);
+    if (node?.kind !== 'command') {
+      return;
     }
-    if (node?.kind === 'command') {
+    if (editMode) {
       await editor.open(node.scope, node.groupId, node.commandId, false);
+    } else {
+      const cmd = await commandFromNode(node);
+      if (cmd) {
+        await execute(node.scope, cmd);
+      }
     }
   });
   register('quickCmd.editCommand', async (node) => {
@@ -426,21 +433,16 @@ function activate(context) {
       return;
     }
     const item = await vscode.window.showQuickPick(entries, {
-      placeHolder: t('Search commands, then choose an action'),
+      placeHolder: t(
+        editMode ? 'Search commands to edit' : 'Search commands to send',
+      ),
       matchOnDescription: true,
       matchOnDetail: true,
     });
     if (item) {
-      const action = await vscode.window.showQuickPick(
-        [
-          { label: t('Edit command'), edit: true },
-          { label: t('Send to terminal'), edit: false },
-        ],
-        { placeHolder: item.cmd.title },
-      );
-      if (action?.edit) {
+      if (editMode) {
         await editor.open(item.scope, item.groupId, item.cmd.id);
-      } else if (action) {
+      } else {
         await execute(item.scope, item.cmd);
       }
     }

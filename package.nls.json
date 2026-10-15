@@ -25,8 +25,9 @@
   "quickCmd.openEditorPanel": "Quick Cmd: Open Wide Editor",
   "quickCmd.selectCommand": "Quick Cmd: Select Command",
   "shellType": "Shell quoting mode used when interpolating command variables. Auto uses PowerShell or cmd.exe on Windows and POSIX quoting elsewhere.",
-  "singleClickRuns": "Send commands on a single click instead of opening the editor.",
   "groupForeground": "Text and folder icon color for command groups.",
-  "quickCmd.showEditor": "Quick Cmd: Open Command Editor",
-  "quickCmd.closeEditor": "Quick Cmd: Finish Editing"
+  "quickCmd.showEditor": "Quick Cmd: Enter Edit Mode",
+  "quickCmd.closeEditor": "Quick Cmd: Done Editing",
+  "quickCmd.collapseAll": "Quick Cmd: Collapse All Groups",
+  "quickCmd.openSettings": "Quick Cmd: Settings"
 }

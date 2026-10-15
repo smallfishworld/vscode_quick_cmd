@@ -1,25 +1,19 @@
-# Quick Cmd v0.6.0
+# Quick Cmd v0.6.1
 
 ## 中文
 
-- 同时发布固定中文和英文两份安装包，完整覆盖菜单、编辑栏、状态和错误提示。
-- 编辑栏默认隐藏，新建或编辑时显示；右上角可打开或结束编辑，保留未保存修改保护。
-- 分组文字和文件夹图标使用独立主题颜色，普通命令保持默认颜色。
-- `docs/` 收敛为唯一需求 `spec.md` 与设计 `design.md`，根目录增加 `agent.md` 项目约束和变更流程。
-- 使用隔离构建、锁定打包工具及双包解包校验，提供 `SHA256SUMS`。
-- 按用户要求清理旧发布及其版本标签，重新以 v0.6.0 发布。
-
-选择 `quick-cmd-v0.6.0-zh-cn.vsix`（中文）或 `quick-cmd-v0.6.0-en.vsix`（英文）安装。两包为同一扩展的语言版本，不能同时安装；替换语言包沿用同一宿主/配置档案中的全局命令。
+- 明确普通模式与编辑模式：普通模式点击命令按配置发送；只有显式进入编辑模式后，点击命令才打开编辑栏。
+- 右上角直接显示新建分组、新建命令、编辑/完成、搜索、导入、导出、折叠、刷新、设置按钮。
+- 默认隐藏编辑栏，完成编辑时处理草稿并退出模式；取消退出会保留修改和编辑状态。
+- 命令名称后显示 Shell 内容摘要；搜索按当前模式直接发送或编辑，减少重复选择。
+- 保留独立中英文安装包、分组颜色、全局配置和既有数据；正常新增发布，不清理历史。
 
 ## English
 
-- Separate Chinese and English installers pin every UI surface to the selected language.
-- The editor starts hidden and opens only for editing; top-right controls open or finish editing with draft protection.
-- Group labels and folder icons use a dedicated theme color; commands retain their normal foreground.
-- Consolidated requirements/design and documented project constraints and change procedures.
-- Isolated builds, locked packaging tools, ZIP validation and SHA-256 checksums for both installers.
-- Existing release history and its version tags are reset for the requested v0.6.0 publication.
+- Separate normal and edit modes: normal clicks send with the saved Enter option; edit-mode clicks open the form without sending.
+- Direct top-right toolbar actions for groups, commands, edit/done, search, import/export, collapse, refresh and settings.
+- The editor stays hidden during normal use. Done protects the draft before exiting; Cancel retains editing.
+- Inline command previews and mode-aware search remove unnecessary interaction steps.
+- Both language editions, group colors and stored global commands remain available. This release does not delete history.
 
-Install either the `zh-cn` or `en` VSIX. Both share one extension identity and stored commands; they are alternatives, not side-by-side extensions.
-
-Validation includes automated behavior and package checks. Theme rendering, native drag-and-drop and window sizing still require a real VS Code graphical host.
+Validation includes automated mode transitions, draft cancellation, language and package checks. Actual VS Code visual rendering still requires graphical-host verification.

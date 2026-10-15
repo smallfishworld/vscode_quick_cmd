@@ -200,9 +200,11 @@ class CommandTreeProvider {
                 ? t('Sent without trailing Enter')
                 : t('Sent · status unknown')
           : command.description ||
-            (commandSteps(command).length > 1
-              ? t('{0} steps', commandSteps(command).length)
-              : '');
+            commandSteps(command)
+              .map((step) => step.command)
+              .join(' ; ')
+              .replace(/\s+/g, ' ')
+              .trim();
         item.tooltip =
           (command.description ? command.description + '\n' : '') +
           commandSteps(command)
@@ -222,7 +224,7 @@ class CommandTreeProvider {
             : '');
         item.command = {
           command: 'quickCmd.selectCommand',
-          title: t('Edit command'),
+          title: t(this.editMode ? 'Edit command' : 'Send to terminal'),
           arguments: [item],
         };
         return item;
