@@ -83,9 +83,9 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     assert.equal(cmd.steps.length, 2);
     await callbacks.get('quickCmd.searchCommands')();
     assert.equal(terminals.length, 1);
-    assert.deepEqual(terminals[0].calls, [['echo first', true], ['echo second', false]]);
+    assert.deepEqual(terminals[0].calls, [['echo first\necho second', false]]);
     await callbacks.get('quickCmd.runById')({ id: cmd.id, scopeId: 'global' });
     assert.equal(terminals.length, 2);
-    assert.deepEqual(terminals[1].calls, [['echo first', true], ['echo second', false]]);
+    assert.deepEqual(terminals[1].calls, [['echo first\necho second', false]]);
   } finally { Module._load = originalLoad; }
 });
