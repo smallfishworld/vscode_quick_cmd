@@ -14,7 +14,7 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-Releases provide `quick-cmd-v0.9.0-en.vsix` (fixed English) and `quick-cmd-v0.9.0-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
+Releases provide `quick-cmd-v0.10.0-en.vsix` (fixed English) and `quick-cmd-v0.10.0-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
@@ -107,7 +107,7 @@ Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"comman
 
 ## Ready-to-import command presets
 
-The [presets/](presets/README.md) folder contains optional, ready-to-import command collections in Chinese and English: Git, SVN, Linux utilities, C/C++ & CMake, network diagnostics, and Docker. [Full Chinese preset](presets/defaults.zh-CN.json) · [Full English preset](presets/defaults.en.json) · [Git-only Chinese preset](presets/git.zh-CN.json) · [Git-only English preset](presets/git.en.json).
+The [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) folder contains optional, ready-to-import command collections in Chinese and English: Git, SVN, Linux utilities, C/C++ & CMake, network diagnostics, and Docker. [Full Chinese preset](presets/defaults.zh-CN.json) · [Full English preset](presets/defaults.en.json) · [Git-only Chinese preset](presets/git.zh-CN.json) · [Git-only English preset](presets/git.en.json).
 
 **Import replaces all current commands**, rather than merging them. Export your existing configuration first. No preset is automatically loaded or executed. Linux and networking examples target POSIX/Linux terminals such as Remote SSH or WSL.
 
