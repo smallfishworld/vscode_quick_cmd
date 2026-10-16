@@ -14,7 +14,7 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-Releases provide `quick-cmd-v0.10.0-en.vsix` (fixed English) and `quick-cmd-v0.10.0-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
+Releases provide `quick-cmd-v0.10.0-en.vsix` (fixed English), `quick-cmd-v0.10.0-zh-cn.vsix` (fixed Chinese), and `quick-cmd-v0.10.0-marketplace.vsix` (follows the VS Code UI language). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
@@ -125,9 +125,15 @@ python3 scripts/verify-packages.py
 
 Tests cover configuration, terminal sending, draft sessions, list interactions and editor interactions executed in Happy DOM. Happy DOM is a development-only dependency and is excluded from the extension package. DOM tests do not replace visual, font, drag-and-drop or sizing checks in a real VS Code window.
 
-Outputs in `dist/` contain both language installers and `SHA256SUMS`. GitHub Actions builds and verifies both editions; release automation prepares a complete draft before publishing the bilingual assets.
+Outputs in `dist/` contain both fixed-language installers, one locale-aware Marketplace installer, and `SHA256SUMS`. GitHub Actions verifies all three; publishing to the Marketplace requires a linked publisher and trusted publishing policy. See [Marketplace publishing](#marketplace-publishing).
 
 The only engineering specifications are [requirements](docs/spec.md) and [design](docs/design.md). Follow [agent.md](agent.md) for constraints and change procedures.
+
+## Marketplace publishing
+
+The Marketplace installer follows VS Code's language (English and Chinese). It has the same `smallfishworld.vscode-quick-cmd` extension identity as the fixed-language VSIX downloads; **do not publish both fixed-language variants** to one Marketplace version.
+
+Create or access Marketplace publisher `smallfishworld`, configure a trusted GitHub OIDC publishing policy for `smallfishworld/vscode_quick_cmd` and workflow `.github/workflows/release.yml`, and set repository Actions variable `MARKETPLACE_PUBLISH_ENABLED=true`. Then re-run the Release Quick Cmd workflow for the version you want to publish. The publish step uses `vsce publish --oidc` without long-lived credentials. See [official vsce trusted publishing instructions](https://github.com/microsoft/vscode-vsce#trusted-publishing). Until publisher trust is configured, GitHub Releases work as usual but Marketplace publication is skipped.
 
 ## License
 
