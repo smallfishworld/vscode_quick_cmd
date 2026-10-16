@@ -14,7 +14,7 @@
 4. **单击命令主体按配置发送；鼠标移入命令行时，最右侧显示编辑、运行按钮；删除改由右键命令弹出的原生菜单完成，删除前仍确认。编辑只打开表单。键盘聚焦时也显示这些按钮。** 在编辑栏工具栏点击“完成编辑”或右上角 × 关闭，处理草稿后收起。
 5. 搜索按钮或 `Ctrl+Alt+Q`（macOS：`Cmd+Alt+Q`）可查找命令，选择后直接发送。
 
-发行版提供 `quick-cmd-v0.9.0-zh-cn.vsix`（固定中文）和 `quick-cmd-v0.9.0-en.vsix`（固定英文），请选择其一安装。两包共用扩展标识，替换语言包沿用同一宿主/配置档案中的全局命令，不支持同时安装。开发模式仍跟随 VS Code 显示语言；用户填写的名称、命令和变量不翻译。
+发行版提供 `quick-cmd-v0.10.0-zh-cn.vsix`（固定中文）和 `quick-cmd-v0.10.0-en.vsix`（固定英文），请选择其一安装。两包共用扩展标识，替换语言包沿用同一宿主/配置档案中的全局命令，不支持同时安装。开发模式仍跟随 VS Code 显示语言；用户填写的名称、命令和变量不翻译。
 
 ## 命令列表
 
@@ -107,7 +107,7 @@
 
 ## 默认快捷命令预设
 
-仓库新增 [presets/](presets/README.md) 目录，提供可选的中文、英文快捷命令模板，涵盖 Git、SVN、Linux 常用命令、C/C++ 与 CMake、网络诊断、Docker。可以下载 [完整中文预设](presets/defaults.zh-CN.json)、[完整英文预设](presets/defaults.en.json)、[仅 Git 中文预设](presets/git.zh-CN.json) 或 [仅 Git 英文预设](presets/git.en.json)，在面板右上角通过“导入”选择使用。
+仓库新增 [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) 目录，提供可选的中文、英文快捷命令模板，涵盖 Git、SVN、Linux 常用命令、C/C++ 与 CMake、网络诊断、Docker。可以下载 [完整中文预设](presets/defaults.zh-CN.json)、[完整英文预设](presets/defaults.en.json)、[仅 Git 中文预设](presets/git.zh-CN.json) 或 [仅 Git 英文预设](presets/git.en.json)，在面板右上角通过“导入”选择使用。
 
 **注意：当前导入会替换全部已有命令，不会追加合并。** 请先“导出”备份。预设不会在扩展启动时自动加载或执行；Linux/网络命令主要面向 Linux、Remote SSH 或 WSL 的 POSIX 终端。
 
