@@ -105,6 +105,12 @@
 
 右键“复制快捷键配置”可以生成 `quickCmd.runById` 的按键配置，参数为 `{"id":"命令标识"}`。
 
+## 默认快捷命令预设
+
+仓库新增 [presets/](presets/README.md) 目录，提供可选的中文、英文快捷命令模板，涵盖 Git、SVN、Linux 常用命令、C/C++ 与 CMake、网络诊断、Docker。可以下载 [完整中文预设](presets/defaults.zh-CN.json)、[完整英文预设](presets/defaults.en.json)、[仅 Git 中文预设](presets/git.zh-CN.json) 或 [仅 Git 英文预设](presets/git.en.json)，在面板右上角通过“导入”选择使用。
+
+**注意：当前导入会替换全部已有命令，不会追加合并。** 请先“导出”备份。预设不会在扩展启动时自动加载或执行；Linux/网络命令主要面向 Linux、Remote SSH 或 WSL 的 POSIX 终端。
+
 ## 开发与验证
 
 建议使用 Node.js 22：
