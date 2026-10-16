@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "preset-git",
+      "title": "Git Version Control",
+      "commands": [
+        {
+          "id": "preset-git-status",
+          "title": "Working tree status",
+          "steps": [
+            {
+              "command": "git status -sb",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-log",
+          "title": "Recent 20 commits",
+          "steps": [
+            {
+              "command": "git log --oneline --decorate --graph -20",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff",
+          "title": "Unstaged diff",
+          "steps": [
+            {
+              "command": "git diff",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff-staged",
+          "title": "Staged diff",
+          "steps": [
+            {
+              "command": "git diff --cached",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-branches",
+          "title": "List local branches",
+          "steps": [
+            {
+              "command": "git branch -vv",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-switch",
+          "title": "Switch branch",
+          "steps": [
+            {
+              "command": "git switch ${input:branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-new-branch",
+          "title": "Create and switch branch",
+          "steps": [
+            {
+              "command": "git switch -c ${input:new_branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-fetch",
+          "title": "Fetch remotes",
+          "steps": [
+            {
+              "command": "git fetch --all",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-pull",
+          "title": "Fast-forward pull",
+          "steps": [
+            {
+              "command": "git pull --ff-only",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stage-interactive",
+          "title": "Interactively stage",
+          "steps": [
+            {
+              "command": "git add -p",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-commit",
+          "title": "Commit staged changes",
+          "steps": [
+            {
+              "command": "git commit -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-push",
+          "title": "Push current branch",
+          "steps": [
+            {
+              "command": "git push -u origin HEAD",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stash-list",
+          "title": "List stashes",
+          "steps": [
+            {
+              "command": "git stash list",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-stash-save",
+          "title": "Stash current changes",
+          "steps": [
+            {
+              "command": "git stash push -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        }
+      ]
+    }
+  ]
+}
