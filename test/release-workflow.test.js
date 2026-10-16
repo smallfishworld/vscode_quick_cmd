@@ -9,9 +9,15 @@ const workflow = fs.readFileSync(
   path.join(__dirname, '../.github/workflows/release.yml'),
   'utf8',
 );
-const script = workflow
-  .split('        run: |')
-  .at(-1)
+// Select the GitHub release script by step name, not the last YAML run block.
+// Additional steps (for example, optional Marketplace publishing) must not
+// change which shell script this regression test executes.
+const releaseStep = workflow
+  .split('      - name: Prepare draft, reset requested history, and publish\n')[1]
+  ?.split('\n      - name: ')[0];
+assert.ok(releaseStep, 'Cannot find the GitHub release step');
+const script = releaseStep
+  .split('        run: |\n')[1]
   .split('\n')
   .map((line) => line.slice(10))
   .join('\n');
