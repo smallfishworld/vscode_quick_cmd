@@ -20,13 +20,13 @@ jobs:
         run: |
           npm run check
           npm test
-      - name: Build and verify both language editions
+      - name: Build and verify release and Marketplace installers
         run: |
           npm run package
           python3 scripts/verify-packages.py
       - uses: actions/upload-artifact@v4
         with:
-          name: quick-cmd-bilingual-vsix
+          name: quick-cmd-installers
           path: |
             dist/*.vsix
             dist/SHA256SUMS
