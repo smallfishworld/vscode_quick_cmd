@@ -105,6 +105,12 @@ Command variables are Shell-quoted automatically; do not add quotes around the p
 
 Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"command-id"}` arguments.
 
+## Ready-to-import command presets
+
+The [presets/](presets/README.md) folder contains optional, ready-to-import command collections in Chinese and English: Git, SVN, Linux utilities, C/C++ & CMake, network diagnostics, and Docker. [Full Chinese preset](presets/defaults.zh-CN.json) · [Full English preset](presets/defaults.en.json) · [Git-only Chinese preset](presets/git.zh-CN.json) · [Git-only English preset](presets/git.en.json).
+
+**Import replaces all current commands**, rather than merging them. Export your existing configuration first. No preset is automatically loaded or executed. Linux and networking examples target POSIX/Linux terminals such as Remote SSH or WSL.
+
 ## Development
 
 Node.js 22 is recommended:
