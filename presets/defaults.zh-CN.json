@@ -1,0 +1,606 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "preset-git",
+      "title": "Git 版本管理",
+      "commands": [
+        {
+          "id": "preset-git-status",
+          "title": "工作区状态",
+          "steps": [
+            {
+              "command": "git status -sb",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-log",
+          "title": "最近 20 次提交",
+          "steps": [
+            {
+              "command": "git log --oneline --decorate --graph -20",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff",
+          "title": "查看未暂存差异",
+          "steps": [
+            {
+              "command": "git diff",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff-staged",
+          "title": "查看已暂存差异",
+          "steps": [
+            {
+              "command": "git diff --cached",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-branches",
+          "title": "查看本地分支",
+          "steps": [
+            {
+              "command": "git branch -vv",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-switch",
+          "title": "切换分支",
+          "steps": [
+            {
+              "command": "git switch ${input:branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-new-branch",
+          "title": "创建并切换分支",
+          "steps": [
+            {
+              "command": "git switch -c ${input:new_branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-fetch",
+          "title": "获取远程更新",
+          "steps": [
+            {
+              "command": "git fetch --all",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-pull",
+          "title": "快进式拉取",
+          "steps": [
+            {
+              "command": "git pull --ff-only",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stage-interactive",
+          "title": "交互式暂存",
+          "steps": [
+            {
+              "command": "git add -p",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-commit",
+          "title": "提交更改",
+          "steps": [
+            {
+              "command": "git commit -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-push",
+          "title": "推送当前分支",
+          "steps": [
+            {
+              "command": "git push -u origin HEAD",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stash-list",
+          "title": "查看暂存列表",
+          "steps": [
+            {
+              "command": "git stash list",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-stash-save",
+          "title": "暂存当前修改",
+          "steps": [
+            {
+              "command": "git stash push -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        }
+      ]
+    },
+    {
+      "id": "preset-svn",
+      "title": "SVN 版本管理",
+      "commands": [
+        {
+          "id": "preset-svn-status",
+          "title": "查看工作副本状态",
+          "steps": [
+            {
+              "command": "svn status",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-diff",
+          "title": "查看本地差异",
+          "steps": [
+            {
+              "command": "svn diff",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-update",
+          "title": "更新工作副本",
+          "steps": [
+            {
+              "command": "svn update",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control",
+          "confirm": true
+        },
+        {
+          "id": "preset-svn-log",
+          "title": "最近 10 次提交",
+          "steps": [
+            {
+              "command": "svn log -l 10",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-info",
+          "title": "查看仓库信息",
+          "steps": [
+            {
+              "command": "svn info",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-commit",
+          "title": "提交本地修改",
+          "steps": [
+            {
+              "command": "svn commit -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control",
+          "confirm": true
+        }
+      ]
+    },
+    {
+      "id": "preset-linux",
+      "title": "Linux 常用命令",
+      "commands": [
+        {
+          "id": "preset-linux-list",
+          "title": "查看当前目录",
+          "steps": [
+            {
+              "command": "pwd && ls -lah",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-find",
+          "title": "按文件名查找",
+          "steps": [
+            {
+              "command": "find . -type f -name ${input:pattern}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-grep",
+          "title": "递归搜索内容",
+          "steps": [
+            {
+              "command": "grep -RIn --exclude-dir=.git -- ${input:keyword} .",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-disk",
+          "title": "查看磁盘空间",
+          "steps": [
+            {
+              "command": "df -h",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-memory",
+          "title": "查看内存使用",
+          "steps": [
+            {
+              "command": "free -h",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-processes",
+          "title": "内存占用最高的进程",
+          "steps": [
+            {
+              "command": "ps aux --sort=-%mem | head -n 15",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-journal",
+          "title": "查看最近系统日志",
+          "steps": [
+            {
+              "command": "journalctl -n 100 --no-pager",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        }
+      ]
+    },
+    {
+      "id": "preset-cmake",
+      "title": "C/C++ 与 CMake",
+      "commands": [
+        {
+          "id": "preset-cmake-configure-debug",
+          "title": "配置 Debug",
+          "steps": [
+            {
+              "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-configure-release",
+          "title": "配置 Release",
+          "steps": [
+            {
+              "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-build",
+          "title": "编译工程",
+          "steps": [
+            {
+              "command": "cmake --build build --parallel",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-test",
+          "title": "运行测试",
+          "steps": [
+            {
+              "command": "cd build && ctest --output-on-failure",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-targets",
+          "title": "列出构建目标",
+          "steps": [
+            {
+              "command": "cmake --build build --target help",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-compiler",
+          "title": "查看编译器版本",
+          "steps": [
+            {
+              "command": "gcc --version && g++ --version",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        }
+      ]
+    },
+    {
+      "id": "preset-network",
+      "title": "网络诊断",
+      "commands": [
+        {
+          "id": "preset-network-addresses",
+          "title": "查看网络接口",
+          "steps": [
+            {
+              "command": "ip -br addr",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-routes",
+          "title": "查看路由表",
+          "steps": [
+            {
+              "command": "ip route",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-ports",
+          "title": "查看监听端口",
+          "steps": [
+            {
+              "command": "ss -lnt",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-ping",
+          "title": "测试网络连通性",
+          "steps": [
+            {
+              "command": "ping -c 4 ${input:host}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-headers",
+          "title": "查看 HTTP 响应头",
+          "steps": [
+            {
+              "command": "curl -I --max-time 10 -- ${input:url}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "id": "preset-docker",
+      "title": "Docker 容器",
+      "commands": [
+        {
+          "id": "preset-docker-ps",
+          "title": "查看运行容器",
+          "steps": [
+            {
+              "command": "docker ps",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-ps-all",
+          "title": "查看所有容器",
+          "steps": [
+            {
+              "command": "docker ps -a",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-images",
+          "title": "查看本地镜像",
+          "steps": [
+            {
+              "command": "docker images",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-logs",
+          "title": "查看容器日志",
+          "steps": [
+            {
+              "command": "docker logs --tail 100 ${input:container}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-stats",
+          "title": "查看容器资源",
+          "steps": [
+            {
+              "command": "docker stats --no-stream",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        }
+      ]
+    }
+  ]
+}
