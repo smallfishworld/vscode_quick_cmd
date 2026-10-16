@@ -94,7 +94,7 @@
   <body>
     <h1>Quick Cmd — UI 视觉稿</h1>
     <p class="lede">
-      基线 v0.7.1 · 视图<strong>主体</strong>由扩展自身的
+      基线 v0.9.0 · 视图<strong>主体</strong>由扩展自身的
       <code>media/list.html</code> / <code>media/editor.html</code> 模板、
       <code>media/*.css</code> 与 <code>media/*-client.js</code> 在 iframe 中真实渲染（仅补假的
       <code>acquireVsCodeApi</code> 与宿主消息）。视图<strong>标题栏与右上角工具栏</strong>由 VS Code
@@ -169,7 +169,7 @@
     <p class="note">
       开始编辑时宿主执行 <code>quickCmd.editor.focus</code>（<code>src/editor.js</code> 的 <code>focus()</code>），
       VS Code 展开“命令编辑”并滚动到它，<strong>“分组”被收起为标题栏</strong>，编辑表单占据整个侧栏——不是两者各占一半。
-      编辑视图标题栏工具栏为“在主编辑区打开”“完成编辑”与“关闭编辑”（×）；webview 内部还有一行上下文（<code>构建 · 编辑命令</code>）与展开/重读按钮。
+      编辑视图标题栏工具栏为“在主编辑区打开”“保存并完成编辑”（✓，保存后退出）与“关闭编辑”（×，放弃确认）；webview 内部还有一行上下文（<code>构建 · 编辑命令</code>）与展开/重读按钮。
     </p>
     <div class="rowpair">
       <div>
@@ -200,7 +200,7 @@
                 <span class="label">命令编辑</span>
                 <div class="view-actions">
                   <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
-                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 保存并完成编辑"></span>
                   <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
                 </div>
               </div>
@@ -238,7 +238,7 @@
                 <span class="label">命令编辑</span>
                 <div class="view-actions">
                   <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
-                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 保存并完成编辑"></span>
                   <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
                 </div>
               </div>
@@ -269,7 +269,7 @@
                 <span class="label">命令编辑</span>
                 <div class="view-actions">
                   <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
-                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 保存并完成编辑"></span>
                   <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
                 </div>
               </div>
@@ -291,7 +291,7 @@
                 <span class="label">命令编辑</span>
                 <div class="view-actions">
                   <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
-                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 保存并完成编辑"></span>
                   <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
                 </div>
               </div>
@@ -303,10 +303,10 @@
       </div>
     </div>
 
-    <h2><span class="num">4</span>高级设置展开 · 图标选择与环境变量（FR-11）</h2>
+    <h2><span class="num">4</span>高级设置（默认展开）· 图标选择与环境变量（FR-11）</h2>
     <p class="note">
-      低频配置收入“高级设置”折叠区：确认开关、描述、命令图标（7 个预设 + 自定义名）、环境变量表格。
-      图标选项与顺序取自 <code>editor-client.js</code> 的 <code>iconOptions</code>，使用编辑表单的自绘 stroke 图标。
+      低频配置收入“高级设置”区，<strong>默认展开</strong>：确认开关、描述、命令图标（32 个 Codicon 预设 + 自定义名）、环境变量表格。
+      图标选项与顺序取自 <code>editor-client.js</code> 的 <code>iconOptions</code>，与命令列表同用 Codicon 字体渲染。
     </p>
     <div class="rowpair">
       <div>
@@ -321,11 +321,11 @@
                 <span class="label">命令编辑</span>
                 <div class="view-actions">
                   <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
-                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 保存并完成编辑"></span>
                   <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
                 </div>
               </div>
-              <iframe src="./editor.html?theme=light&fixture=editor&adv=1" title="高级设置"></iframe>
+              <iframe src="./editor.html?theme=light&fixture=editor" title="高级设置"></iframe>
             </section>
           </div>
         </div>
@@ -343,11 +343,11 @@
                 <span class="label">命令编辑</span>
                 <div class="view-actions">
                   <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
-                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 保存并完成编辑"></span>
                   <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
                 </div>
               </div>
-              <iframe src="./editor.html?theme=dark&fixture=editor&adv=1" title="高级设置"></iframe>
+              <iframe src="./editor.html?theme=dark&fixture=editor" title="高级设置"></iframe>
             </section>
           </div>
         </div>

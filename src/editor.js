@@ -33,7 +33,19 @@ class CommandEditorProvider {
   }
   html(webview) {
     const media = this.vscode.Uri.joinPath(this.context.extensionUri, 'media');
-    webview.options = { enableScripts: true, localResourceRoots: [media] };
+    const packaged = fs.existsSync(
+      path.join(this.context.extensionPath, 'media', 'codicons', 'codicon.css'),
+    );
+    const icons = this.vscode.Uri.joinPath(
+      this.context.extensionUri,
+      ...(packaged
+        ? ['media', 'codicons']
+        : ['node_modules', '@vscode', 'codicons', 'dist']),
+    );
+    webview.options = {
+      enableScripts: true,
+      localResourceRoots: [media, icons],
+    };
     let html = fs.readFileSync(
       path.join(this.context.extensionPath, 'media', 'editor.html'),
       'utf8',
@@ -41,6 +53,9 @@ class CommandEditorProvider {
     const values = {
       cspSource: webview.cspSource,
       nonce: randomBytes(16).toString('base64'),
+      iconsUri: String(
+        webview.asWebviewUri(this.vscode.Uri.joinPath(icons, 'codicon.css')),
+      ),
       language: /^zh\b/i.test(resolveLocale(this.vscode.env?.language))
         ? 'zh-CN'
         : 'en',
@@ -377,20 +392,42 @@ class CommandEditorProvider {
             return false;
           }
         }
-        this.panel?.dispose();
-        this.session = undefined;
-        this.selection = undefined;
-        this.persist();
-        this.broadcast({ type: 'empty' });
-        await this.vscode.commands.executeCommand(
-          'setContext',
-          'quickCmd.editing',
-          false,
-        );
+        await this.teardown();
         return true;
       });
     this.openQueue = job;
     return job;
+  }
+  // “完成编辑”：先保存草稿再退出，保存失败则保持编辑，不丢输入。
+  async saveAndClose() {
+    const job = this.openQueue
+      .catch(() => {})
+      .then(async () => {
+        if (this.saving) {
+          await this.saving;
+        }
+        if (this.dirty()) {
+          await this.save(this.session.raw, this.selection.groupId);
+        }
+        await this.teardown();
+        return true;
+      });
+    this.openQueue = job;
+    return job;
+  }
+  async teardown() {
+    this.panel?.dispose();
+    this.session = undefined;
+    this.selection = undefined;
+    this.persist();
+    this.broadcast({ type: 'empty' });
+    await this.vscode.commands.executeCommand(
+      'setContext',
+      'quickCmd.editing',
+      false,
+    );
+    // 退出编辑后回到命令列表视图，而不是停在终端或空编辑视图。
+    await this.vscode.commands.executeCommand('quickCmd.commands.focus');
   }
   async openPanel() {
     await this.showView();

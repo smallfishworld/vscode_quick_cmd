@@ -215,10 +215,32 @@ test('finishing editing cancels or handles dirty data before hiding the editor',
     (await f.store.read(f.scope)).groups[0].commands[0].title,
     'Pending',
   );
-  assert.deepEqual(contexts.at(-1), ['setContext', 'quickCmd.editing', false]);
+  assert.deepEqual(contexts.at(-2), ['setContext', 'quickCmd.editing', false]);
+  // 退出编辑后回到命令列表视图，而不是停在终端或空编辑视图。
+  assert.deepEqual(contexts.at(-1), ['quickCmd.commands.focus']);
   await f.editor.open(f.scope, f.group.id, f.b.id);
   f.editor.session.raw.title = 'Discarded';
   f.answers.push('Discard');
   assert.equal(await f.editor.close(), true);
   assert.equal((await f.store.read(f.scope)).groups[0].commands[1].title, 'B');
+});
+
+test('save and finish writes the draft and leaves the editor without a prompt', async () => {
+  const f = fixture();
+  const contexts = [];
+  f.vscode.commands.executeCommand = async (...args) => contexts.push(args);
+  await f.editor.open(f.scope, f.group.id, f.a.id);
+  f.editor.session.raw.title = 'Saved by check';
+  assert.equal(await f.editor.saveAndClose(), true);
+  assert.equal(f.editor.session, undefined);
+  assert.equal(
+    (await f.store.read(f.scope)).groups[0].commands[0].title,
+    'Saved by check',
+  );
+  assert.deepEqual(contexts.at(-1), ['quickCmd.commands.focus']);
+  // 保存失败时保持编辑，不丢输入。
+  await f.editor.open(f.scope, f.group.id, f.a.id);
+  f.editor.session.raw.envText = '{broken';
+  await assert.rejects(f.editor.saveAndClose(), /Invalid environment/);
+  assert.equal(f.editor.session.raw.envText, '{broken');
 });

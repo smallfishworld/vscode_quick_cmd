@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; style-src {{cspSource}}; script-src {{cspSource}}; img-src {{cspSource}} data:;"
+      content="default-src 'none'; style-src {{cspSource}}; script-src {{cspSource}}; img-src {{cspSource}} data:; font-src {{cspSource}};"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="{{iconsUri}}" rel="stylesheet" />
     <link href="{{cssUri}}" rel="stylesheet" />
     <title>Quick Cmd</title>
   </head>
@@ -133,7 +134,7 @@
               hidden
             ></p>
           </section>
-          <details id="advanced" class="advanced">
+          <details id="advanced" class="advanced" open>
             <summary>
               <span data-i18n="Advanced settings"></span
               ><span data-icon="chevron" aria-hidden="true"></span>

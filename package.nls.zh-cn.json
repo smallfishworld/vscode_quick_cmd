@@ -24,7 +24,7 @@
   "quickCmd.stop": "Quick Cmd: 停止命令并关闭终端",
   "quickCmd.openEditorPanel": "Quick Cmd: 在主编辑区打开",
   "shellType": "命令变量插值时使用的 Shell 引号规则。自动模式在 Windows 上使用 PowerShell 或 cmd.exe，在其他系统上使用 POSIX 规则。",
-  "quickCmd.closeEditor": "Quick Cmd: 完成编辑",
+  "quickCmd.closeEditor": "Quick Cmd: 保存并完成编辑",
   "quickCmd.closeEditorView": "Quick Cmd: 关闭编辑",
   "quickCmd.collapseAll": "Quick Cmd: 折叠全部分组",
   "quickCmd.openSettings": "Quick Cmd: 设置",

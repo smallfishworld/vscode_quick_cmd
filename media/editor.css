@@ -309,9 +309,15 @@ details[open] > summary > .icon {
 .icon-choice {
   width: 30px;
   height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid transparent;
   background: transparent;
   color: var(--vscode-foreground);
+}
+.icon-choice .codicon {
+  font-size: 16px;
 }
 .icon-choice[aria-pressed='true'] {
   border-color: var(--focus);

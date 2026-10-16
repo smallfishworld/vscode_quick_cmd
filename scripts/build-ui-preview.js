@@ -32,6 +32,7 @@ const PAGES = [
     target: 'editor.html',
     vars: {
       language: 'zh-CN',
+      iconsUri: './codicon.css',
       cssUri: '../../media/editor.css',
       i18nUri: '../../media/i18n.js',
       jsUri: '../../media/editor-client.js',

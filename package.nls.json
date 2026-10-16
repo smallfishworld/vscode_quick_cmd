@@ -24,7 +24,7 @@
   "quickCmd.stop": "Quick Cmd: Stop Command (Close Terminal)",
   "quickCmd.openEditorPanel": "Quick Cmd: Open Wide Editor",
   "shellType": "Shell quoting mode used when interpolating command variables. Auto uses PowerShell or cmd.exe on Windows and POSIX quoting elsewhere.",
-  "quickCmd.closeEditor": "Quick Cmd: Done Editing",
+  "quickCmd.closeEditor": "Quick Cmd: Save and Finish Editing",
   "quickCmd.closeEditorView": "Quick Cmd: Close Editor",
   "quickCmd.collapseAll": "Quick Cmd: Collapse All Groups",
   "quickCmd.openSettings": "Quick Cmd: Settings",

@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.8.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.9.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -41,7 +41,9 @@
 
 表单把末尾回车作为组级设置，序列化时映射为中间步骤 `execute: true` 和最后一步的实际选项；布局操作不会改动选项。无效环境变量行通过草稿元数据保留，不作为有效环境变量写入。
 
-编辑栏仍由 `quickCmd.editing` 控制，启动为 false。行尾铅笔和新建操作打开编辑栏，命令主体始终按保存配置发送；不再使用全局编辑模式或在列表顶部切换点击含义。关闭编辑栏仍先等待保存并处理草稿，取消或失败保持编辑。标题栏提供两个关闭入口：`quickCmd.closeEditor`（完成编辑，`$(check)`）与 `quickCmd.closeEditorView`（关闭编辑，`$(close)`），两者都调用 `editor.close()`，共用脏数据确认与草稿保护。
+编辑栏仍由 `quickCmd.editing` 控制，启动为 false。行尾铅笔和新建操作打开编辑栏，命令主体始终按保存配置发送；不再使用全局编辑模式或在列表顶部切换点击含义。关闭编辑栏仍先等待保存并处理草稿，取消或失败保持编辑。标题栏提供两个关闭入口：`quickCmd.closeEditor`（保存并完成编辑，`$(check)`）调用 `editor.saveAndClose()`，先保存草稿再退出，保存失败保持编辑不丢输入；`quickCmd.closeEditorView`（关闭编辑，`$(close)`）调用 `editor.close()`，脏数据时弹保存/放弃/取消确认。两者退出都经 `teardown()`，除清除会话外还执行 `quickCmd.commands.focus`，把焦点交回命令列表视图，不停留在终端或空编辑视图。
+
+高级设置区（`<details id="advanced">`）默认展开。命令图标选择器渲染约 30 个 Codicon 预设加自定义名称，选项值与命令列表 `glyph()` 使用同一套 Codicon 字体（`media/codicons/codicon.css` 或 `node_modules/@vscode/codicons/dist`，经 `webview.asWebviewUri` 注入，CSP 放行 `font-src`），因此编辑表单与列表两处显示一致。
 
 
 原生右键菜单通过 `webview/context` 和行级 `data-vscode-context` 声明，由 VS Code 在鼠标处定位。右键只选中目标，不阻止原生事件、不请求 QuickPick。菜单命令携带 token、类型及 ID，宿主重新校验会话、动作白名单与当前数据后重建节点，忽略客户端作用域和命令文本。

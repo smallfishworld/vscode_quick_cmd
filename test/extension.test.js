@@ -221,15 +221,33 @@ test('extension activates the embedded editor, saves a multi-step command, then 
       baseRevision: latest.revision,
       fields: { ...latest.raw, title: 'Dirty' },
     });
-    answers.push('Cancel');
-    assert.equal(await callbacks.get('quickCmd.closeEditor')(), false);
-    assert.equal(modes.get('quickCmd.editing'), true);
+    // × 仍走放弃确认：取消后保持编辑。
     answers.push('Cancel');
     assert.equal(await callbacks.get('quickCmd.closeEditorView')(), false);
     assert.equal(modes.get('quickCmd.editing'), true);
-    answers.push('Discard');
+    // ✓ 直接保存草稿并退出，不弹确认框。
     assert.equal(await callbacks.get('quickCmd.closeEditor')(), true);
     assert.equal(modes.get('quickCmd.editing'), false);
+    assert.equal(
+      state.get('quickCmd.globalConfig').groups[0].commands[0].title,
+      'Dirty',
+    );
+    // 再次进入编辑并改脏，× 选择放弃后退出。
+    await callbacks.get('quickCmd.editCommand')(nativeContext);
+    assert.equal(modes.get('quickCmd.editing'), true);
+    await onMessage({
+      type: 'draft',
+      token: latest.token,
+      baseRevision: latest.revision,
+      fields: { ...latest.raw, title: 'Discarded' },
+    });
+    answers.push('Discard');
+    assert.equal(await callbacks.get('quickCmd.closeEditorView')(), true);
+    assert.equal(modes.get('quickCmd.editing'), false);
+    assert.equal(
+      state.get('quickCmd.globalConfig').groups[0].commands[0].title,
+      'Dirty',
+    );
     await callbacks.get('quickCmd.searchCommands')();
     assert.equal(terminals.length, 2);
     await callbacks.get('quickCmd.collapseAll')();

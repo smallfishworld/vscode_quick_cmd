@@ -216,10 +216,10 @@
     if (!payload) return;
     setTimeout(() => {
       window.dispatchEvent(new MessageEvent('message', { data: payload }));
-      // ?adv=1 展开“高级设置”，便于核对图标选择器与环境变量表格。
-      if (params.get('adv') === '1') {
+      // 高级设置现默认展开；?adv=0 可收起，便于核对折叠态。
+      if (params.get('adv') === '0') {
         const advanced = document.getElementById('advanced');
-        if (advanced) advanced.open = true;
+        if (advanced) advanced.open = false;
       }
     }, 0);
   });

@@ -537,23 +537,57 @@ function save(run = false) {
     run,
   });
 }
+// 图标值即 Codicon 名称，与命令列表的 glyph() 使用同一套字体，保证两处显示一致。
 const iconOptions = [
   ['', 'terminal', 'Terminal'],
   ['tools', 'tools', 'Build'],
   ['play', 'play', 'Start'],
+  ['debug-start', 'debug-start', 'Debug'],
   ['beaker', 'beaker', 'Test'],
   ['rocket', 'rocket', 'Deploy'],
-  ['clear-all', 'clear', 'Clean'],
-  ['list-ordered', 'list', 'Steps'],
+  ['clear-all', 'clear-all', 'Clean'],
+  ['list-ordered', 'list-ordered', 'Steps'],
+  ['gear', 'gear', 'Config'],
+  ['git-branch', 'git-branch', 'Branch'],
+  ['git-commit', 'git-commit', 'Commit'],
+  ['git-merge', 'git-merge', 'Merge'],
+  ['git-pull-request', 'git-pull-request', 'Pull request'],
+  ['cloud-upload', 'cloud-upload', 'Upload'],
+  ['cloud-download', 'cloud-download', 'Download'],
+  ['database', 'database', 'Database'],
+  ['server', 'server', 'Server'],
+  ['file-code', 'file-code', 'Script'],
+  ['files', 'files', 'Files'],
+  ['folder', 'folder', 'Folder'],
+  ['package', 'package', 'Package'],
+  ['bug', 'bug', 'Bug'],
+  ['flame', 'flame', 'Performance'],
+  ['check', 'check', 'Verify'],
+  ['sync', 'sync', 'Sync'],
+  ['refresh', 'refresh', 'Refresh'],
+  ['shield', 'shield', 'Security'],
+  ['lock', 'lock', 'Lock'],
+  ['key', 'key', 'Key'],
+  ['browser', 'browser', 'Browser'],
+  ['zap', 'zap', 'Fast'],
+  ['plug', 'plug', 'Plugin'],
 ];
 for (const [value, symbol, label] of iconOptions) {
-  const b = action(symbol, label, () => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'icon-choice';
+  b.title = t(label);
+  b.setAttribute('aria-label', t(label));
+  b.dataset.value = value;
+  const glyph = document.createElement('span');
+  glyph.className = 'codicon codicon-' + symbol;
+  glyph.setAttribute('aria-hidden', 'true');
+  b.append(glyph);
+  b.addEventListener('click', () => {
     byId('icon').value = value;
     updateIcons();
     changed();
   });
-  b.className = 'icon-choice';
-  b.dataset.value = value;
   byId('iconPicker').append(b);
 }
 function updateIcons() {

@@ -79,7 +79,14 @@ test('Chinese editor has translated labels, tooltips, placeholders and SVG contr
       f.w.document.querySelector('.delete-action').title,
       '删除步骤',
     );
-    assert.equal(f.w.document.querySelectorAll('.icon-choice svg').length, 7);
+    // 图标选项用 Codicon 字体渲染，与命令列表的 glyph() 同源，保证两处一致。
+    const choices = f.w.document.querySelectorAll('.icon-choice');
+    assert.equal(choices.length, 32);
+    assert.equal(
+      f.w.document.querySelectorAll('.icon-choice .codicon').length,
+      32,
+    );
+    assert.equal(choices[1].getAttribute('aria-label'), '编译构建');
     assert.equal(f.$('save').disabled, true);
     assert.ok(!f.$('context').textContent.includes('全局命令'));
     assert.equal(f.$('saveState').textContent.trim(), '已保存');
