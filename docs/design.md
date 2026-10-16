@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.9.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.10.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -84,9 +84,13 @@
 
 两包使用同一扩展标识，用户选择其一安装；同一宿主/配置档案中切换语言包保留全局命令，不支持两包同时安装。
 
+### Marketplace 打包
+
+发布脚本另构建一个 `marketplace` 安装包，保留英文默认 `package.nls.json` 与中文 `package.nls.zh-cn.json`，不设置 `quickCmdBuildLanguage`，因此运行时界面语言与 VS Code 一致。三个包都包含 `presets/`；校验对三个包进行运行时代码比对，并核对身份与校验和。GitHub 上的中英文固定包保持原有行为，不允许以两个语言包发布同一 Marketplace 版本。
+
 ## 7. 持续集成与发布
 
-CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、双语打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含两包和校验和的草稿发布，最后转为正式发布。
+CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、三包打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含三包和校验和的草稿发布，最后转为正式发布。商店发布步骤需要 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED=true` 且已配置 Marketplace 信任的 GitHub OIDC 发布策略；它仅上传 `marketplace` 版本。
 
 v0.6.0 按用户要求执行一次历史重置：仅删除已核实的旧版本 `v0.2.0`、`v0.3.0`、`v0.3.1`、`v0.4.0`、`v0.5.0` 及其标签。清理发生在新包通过验证并上传草稿之后。固定白名单不会匹配未来版本或其他标签；普通版本发布不清理历史。已正式发布的同版本不会在重复运行时被覆盖。
 

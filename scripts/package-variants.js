@@ -3,16 +3,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const LANGUAGES = ['zh-cn', 'en'];
+const VARIANTS = [...LANGUAGES, 'marketplace'];
 
 /** Prepare isolated release trees; never rewrite the checked-out source manifest. */
 function stageVariant(root, buildRoot, locale) {
-  if (!LANGUAGES.includes(locale)) {
+  if (!VARIANTS.includes(locale)) {
     throw new Error('Unsupported package language: ' + locale);
   }
   const stage = path.join(buildRoot, locale);
   fs.rmSync(stage, { recursive: true, force: true });
   fs.mkdirSync(stage, { recursive: true });
-  for (const name of ['src', 'media', 'LICENSE', 'RELEASE_NOTES.md']) {
+  for (const name of ['src', 'media', 'presets', 'LICENSE', 'RELEASE_NOTES.md']) {
     fs.cpSync(path.join(root, name), path.join(stage, name), {
       recursive: true,
     });
@@ -46,16 +47,23 @@ function stageVariant(root, buildRoot, locale) {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(root, 'package.json'), 'utf8'),
   );
-  manifest.quickCmdBuildLanguage = locale;
-  manifest.displayName =
-    locale === 'zh-cn' ? 'Quick Cmd 中文版' : 'Quick Cmd English';
+  if (locale !== 'marketplace') {
+    manifest.quickCmdBuildLanguage = locale;
+    manifest.displayName =
+      locale === 'zh-cn' ? 'Quick Cmd 中文版' : 'Quick Cmd English';
+  } else {
+    // One Marketplace package supports both UI locales under one extension identity.
+    delete manifest.quickCmdBuildLanguage;
+    manifest.displayName = 'Quick Cmd';
+  }
   manifest.files = [
     'src/**',
     'media/**',
+    'presets/**',
     'README*.md',
     'LICENSE',
     'RELEASE_NOTES.md',
-    'package.nls.json',
+    'package.nls*.json',
   ];
   delete manifest.scripts;
   delete manifest.devDependencies;
@@ -70,6 +78,12 @@ function stageVariant(root, buildRoot, locale) {
     path.join(root, messages),
     path.join(stage, 'package.nls.json'),
   );
+  if (locale === 'marketplace') {
+    fs.copyFileSync(
+      path.join(root, 'package.nls.zh-cn.json'),
+      path.join(stage, 'package.nls.zh-cn.json'),
+    );
+  }
   return stage;
 }
 function packageVariants(root) {
@@ -80,7 +94,7 @@ function packageVariants(root) {
     fs.readFileSync(path.join(root, 'package.json'), 'utf8'),
   );
   const vsce = path.join(root, 'node_modules', '@vscode', 'vsce', 'vsce');
-  for (const locale of LANGUAGES) {
+  for (const locale of VARIANTS) {
     const stage = stageVariant(root, buildRoot, locale);
     const output = path.join(dist, `quick-cmd-v${version}-${locale}.vsix`);
     const result = spawnSync(
@@ -99,4 +113,4 @@ function packageVariants(root) {
 if (require.main === module) {
   packageVariants(path.resolve(__dirname, '..'));
 }
-module.exports = { stageVariant, packageVariants, LANGUAGES };
+module.exports = { stageVariant, packageVariants, LANGUAGES, VARIANTS };

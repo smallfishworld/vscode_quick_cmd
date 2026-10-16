@@ -1,26 +1,21 @@
-# Quick Cmd v0.9.0
-
-> Repository-only addition after v0.9.0 (no new VSIX release): optional bilingual JSON command presets under `presets/` (Git, SVN, Linux, CMake, networking, Docker), including Git-only presets. Import remains an explicit whole-configuration replacement. / v0.9.0 发布后的仓库示例补充，尚未作为新 VSIX 发行；导入仍为整体替换。
-
+# Quick Cmd v0.10.0
 
 ## 中文
 
-- 编辑栏“高级设置”默认展开，确认开关、描述、命令图标与环境变量不再需要手动点开。
-- 标题栏 ✓ 改为“保存并完成编辑”：直接保存草稿并退出，不再弹确认框；保存失败时保持编辑，不丢输入。× 仍走保存/放弃/取消确认。
-- 点击 ✓ 或 × 退出后焦点回到命令列表视图，不再停在终端或空编辑视图。
-- 命令图标预设扩充到约 30 个（覆盖构建、调试、测试、部署、Git、云、数据库、文件、安全等常用场景）。
-- 图标选择器改用 Codicon 字体渲染，与命令列表同源，修复同一图标在两处显示不一致的问题。
-- 保留列表字号分层、缩进竖线、行尾编辑/运行按钮与中英文发行包。
+- 新增 `presets/` 默认快捷命令库，包括 Git（14 条）、SVN（6 条）、Linux（7 条）、C/C++ 与 CMake（6 条）、网络诊断（5 条）和 Docker（5 条），共 **6 组、43 条命令**，同时提供中英文及仅 Git 的预设文件。
+- 预设 JSON 随三个 VSIX 安装包一同打包，也可从 [GitHub presets 目录](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) 下载并手动导入。
+- 新增 `quick-cmd-v0.10.0-marketplace.vsix`：保留英文与中文 VS Code 本地化配置，按宿主界面语言自动选择。
+- 保留 GitHub 发行版的固定中文、固定英文两个 VSIX 以及 SHA256 校验和；自动化构建和校验覆盖全部三个包。
+- 为 GitHub Actions 配置可选的 Marketplace OIDC 可信发布步骤（需先配置发布者授权及仓库开关）。
+
+**兼容与安全：** 所有预设均不会自动执行。现有导入仍为替换全部命令，而不是增量合并；导入前请先导出备份。修改仓库或远端状态的关键命令启用了执行前确认。Linux 网络命令主要面向 POSIX/Linux Shell（Remote SSH、WSL 等）。
 
 ## English
 
-- The editor's **Advanced settings** section is now expanded by default, so confirmation, description, icon and environment variables are visible without an extra click.
-- The title-bar ✓ is now **Save and Finish Editing**: it saves the draft and exits without a prompt, and keeps the editor open (preserving input) if saving fails. × still asks Save, Discard or Cancel.
-- Finishing or closing the editor returns focus to the command list view instead of leaving you in the terminal or an empty editor view.
-- The command icon presets grew to about 30, covering build, debug, test, deploy, Git, cloud, database, files and security.
-- The icon picker now renders from the Codicon font, the same source as the command list, fixing icons that looked different in the two places.
-- Retain the list type hierarchy, indent guide, row Edit/Run buttons and both language editions.
+- Added `presets/` with **43 commands across six groups**: Git (14), SVN (6), Linux (7), C/C++ & CMake (6), network diagnostics (5), and Docker (5). Both Chinese and English collections and Git-only collections are available.
+- The JSON presets are bundled in all three VSIX installers and available for manual download from [GitHub](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets).
+- Added `quick-cmd-v0.10.0-marketplace.vsix`, which follows the host VS Code language for English/Chinese UI localization.
+- Retained fixed Chinese and English GitHub release installers and SHA256 checksums, validating all three packages in CI.
+- Prepared an optional GitHub Actions Marketplace publishing step using OIDC trusted publishing after publisher authorization.
 
-Automated interaction and bilingual package checks cover this release. Actual VS Code font rendering has not been visually verified in a graphical host.
-
-The visual mockups under `docs/ui-preview/` render the extension's own webview templates and client scripts, and were reviewed before this change landed.
+**Compatibility and safety:** Presets are never executed automatically. Import still replaces all existing commands rather than merging; export a backup first. Potentially state-changing version-control commands require a send confirmation. Linux and networking examples target POSIX/Linux shells including Remote SSH and WSL.
