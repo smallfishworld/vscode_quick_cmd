@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.9.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.10.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
