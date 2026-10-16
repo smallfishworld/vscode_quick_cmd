@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "preset-git",
+      "title": "Git 版本管理",
+      "commands": [
+        {
+          "id": "preset-git-status",
+          "title": "工作区状态",
+          "steps": [
+            {
+              "command": "git status -sb",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-log",
+          "title": "最近 20 次提交",
+          "steps": [
+            {
+              "command": "git log --oneline --decorate --graph -20",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff",
+          "title": "查看未暂存差异",
+          "steps": [
+            {
+              "command": "git diff",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff-staged",
+          "title": "查看已暂存差异",
+          "steps": [
+            {
+              "command": "git diff --cached",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-branches",
+          "title": "查看本地分支",
+          "steps": [
+            {
+              "command": "git branch -vv",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-switch",
+          "title": "切换分支",
+          "steps": [
+            {
+              "command": "git switch ${input:branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-new-branch",
+          "title": "创建并切换分支",
+          "steps": [
+            {
+              "command": "git switch -c ${input:new_branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-fetch",
+          "title": "获取远程更新",
+          "steps": [
+            {
+              "command": "git fetch --all",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-pull",
+          "title": "快进式拉取",
+          "steps": [
+            {
+              "command": "git pull --ff-only",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stage-interactive",
+          "title": "交互式暂存",
+          "steps": [
+            {
+              "command": "git add -p",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-commit",
+          "title": "提交更改",
+          "steps": [
+            {
+              "command": "git commit -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-push",
+          "title": "推送当前分支",
+          "steps": [
+            {
+              "command": "git push -u origin HEAD",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stash-list",
+          "title": "查看暂存列表",
+          "steps": [
+            {
+              "command": "git stash list",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-stash-save",
+          "title": "暂存当前修改",
+          "steps": [
+            {
+              "command": "git stash push -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        }
+      ]
+    }
+  ]
+}

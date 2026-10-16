@@ -1,5 +1,8 @@
 # Quick Cmd v0.9.0
 
+> Repository-only addition after v0.9.0 (no new VSIX release): optional bilingual JSON command presets under `presets/` (Git, SVN, Linux, CMake, networking, Docker), including Git-only presets. Import remains an explicit whole-configuration replacement. / v0.9.0 发布后的仓库示例补充，尚未作为新 VSIX 发行；导入仍为整体替换。
+
+
 ## 中文
 
 - 编辑栏“高级设置”默认展开，确认开关、描述、命令图标与环境变量不再需要手动点开。

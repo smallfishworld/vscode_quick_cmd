@@ -24,6 +24,10 @@
 - 项目文件夹仅作为执行目录或文件变量上下文；不是配置保存范围。
 - JSON 导入先解析和校验，再请求替换确认，不主动执行导入的命令。
 
+## 2.1 仓库级默认命令样例
+
+`presets/` 保存可选的双语 JSON 命令集合：完整 6 组及 Git 单组两个集合，每个集合均符合 `src/model.js` 的 `validateConfig` 约束，使用稳定唯一 ID、单步骤、`${workspaceFolder}` 工作目录以及 `reuse` 终端策略。`test/presets.test.js` 保障格式、双语命令等价和高风险操作确认标志。预设是仓库示例文件，不由 `src/store.js` 自动初始化，也不改变 `src/transfer.js` 的“确认后完整替换”语义；用户必须主动下载并导入。POSIX/Linux 专属命令在文档中标明平台限制。
+
 ## 3. 编辑会话与消息
 
 会话包含选择信息、唯一 `token`、递增 `revision`、当前 `raw` 草稿、`baseline` 保存基线和 `original` 存储快照。草稿写入当前 VS Code 工作区状态，不能触发命令执行。

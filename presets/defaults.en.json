@@ -1,0 +1,606 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "preset-git",
+      "title": "Git Version Control",
+      "commands": [
+        {
+          "id": "preset-git-status",
+          "title": "Working tree status",
+          "steps": [
+            {
+              "command": "git status -sb",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-log",
+          "title": "Recent 20 commits",
+          "steps": [
+            {
+              "command": "git log --oneline --decorate --graph -20",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff",
+          "title": "Unstaged diff",
+          "steps": [
+            {
+              "command": "git diff",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-diff-staged",
+          "title": "Staged diff",
+          "steps": [
+            {
+              "command": "git diff --cached",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-branches",
+          "title": "List local branches",
+          "steps": [
+            {
+              "command": "git branch -vv",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-switch",
+          "title": "Switch branch",
+          "steps": [
+            {
+              "command": "git switch ${input:branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-new-branch",
+          "title": "Create and switch branch",
+          "steps": [
+            {
+              "command": "git switch -c ${input:new_branch}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-fetch",
+          "title": "Fetch remotes",
+          "steps": [
+            {
+              "command": "git fetch --all",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-pull",
+          "title": "Fast-forward pull",
+          "steps": [
+            {
+              "command": "git pull --ff-only",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stage-interactive",
+          "title": "Interactively stage",
+          "steps": [
+            {
+              "command": "git add -p",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-commit",
+          "title": "Commit staged changes",
+          "steps": [
+            {
+              "command": "git commit -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-push",
+          "title": "Push current branch",
+          "steps": [
+            {
+              "command": "git push -u origin HEAD",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        },
+        {
+          "id": "preset-git-stash-list",
+          "title": "List stashes",
+          "steps": [
+            {
+              "command": "git stash list",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch"
+        },
+        {
+          "id": "preset-git-stash-save",
+          "title": "Stash current changes",
+          "steps": [
+            {
+              "command": "git stash push -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "git-branch",
+          "confirm": true
+        }
+      ]
+    },
+    {
+      "id": "preset-svn",
+      "title": "SVN Version Control",
+      "commands": [
+        {
+          "id": "preset-svn-status",
+          "title": "Working copy status",
+          "steps": [
+            {
+              "command": "svn status",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-diff",
+          "title": "Local diff",
+          "steps": [
+            {
+              "command": "svn diff",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-update",
+          "title": "Update working copy",
+          "steps": [
+            {
+              "command": "svn update",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control",
+          "confirm": true
+        },
+        {
+          "id": "preset-svn-log",
+          "title": "Last 10 revisions",
+          "steps": [
+            {
+              "command": "svn log -l 10",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-info",
+          "title": "Repository information",
+          "steps": [
+            {
+              "command": "svn info",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control"
+        },
+        {
+          "id": "preset-svn-commit",
+          "title": "Commit changes",
+          "steps": [
+            {
+              "command": "svn commit -m ${input:message}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "source-control",
+          "confirm": true
+        }
+      ]
+    },
+    {
+      "id": "preset-linux",
+      "title": "Linux Utilities",
+      "commands": [
+        {
+          "id": "preset-linux-list",
+          "title": "List current directory",
+          "steps": [
+            {
+              "command": "pwd && ls -lah",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-find",
+          "title": "Find files by name",
+          "steps": [
+            {
+              "command": "find . -type f -name ${input:pattern}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-grep",
+          "title": "Search file contents",
+          "steps": [
+            {
+              "command": "grep -RIn --exclude-dir=.git -- ${input:keyword} .",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-disk",
+          "title": "Disk free space",
+          "steps": [
+            {
+              "command": "df -h",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-memory",
+          "title": "Memory usage",
+          "steps": [
+            {
+              "command": "free -h",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-processes",
+          "title": "Top memory processes",
+          "steps": [
+            {
+              "command": "ps aux --sort=-%mem | head -n 15",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        },
+        {
+          "id": "preset-linux-journal",
+          "title": "Recent systemd logs",
+          "steps": [
+            {
+              "command": "journalctl -n 100 --no-pager",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "terminal-linux"
+        }
+      ]
+    },
+    {
+      "id": "preset-cmake",
+      "title": "C/C++ and CMake",
+      "commands": [
+        {
+          "id": "preset-cmake-configure-debug",
+          "title": "Configure Debug",
+          "steps": [
+            {
+              "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-configure-release",
+          "title": "Configure Release",
+          "steps": [
+            {
+              "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-build",
+          "title": "Build project",
+          "steps": [
+            {
+              "command": "cmake --build build --parallel",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-test",
+          "title": "Run tests",
+          "steps": [
+            {
+              "command": "cd build && ctest --output-on-failure",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-targets",
+          "title": "List build targets",
+          "steps": [
+            {
+              "command": "cmake --build build --target help",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        },
+        {
+          "id": "preset-cmake-compiler",
+          "title": "Compiler versions",
+          "steps": [
+            {
+              "command": "gcc --version && g++ --version",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "tools"
+        }
+      ]
+    },
+    {
+      "id": "preset-network",
+      "title": "Network Diagnostics",
+      "commands": [
+        {
+          "id": "preset-network-addresses",
+          "title": "Network interfaces",
+          "steps": [
+            {
+              "command": "ip -br addr",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-routes",
+          "title": "Routing table",
+          "steps": [
+            {
+              "command": "ip route",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-ports",
+          "title": "Listening TCP/UDP ports",
+          "steps": [
+            {
+              "command": "ss -lnt",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-ping",
+          "title": "Ping host",
+          "steps": [
+            {
+              "command": "ping -c 4 ${input:host}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        },
+        {
+          "id": "preset-network-headers",
+          "title": "HTTP response headers",
+          "steps": [
+            {
+              "command": "curl -I --max-time 10 -- ${input:url}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "id": "preset-docker",
+      "title": "Docker Containers",
+      "commands": [
+        {
+          "id": "preset-docker-ps",
+          "title": "Running containers",
+          "steps": [
+            {
+              "command": "docker ps",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-ps-all",
+          "title": "All containers",
+          "steps": [
+            {
+              "command": "docker ps -a",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-images",
+          "title": "Local images",
+          "steps": [
+            {
+              "command": "docker images",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-logs",
+          "title": "Container logs",
+          "steps": [
+            {
+              "command": "docker logs --tail 100 ${input:container}",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        },
+        {
+          "id": "preset-docker-stats",
+          "title": "Container resource usage",
+          "steps": [
+            {
+              "command": "docker stats --no-stream",
+              "execute": true
+            }
+          ],
+          "cwd": "${workspaceFolder}",
+          "terminal": "reuse",
+          "icon": "server-process"
+        }
+      ]
+    }
+  ]
+}
