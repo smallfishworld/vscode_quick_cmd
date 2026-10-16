@@ -12,6 +12,7 @@ on:
       - '.github/workflows/release.yml'
 permissions:
   contents: write
+  id-token: write
 concurrency:
   group: quick-cmd-release
   cancel-in-progress: false
@@ -37,13 +38,13 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Build and verify both language editions
+      - name: Build and verify release and Marketplace installers
         run: |
           npm run package
           python3 scripts/verify-packages.py
       - uses: actions/upload-artifact@v4
         with:
-          name: quick-cmd-v${{ steps.version.outputs.version }}-bilingual-vsix
+          name: quick-cmd-v${{ steps.version.outputs.version }}-installers
           path: |
             dist/*.vsix
             dist/SHA256SUMS
@@ -90,3 +91,10 @@ jobs:
             done
           fi
           gh release edit "$TAG" --draft=false --latest
+      - name: Publish locale-aware installer to VS Code Marketplace
+        # Enable only after configuring trusted publishing at the Marketplace.
+        if: vars.MARKETPLACE_PUBLISH_ENABLED == 'true'
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          node node_modules/@vscode/vsce/vsce publish --oidc --skip-duplicate \
+            --packagePath "dist/quick-cmd-v${VERSION}-marketplace.vsix"
