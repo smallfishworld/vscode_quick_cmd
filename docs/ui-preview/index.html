@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick Cmd — UI 视觉稿（由扩展代码渲染）</title>
+    <link href="./codicon.css" rel="stylesheet" />
+    <style>
+      /*
+       * 本页是外壳：视图标题栏与工具栏由 VS Code 渲染（package.json 的
+       * menus.view/title），webview 主体由 iframe 内扩展自己的代码渲染。
+       * 外壳按 package.json 的视图定义与菜单贡献点绘制，不重绘 webview 内容。
+       */
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 28px 32px 60px; background: #0d0d0f; color: #d8d8dc;
+        font-family: system-ui, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.55;
+      }
+      h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; color: #fff; }
+      .lede { color: #9a9aa2; margin: 0 0 8px; font-size: 13px; max-width: 940px; }
+      .lede code {
+        background: #1c1c22; border: 1px solid #2c2c34; border-radius: 3px;
+        padding: 0 5px; font-size: 12px;
+      }
+      .banner {
+        display: inline-block; margin: 8px 0 24px; padding: 6px 12px; border-radius: 4px;
+        background: #14311c; border: 1px solid #2ea04366; color: #7ee787; font-size: 12.5px;
+      }
+      h2 { font-size: 13px; font-weight: 650; margin: 34px 0 4px; color: #b6b6bf; }
+      h2 .num { color: #6a6a75; font-weight: 400; margin-right: 8px; }
+      h2 + p.note { margin: 0 0 12px; color: #82828c; font-size: 12.5px; max-width: 940px; }
+      .rowpair { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+
+      /* ---- 模拟 VS Code 窗口 ---- */
+      .vswin {
+        display: flex; width: 340px; height: 600px; border-radius: 6px; overflow: hidden;
+        border: 1px solid #00000066; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        background: #f8f8f8;
+      }
+      .vswin.dark { background: #252526; }
+      .ab {
+        width: 42px; flex: none; display: flex; flex-direction: column; align-items: center;
+        padding-top: 10px; gap: 10px; border-right: 1px solid #e5e5e5; background: #f8f8f8;
+      }
+      .vswin.dark .ab { border-color: #3c3c3c; background: #333333; }
+      .ab svg { width: 24px; height: 24px; fill: none; stroke: #6a6a6a; stroke-width: 1.5;
+        stroke-linecap: round; stroke-linejoin: round; }
+      .ab .active { color: #3b3b3b; position: relative; }
+      .vswin.dark .ab .active { color: #cccccc; }
+      .ab .active svg { stroke: currentColor; }
+      .ab .active::before {
+        content: ""; position: absolute; left: -6px; top: 2px; bottom: 2px; width: 2px; background: #007acc;
+      }
+
+      .sidebar { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      /* 视图：标题栏（VS Code 渲染）+ webview 主体（扩展渲染） */
+      .view { display: flex; flex-direction: column; min-height: 0; }
+      .view + .view { border-top: 1px solid #e5e5e5; }
+      .vswin.dark .view + .view { border-color: #3c3c3c; }
+      .view.fill { flex: 1; }
+      /* 折叠视图：只剩标题栏，内容被展开的编辑视图覆盖 */
+      .view.collapsed { flex: 0 0 auto; }
+      .view.collapsed .view-title .label { color: #8a8a8a; }
+      .vswin.dark .view.collapsed .view-title .label { color: #8a8a8a; }
+
+      .view-title {
+        display: flex; align-items: center; height: 22px; padding: 0 4px 0 8px;
+        font-size: 11px; color: #3b3b3b; flex: none;
+      }
+      .vswin.dark .view-title { color: #cccccc; }
+      .view-title .caret { font-size: 14px; color: #6a6a6a; margin-right: 2px; }
+      .view-title .label {
+        flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.04em;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .view-actions { display: flex; gap: 1px; }
+      .view-actions .codicon {
+        width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+        font-size: 14px; color: #3b3b3b; border-radius: 3px;
+      }
+      .vswin.dark .view-actions .codicon { color: #cccccc; }
+      .view-actions .codicon:hover { background: rgba(0, 0, 0, 0.08); }
+      .vswin.dark .view-actions .codicon:hover { background: rgba(255, 255, 255, 0.1); }
+
+      iframe { border: 0; width: 100%; display: block; background: transparent; }
+      .view.fill iframe { flex: 1; min-height: 0; height: 100%; }
+
+      .caption { font-size: 12px; color: #8f8f99; margin: 10px 2px 0; max-width: 340px; }
+      .caption b { color: #c4c4cc; font-weight: 600; }
+      footer { margin-top: 44px; color: #6a6a75; font-size: 12px; max-width: 940px; }
+    </style>
+  </head>
+  <body>
+    <h1>Quick Cmd — UI 视觉稿</h1>
+    <p class="lede">
+      基线 v0.7.1 · 视图<strong>主体</strong>由扩展自身的
+      <code>media/list.html</code> / <code>media/editor.html</code> 模板、
+      <code>media/*.css</code> 与 <code>media/*-client.js</code> 在 iframe 中真实渲染（仅补假的
+      <code>acquireVsCodeApi</code> 与宿主消息）。视图<strong>标题栏与右上角工具栏</strong>由 VS Code
+      外壳渲染（<code>package.json</code> 的 <code>menus.view/title</code>），不在 webview 内，故由本页外壳按贡献点绘制。
+    </p>
+    <div class="banner">✓ webview 主体由扩展代码渲染 · 标题栏按 package.json 绘制</div>
+
+    <h2><span class="num">1</span>默认状态：只有“分组”视图</h2>
+    <p class="note">
+      “命令编辑”视图由 <code>when: quickCmd.editing</code> 控制，<strong>默认隐藏</strong>——未开始编辑时侧栏只有“分组”视图。
+      工具栏 8 个按钮依次为：新建分组、新建命令、搜索、导入、导出、折叠全部分组、刷新、设置（顺序取自
+      <code>menus.view/title</code> 的 <code>navigation@0…8</code>）。
+    </p>
+    <div class="rowpair">
+      <div>
+        <div class="vswin">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">分组</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-new-folder" title="Quick Cmd: 新建分组"></span>
+                  <span class="codicon codicon-add" title="Quick Cmd: 新建命令"></span>
+                  <span class="codicon codicon-search" title="Quick Cmd: 搜索命令"></span>
+                  <span class="codicon codicon-arrow-down" title="Quick Cmd: 导入配置"></span>
+                  <span class="codicon codicon-arrow-up" title="Quick Cmd: 导出配置"></span>
+                  <span class="codicon codicon-collapse-all" title="Quick Cmd: 折叠全部分组"></span>
+                  <span class="codicon codicon-refresh" title="Quick Cmd: 刷新"></span>
+                  <span class="codicon codicon-settings-gear" title="Quick Cmd: 设置"></span>
+                </div>
+              </div>
+              <iframe src="./list.html?theme=light&fixture=list" title="分组列表"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>浅色</b> — Default Light+ 主题变量</p>
+      </div>
+      <div>
+        <div class="vswin dark">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">分组</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-new-folder" title="Quick Cmd: 新建分组"></span>
+                  <span class="codicon codicon-add" title="Quick Cmd: 新建命令"></span>
+                  <span class="codicon codicon-search" title="Quick Cmd: 搜索命令"></span>
+                  <span class="codicon codicon-arrow-down" title="Quick Cmd: 导入配置"></span>
+                  <span class="codicon codicon-arrow-up" title="Quick Cmd: 导出配置"></span>
+                  <span class="codicon codicon-collapse-all" title="Quick Cmd: 折叠全部分组"></span>
+                  <span class="codicon codicon-refresh" title="Quick Cmd: 刷新"></span>
+                  <span class="codicon codicon-settings-gear" title="Quick Cmd: 设置"></span>
+                </div>
+              </div>
+              <iframe src="./list.html?theme=dark&fixture=list" title="分组列表"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>深色</b> — Default Dark+ 主题变量</p>
+      </div>
+    </div>
+
+    <h2><span class="num">2</span>编辑状态：命令编辑展开覆盖分组视图</h2>
+    <p class="note">
+      开始编辑时宿主执行 <code>quickCmd.editor.focus</code>（<code>src/editor.js</code> 的 <code>focus()</code>），
+      VS Code 展开“命令编辑”并滚动到它，<strong>“分组”被收起为标题栏</strong>，编辑表单占据整个侧栏——不是两者各占一半。
+      编辑视图标题栏工具栏为“在主编辑区打开”“完成编辑”与“关闭编辑”（×）；webview 内部还有一行上下文（<code>构建 · 编辑命令</code>）与展开/重读按钮。
+    </p>
+    <div class="rowpair">
+      <div>
+        <div class="vswin" style="height: 940px">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view collapsed">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-right"></span>
+                <span class="label">分组</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-new-folder" title="Quick Cmd: 新建分组"></span>
+                  <span class="codicon codicon-add" title="Quick Cmd: 新建命令"></span>
+                  <span class="codicon codicon-search" title="Quick Cmd: 搜索命令"></span>
+                  <span class="codicon codicon-arrow-down" title="Quick Cmd: 导入配置"></span>
+                  <span class="codicon codicon-arrow-up" title="Quick Cmd: 导出配置"></span>
+                  <span class="codicon codicon-collapse-all" title="Quick Cmd: 折叠全部分组"></span>
+                  <span class="codicon codicon-refresh" title="Quick Cmd: 刷新"></span>
+                  <span class="codicon codicon-settings-gear" title="Quick Cmd: 设置"></span>
+                </div>
+              </div>
+            </section>
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">命令编辑</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
+                </div>
+              </div>
+              <iframe src="./editor.html?theme=light&fixture=editor" title="命令编辑"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>浅色</b></p>
+      </div>
+      <div>
+        <div class="vswin dark" style="height: 940px">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view collapsed">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-right"></span>
+                <span class="label">分组</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-new-folder" title="Quick Cmd: 新建分组"></span>
+                  <span class="codicon codicon-add" title="Quick Cmd: 新建命令"></span>
+                  <span class="codicon codicon-search" title="Quick Cmd: 搜索命令"></span>
+                  <span class="codicon codicon-arrow-down" title="Quick Cmd: 导入配置"></span>
+                  <span class="codicon codicon-arrow-up" title="Quick Cmd: 导出配置"></span>
+                  <span class="codicon codicon-collapse-all" title="Quick Cmd: 折叠全部分组"></span>
+                  <span class="codicon codicon-refresh" title="Quick Cmd: 刷新"></span>
+                  <span class="codicon codicon-settings-gear" title="Quick Cmd: 设置"></span>
+                </div>
+              </div>
+            </section>
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">命令编辑</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
+                </div>
+              </div>
+              <iframe src="./editor.html?theme=dark&fixture=editor" title="命令编辑"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>深色</b></p>
+      </div>
+    </div>
+    <p class="caption" style="max-width: 940px">
+      注：<code>open-in-editor</code> 图标未随 <code>@vscode/codicons</code> 0.0.46-24 发布（属 VS Code 内置字体较新字形），此处以
+      <code>editor-layout</code> 近似表示。
+    </p>
+
+    <h2><span class="num">3</span>编辑视图空态</h2>
+    <p class="note">编辑视图已打开但未选择命令时显示空态引导。</p>
+    <div class="rowpair">
+      <div>
+        <div class="vswin" style="height: 380px">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">命令编辑</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
+                </div>
+              </div>
+              <iframe src="./editor.html?theme=light&fixture=editorEmpty" title="编辑空态"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>浅色</b></p>
+      </div>
+      <div>
+        <div class="vswin dark" style="height: 380px">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">命令编辑</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
+                </div>
+              </div>
+              <iframe src="./editor.html?theme=dark&fixture=editorEmpty" title="编辑空态"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>深色</b></p>
+      </div>
+    </div>
+
+    <h2><span class="num">4</span>高级设置展开 · 图标选择与环境变量（FR-11）</h2>
+    <p class="note">
+      低频配置收入“高级设置”折叠区：确认开关、描述、命令图标（7 个预设 + 自定义名）、环境变量表格。
+      图标选项与顺序取自 <code>editor-client.js</code> 的 <code>iconOptions</code>，使用编辑表单的自绘 stroke 图标。
+    </p>
+    <div class="rowpair">
+      <div>
+        <div class="vswin" style="height: 1120px">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">命令编辑</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
+                </div>
+              </div>
+              <iframe src="./editor.html?theme=light&fixture=editor&adv=1" title="高级设置"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>浅色</b></p>
+      </div>
+      <div>
+        <div class="vswin dark" style="height: 1120px">
+          <div class="ab">
+            <span class="active"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="m6.5 8 3 3-3 3M12.5 9H18M12.5 13H18M6.5 17H18"/></svg></span>
+          </div>
+          <div class="sidebar">
+            <section class="view fill">
+              <div class="view-title">
+                <span class="caret codicon codicon-chevron-down"></span>
+                <span class="label">命令编辑</span>
+                <div class="view-actions">
+                  <span class="codicon codicon-editor-layout" title="Quick Cmd: 在主编辑区打开"></span>
+                  <span class="codicon codicon-check" title="Quick Cmd: 完成编辑"></span>
+                  <span class="codicon codicon-close" title="Quick Cmd: 关闭编辑"></span>
+                </div>
+              </div>
+              <iframe src="./editor.html?theme=dark&fixture=editor&adv=1" title="高级设置"></iframe>
+            </section>
+          </div>
+        </div>
+        <p class="caption"><b>深色</b></p>
+      </div>
+    </div>
+
+    <footer>
+      Quick Cmd UI 视觉稿 · docs/ui-preview/index.html · webview 主体由
+      <code>scripts/build-ui-preview.js</code> 从 media 模板生成 ·
+      标题栏与工具栏按 <code>package.json</code> 的视图定义与菜单贡献点绘制 ·
+      图标为扩展加载的 @vscode/codicons 字体与自绘 SVG ·
+      颜色为 VS Code Default Light+ / Dark+ 主题参考值。
+    </footer>
+  </body>
+</html>

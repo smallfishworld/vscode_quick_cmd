@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:; font-src 'self' data:;" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="./codicon.css" rel="stylesheet" />
+    <link href="../../media/list.css" rel="stylesheet" />
+    <title>Quick Cmd</title>
+  </head>
+  <body>
+    <div id="error" role="alert" hidden></div>
+    <div id="empty" hidden>
+      <p data-i18n="No commands yet. Create a group to get started."></p>
+      <button id="newGroup" type="button" data-i18n="New group"></button>
+    </div>
+    <div id="list" role="tree" aria-label="Quick Cmd"></div>
+    <script src="./shim.js"></script>
+    <script src="../../media/i18n.js"></script>
+    <script src="../../media/list-client.js"></script>
+  </body>
+</html>

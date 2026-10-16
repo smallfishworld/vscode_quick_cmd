@@ -85,8 +85,11 @@ test('list message boundary checks session and current IDs and ignores injected 
   assert.equal(Object.hasOwn(f.calls[0][1], 'command'), false);
   await f.provider.handleMessage({ type: 'run', token: 'session', ...node });
   assert.equal(f.calls[1][0], 'quickCmd.run');
-  await f.provider.handleMessage({ type: 'delete', token: 'session', ...node });
-  assert.equal(f.calls[2][0], 'quickCmd.deleteCommand');
+  // 行尾删除按钮已移除；删除只能通过行级右键的原生菜单（contextNode）触发。
+  await assert.rejects(
+    f.provider.handleMessage({ type: 'delete', token: 'session', ...node }),
+    /Invalid list/,
+  );
   await assert.rejects(
     f.provider.handleMessage({
       type: 'delete',

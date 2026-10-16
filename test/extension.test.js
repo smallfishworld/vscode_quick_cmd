@@ -224,6 +224,9 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     answers.push('Cancel');
     assert.equal(await callbacks.get('quickCmd.closeEditor')(), false);
     assert.equal(modes.get('quickCmd.editing'), true);
+    answers.push('Cancel');
+    assert.equal(await callbacks.get('quickCmd.closeEditorView')(), false);
+    assert.equal(modes.get('quickCmd.editing'), true);
     answers.push('Discard');
     assert.equal(await callbacks.get('quickCmd.closeEditor')(), true);
     assert.equal(modes.get('quickCmd.editing'), false);

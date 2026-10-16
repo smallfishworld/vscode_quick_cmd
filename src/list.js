@@ -227,7 +227,6 @@ class CommandListProvider {
     const actions = {
       run: 'quickCmd.run',
       edit: 'quickCmd.editCommand',
-      delete: 'quickCmd.deleteCommand',
       add: 'quickCmd.addCommand',
     };
     if (actions[message.type]) {

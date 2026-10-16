@@ -222,6 +222,7 @@ function activate(context) {
   });
   register('quickCmd.openEditorPanel', () => editor.openPanel());
   register('quickCmd.closeEditor', () => editor.close());
+  register('quickCmd.closeEditorView', () => editor.close());
   register('quickCmd.collapseAll', () => provider.collapseAll());
   register('quickCmd.openSettings', () =>
     vscode.commands.executeCommand(

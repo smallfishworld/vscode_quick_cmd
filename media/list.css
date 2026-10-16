@@ -1,7 +1,8 @@
 :root {
   color-scheme: light dark;
-  --command-size: var(--vscode-font-size, 13px);
-  --group-size: calc(var(--command-size) + 1px);
+  /* 命令比宿主界面字号小 1px；分组沿用原字号（= 命令 + 2px），层级差 2px 便于区分。 */
+  --command-size: calc(var(--vscode-font-size, 13px) - 1px);
+  --group-size: calc(var(--command-size) + 2px);
   --row-height: max(22px, calc(var(--command-size) + 9px));
 }
 * {
@@ -61,6 +62,19 @@ button {
 .command-row {
   font-size: var(--command-size);
   padding-left: 23px;
+}
+/* 缩进竖线：对齐分组折叠箭头中心，随子项一起显示/隐藏。 */
+.group > [role='group'] {
+  position: relative;
+}
+.group > [role='group']::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--vscode-tree-indentGuidesStroke, #a9a9a9);
 }
 .row > .codicon {
   font-size: 13px;

@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -171,6 +171,11 @@
         "icon": "$(check)"
       },
       {
+        "command": "quickCmd.closeEditorView",
+        "title": "%quickCmd.closeEditorView%",
+        "icon": "$(close)"
+      },
+      {
         "command": "quickCmd.collapseAll",
         "title": "%quickCmd.collapseAll%",
         "icon": "$(collapse-all)"
@@ -222,6 +227,11 @@
           "command": "quickCmd.closeEditor",
           "when": "view == quickCmd.editor",
           "group": "navigation@2"
+        },
+        {
+          "command": "quickCmd.closeEditorView",
+          "when": "view == quickCmd.editor",
+          "group": "navigation@3"
         },
         {
           "command": "quickCmd.collapseAll",

@@ -11,24 +11,25 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 1. Open **Quick Cmd** in the Activity Bar.
 2. Choose **New Command**, then a group. The plus button beside a group creates a command directly in that group.
 3. The editor starts hidden and appears when creating or editing a command. Fill in the name, command text, working directory and terminal usage, then save.
-4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit, Run and Delete at its far right. Edit opens the form without sending; Delete asks for confirmation. Keyboard focus also reveals these actions.** Close the editor with its own toolbar button after handling the draft.
+4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-Releases provide `quick-cmd-v0.7.1-en.vsix` (fixed English) and `quick-cmd-v0.7.1-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
+Releases provide `quick-cmd-v0.8.0-en.vsix` (fixed English) and `quick-cmd-v0.8.0-zh-cn.vsix` (fixed Chinese). Install one edition. Both share an extension identity and preserve commands when replacing the language package in the same host/profile; they cannot be installed side by side. Development builds follow the host locale. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
-- Groups and commands use the same theme foreground, without command counts. Names and previews share the VS Code UI font, weight and default size. Groups remain one pixel larger. `quickCmd.listFontSize=0` follows the host; positive values customize the command size (10–18 px).
+- Groups and commands use the same theme foreground, without command counts. Names and previews share the VS Code UI font and weight; commands are one pixel smaller than the host and groups are two pixels larger. `quickCmd.listFontSize=0` follows the host; positive values customize the command size (10–18 px).
+- An expanded group draws a vertical indent guide under its collapse arrow, so the command column stays visible.
 - Move the command view into Explorer or another container through the native view title **Move View** menu. Sizing only affects this extension.
 - The list starts directly at **group → command**. All commands use VS Code global extension state, without project/global root nodes.
 - Drag groups or commands to reorder; drop a command onto a group to append it. Drop a group onto empty list space to move it to the end.
 - A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
-- Right-click a command or group to open a native menu beside the pointer, with duplication, deletion, movement and keybinding actions. Import/export remain in the top-right toolbar.
+- Right-click a command or group to open a native menu beside the pointer, with duplication, deletion, movement and keybinding actions. Command deletion lives here rather than on the row. Import/export remain in the top-right toolbar.
 - Running status takes precedence over a custom icon. Unknown status is explicitly reported; sending text is not treated as successful execution.
 
 ## Editor
 
-The top-right toolbar provides New Group, New Command, Search, Import, Export, Collapse All, Refresh and Settings. Import uses a supported down-arrow icon. The editor stays hidden until creating a command or clicking its hover-revealed row pencil; there is no global edit-mode switch. The compact form reduces padding and control sizes. Closing handles unsaved changes; cancelling keeps the form open, and saving alone keeps editing open.
+The top-right toolbar provides New Group, New Command, Search, Import, Export, Collapse All, Refresh and Settings. Import uses a supported down-arrow icon. The editor stays hidden until creating a command or clicking its hover-revealed row pencil; there is no global edit-mode switch. The compact form reduces padding and control sizes. The editor title bar offers both **Done Editing** and **×** to close. Closing handles unsaved changes; cancelling keeps the form open, and saving alone keeps editing open.
 
 - **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or save commands automatically.
 - **Accurate save state:** edits made while a save is pending remain unsaved after that request completes.

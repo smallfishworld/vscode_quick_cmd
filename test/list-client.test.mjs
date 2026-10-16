@@ -97,14 +97,11 @@ test('list inherits the host UI font and hides localized row actions by default'
       f.w.getComputedStyle(doc.querySelector('.row-actions')).visibility,
       'hidden',
     );
-    assert.equal(doc.querySelectorAll('.run-button,.delete-button').length, 4);
+    assert.equal(doc.querySelectorAll('.run-button,.edit-button').length, 4);
+    assert.equal(doc.querySelectorAll('.delete-button').length, 0);
     assert.equal(
       doc.querySelector('.run-button').getAttribute('aria-label'),
       '运行命令',
-    );
-    assert.equal(
-      doc.querySelector('.delete-button').getAttribute('aria-label'),
-      '删除命令',
     );
     assert.equal(
       doc.querySelector('.edit-button').getAttribute('aria-label'),
@@ -127,9 +124,9 @@ test('editing a row never runs it; clicking its body sends exactly once', async 
     row.querySelector('.edit-button').click();
     assert.equal(f.messages.filter((m) => m.type === 'edit').length, 1);
     assert.equal(f.messages.filter((m) => m.type === 'run').length, 0);
-    row.querySelector('.delete-button').click();
-    assert.equal(f.messages.filter((m) => m.type === 'delete').length, 1);
-    assert.equal(f.messages.filter((m) => m.type === 'run').length, 0);
+    // 删除不再有行尾按钮，只能通过行级右键的原生菜单触发。
+    assert.equal(row.querySelector('.delete-button'), null);
+    assert.equal(f.messages.some((m) => m.type === 'delete'), false);
     row.querySelector('.run-button').click();
     assert.equal(f.messages.filter((m) => m.type === 'run').length, 1);
     row.querySelector('.name').click();
@@ -222,9 +219,9 @@ test('focused row reveals actions and model refresh preserves the focused action
       f.w.getComputedStyle(row.querySelector('.row-actions')).visibility,
       'visible',
     );
-    row.querySelector('.delete-button').focus();
+    row.querySelector('.run-button').focus();
     f.send({ ...f.model, fontSize: 12 });
-    assert.equal(f.w.document.activeElement.dataset.action, 'delete');
+    assert.equal(f.w.document.activeElement.dataset.action, 'run');
     assert.equal(
       f.w.document.documentElement.style.getPropertyValue('--command-size'),
       '12px',

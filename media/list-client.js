@@ -207,10 +207,10 @@ function render(data) {
       body.append(title, preview);
       const actions = document.createElement('span');
       actions.className = 'row-actions';
+      // 删除走行级右键的原生上下文菜单，不在行尾放按钮。
       for (const [action, icon, label] of [
         ['edit', 'edit', 'Edit command'],
         ['run', 'play', 'Run command'],
-        ['delete', 'trash', 'Delete command'],
       ]) {
         const control = button(
           icon,
