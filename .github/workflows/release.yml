@@ -38,15 +38,15 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Build and verify release and Marketplace installers
+      - name: Build and verify single multilingual installer
         run: |
           npm run package
           python3 scripts/verify-packages.py
       - uses: actions/upload-artifact@v4
         with:
-          name: quick-cmd-v${{ steps.version.outputs.version }}-installers
+          name: quick-cmd-v${{ steps.version.outputs.version }}-multilingual-vsix
           path: |
-            dist/*.vsix
+            dist/quick-cmd-v${{ steps.version.outputs.version }}.vsix
             dist/SHA256SUMS
           if-no-files-found: error
       - name: Prepare draft, reset requested history, and publish
@@ -54,9 +54,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           # Explicit one-time replacement of the inspected 0.7.1 release only.
-          # Both installers have passed verification and are archived above.
+          # The single installer has passed verification and is archived above.
           if [ "$TAG" = v0.7.1 ]; then
             OLD_ID="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.id' 2>/dev/null || true)"
             if [ "$OLD_ID" = 413791301 ]; then
@@ -74,9 +75,9 @@ jobs:
             fi
             TARGET="$(gh release view "$TAG" --json targetCommitish --jq '.targetCommitish')"
             test "$TARGET" = "$GITHUB_SHA"
-            gh release upload "$TAG" dist/*.vsix dist/SHA256SUMS --clobber
+            gh release upload "$TAG" "dist/quick-cmd-v${VERSION}.vsix" dist/SHA256SUMS --clobber
           else
-            gh release create "$TAG" dist/*.vsix dist/SHA256SUMS \
+            gh release create "$TAG" "dist/quick-cmd-v${VERSION}.vsix" dist/SHA256SUMS \
               --draft --target "$GITHUB_SHA" --title "Quick Cmd $TAG" \
               --notes-file RELEASE_NOTES.md
           fi
@@ -91,10 +92,10 @@ jobs:
             done
           fi
           gh release edit "$TAG" --draft=false --latest
-      - name: Publish locale-aware installer to VS Code Marketplace
+      - name: Publish multilingual installer to VS Code Marketplace
         # Enable only after configuring trusted publishing at the Marketplace.
         if: vars.MARKETPLACE_PUBLISH_ENABLED == 'true'
         run: |
           VERSION="$(node -p "require('./package.json').version")"
           node node_modules/@vscode/vsce/vsce publish --oidc --skip-duplicate \
-            --packagePath "dist/quick-cmd-v${VERSION}-marketplace.vsix"
+            --packagePath "dist/quick-cmd-v${VERSION}.vsix"

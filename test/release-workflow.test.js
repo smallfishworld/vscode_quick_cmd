@@ -52,6 +52,7 @@ esac
         FIXTURE_DIR: dir,
         OLD_TARGET: target,
         TAG: 'v0.7.1',
+        VERSION: '0.11.0',
         GITHUB_SHA: 'corrected-commit',
         GITHUB_REPOSITORY: 'smallfishworld/vscode_quick_cmd',
       },

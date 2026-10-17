@@ -20,14 +20,14 @@ jobs:
         run: |
           npm run check
           npm test
-      - name: Build and verify release and Marketplace installers
+      - name: Build and verify single multilingual installer
         run: |
           npm run package
           python3 scripts/verify-packages.py
       - uses: actions/upload-artifact@v4
         with:
-          name: quick-cmd-installers
+          name: quick-cmd-multilingual-vsix
           path: |
-            dist/*.vsix
+            dist/quick-cmd-v*.vsix
             dist/SHA256SUMS
           if-no-files-found: error

@@ -1,13 +1,14 @@
 'use strict';
-const shared = require('../media/i18n');
-const { quickCmdBuildLanguage } = require('../package.json');
 
-/** Release variants pin their language; development follows the VS Code locale. */
+const shared = require('../media/i18n');
+
+/** UI locale comes from VS Code; Chinese variants use Chinese, otherwise English. */
 function resolveLocale(hostLocale) {
-  return quickCmdBuildLanguage || hostLocale || 'en';
+  return hostLocale || 'en';
 }
+
 module.exports = {
   ...shared,
   resolveLocale,
-  setLocale: (locale) => shared.setLocale(resolveLocale(locale)),
+  setLocale: (hostLocale) => shared.setLocale(resolveLocale(hostLocale)),
 };

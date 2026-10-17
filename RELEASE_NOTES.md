@@ -1,21 +1,19 @@
-# Quick Cmd v0.10.0
+# Quick Cmd v0.11.0
 
 ## 中文
 
-- 新增 `presets/` 默认快捷命令库，包括 Git（14 条）、SVN（6 条）、Linux（7 条）、C/C++ 与 CMake（6 条）、网络诊断（5 条）和 Docker（5 条），共 **6 组、43 条命令**，同时提供中英文及仅 Git 的预设文件。
-- 预设 JSON 随三个 VSIX 安装包一同打包，也可从 [GitHub presets 目录](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) 下载并手动导入。
-- 新增 `quick-cmd-v0.10.0-marketplace.vsix`：保留英文与中文 VS Code 本地化配置，按宿主界面语言自动选择。
-- 保留 GitHub 发行版的固定中文、固定英文两个 VSIX 以及 SHA256 校验和；自动化构建和校验覆盖全部三个包。
-- 为 GitHub Actions 配置可选的 Marketplace OIDC 可信发布步骤（需先配置发布者授权及仓库开关）。
-
-**兼容与安全：** 所有预设均不会自动执行。现有导入仍为替换全部命令，而不是增量合并；导入前请先导出备份。修改仓库或远端状态的关键命令启用了执行前确认。Linux 网络命令主要面向 POSIX/Linux Shell（Remote SSH、WSL 等）。
+- **中英文合并为单个 VSIX**：GitHub Releases 和 VS Code Marketplace 均使用 `quick-cmd-v0.11.0.vsix`，不再生成中文、英文固定版本。
+- 插件使用 `vscode.env.language` 选择运行时界面语言，VS Code 自动根据 `package.nls.json` / `package.nls.zh-cn.json` 本地化命令、菜单及设置。中文显示中文，其他语言默认英文；切换 VS Code 界面语言并重载后生效。
+- 保留扩展 ID `smallfishworld.vscode-quick-cmd` 和全局命令存储，不清除已有命令，可直接从旧版升级。
+- 打包脚本只生成一个安装包，清空旧构建输出；自动化测试验证语言切换、两个语言目录和预设资源，并生成仅一条 SHA-256 记录。
+- 保留 43 条 Git、SVN、Linux、C/C++ 与 CMake、网络及 Docker 快捷命令预设，仍由用户手动选择导入，不自动执行。
+- Marketplace 自动上传同一个 VSIX，仍需要事先配置发布者权限和 GitHub OIDC（OpenID Connect）可信发布策略。
 
 ## English
 
-- Added `presets/` with **43 commands across six groups**: Git (14), SVN (6), Linux (7), C/C++ & CMake (6), network diagnostics (5), and Docker (5). Both Chinese and English collections and Git-only collections are available.
-- The JSON presets are bundled in all three VSIX installers and available for manual download from [GitHub](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets).
-- Added `quick-cmd-v0.10.0-marketplace.vsix`, which follows the host VS Code language for English/Chinese UI localization.
-- Retained fixed Chinese and English GitHub release installers and SHA256 checksums, validating all three packages in CI.
-- Prepared an optional GitHub Actions Marketplace publishing step using OIDC trusted publishing after publisher authorization.
-
-**Compatibility and safety:** Presets are never executed automatically. Import still replaces all existing commands rather than merging; export a backup first. Potentially state-changing version-control commands require a send confirmation. Linux and networking examples target POSIX/Linux shells including Remote SSH and WSL.
+- **One multilingual VSIX**: GitHub Releases and the VS Code Marketplace use the same `quick-cmd-v0.11.0.vsix`. Fixed-language installers have been removed.
+- The extension reads `vscode.env.language` for runtime UI strings; VS Code selects `package.nls.json` or `package.nls.zh-cn.json` for manifest strings. Chinese UI uses Chinese; other languages fall back to English. Reload VS Code after changing display language.
+- Preserves extension ID `smallfishworld.vscode-quick-cmd` and existing saved commands during upgrades.
+- The build creates exactly one VSIX and a one-line SHA-256 manifest, with tests checking both language catalogs and all bundled resources.
+- The 43 Git/SVN/Linux/CMake/networking/Docker command presets remain opt-in and are never executed automatically.
+- Optional Marketplace publishing uses the same VSIX and requires authorized publisher OIDC trusted publishing.
