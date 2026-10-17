@@ -1,15 +1,15 @@
-# Quick Cmd v0.11.2
+# Quick Cmd v0.11.3
 
 ## 中文
 
-- 修复 VS Code Marketplace 插件详情页显示默认占位图标的问题。
-- 在 `package.json` 顶层新增 `icon: media/icon.png`，包含之前设计的苹果风终端与闪电图标，实际尺寸 **128 × 128 PNG**。
-- 新增源代码及 VSIX 包内图标尺寸、文件内容一致性回归测试；保证后续打包不会遗漏图标。
-- 仍只发布一个自动适配 VS Code 简体中文或英文界面的安装包 `quick-cmd-v0.11.2.vsix`，扩展 ID 与已有用户配置均保持不变。
+- 精简中英文 README，公开展示内容现在聚焦安装、功能、配置、快捷命令预设及开源协议。
+- 将开发验证、CI 和 Marketplace 发布认证等维护者信息从公开介绍页移到已有内部开发文档。
+- 新增测试，防止后续将维护者专用内容意外写入 Marketplace 展示页。
+- 插件功能与中英文自动切换保持不变，继续使用同一扩展 ID，已保存的快捷命令不会受到影响。
 
 ## English
 
-- Fixed the generic placeholder icon on the Visual Studio Marketplace extension details page.
-- Declared `icon: media/icon.png` in the extension manifest and bundled the 128 × 128 PNG Apple-inspired terminal/lightning icon.
-- Added regression checks verifying the icon's dimensions and exact bytes in the packaged VSIX.
-- Still distributes one locale-aware installer, `quick-cmd-v0.11.2.vsix`, keeping the same extension identity and saved commands.
+- Simplified both public READMEs so GitHub and Marketplace pages focus on installation, features, configuration, command presets and the license.
+- Moved developer checks, CI, and Marketplace publishing setup out of the public extension overview into existing maintainer documentation.
+- Added regression tests to prevent maintainer-only instructions from appearing on Marketplace.
+- No change to extension behavior, localization, extension identity, or stored commands.

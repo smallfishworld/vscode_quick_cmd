@@ -31,7 +31,7 @@
 4. **先改视觉稿核对**：任何影响界面的改动（布局、字号、图标、文案、交互入口），先在 `docs/ui-preview/` 的视觉稿上体现并核对，再动生产代码。视觉稿由扩展自身的 `media/*` 模板与客户端脚本渲染（见 `docs/ui-preview/README.md`），不是手绘，因此核对结果可直接对应实现。待确认的改动放在预览专用的 `docs/ui-preview/proposal.css` 或 `index.html` 外壳中，不改 `media/*` 与 `package.json`；确认后再落到生产代码，并删除 `proposal.css`。纯后端或非界面改动可跳过此步。
 5. **实现**：保持模型、存储、视图和终端的边界；与变更无关的功能不重构。新增错误保留可读文案与诊断线索。
 6. **验证**：为有风险的状态/数据/构建行为增加回归测试；运行 `npm ci`、`npm run check`、`npm test`、`npm run package`、`python3 scripts/verify-packages.py`。图形宿主不可用时明确说明未验收的视觉范围。
-7. **同步说明**：更新两份 README 与当前版本 `RELEASE_NOTES.md`。工程文档仍只保留两份。
+7. **同步说明**：更新两份面向用户的 README 与当前版本 `RELEASE_NOTES.md`。**README 会进入 Marketplace**，不要包含开发测试命令、CI 内部流程、令牌/发布配置；维护者流程统一记录在 `docs/design.md` 和本文件。工程文档仍只保留两份。
 8. **提交与发行**：提交合并请求并检查最新提交的 CI。用户已授权发布时，通过现有工作流完成合并、单包发布和下载资产核验；报告准确结果与链接。
 
 ## 发布与历史清理
