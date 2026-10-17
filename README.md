@@ -107,9 +107,11 @@ Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"comman
 
 ## Ready-to-import command presets
 
-The [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) folder contains optional, ready-to-import command collections in Chinese and English: Git, SVN, Linux utilities, C/C++ & CMake, network diagnostics, and Docker. [Full Chinese preset](presets/defaults.zh-CN.json) · [Full English preset](presets/defaults.en.json) · [Git-only Chinese preset](presets/git.zh-CN.json) · [Git-only English preset](presets/git.en.json).
+On first launch, if no commands have ever been saved, Quick Cmd automatically adds the complete **6-group / 43-command** preset, choosing Chinese or English according to the VS Code display language. Later restarts, updates, and reinstalls preserve existing commands (including an intentionally empty list). Presets are never executed automatically.
 
-**Import replaces all current commands**, rather than merging them. Export your existing configuration first. No preset is automatically loaded or executed. Linux and networking examples target POSIX/Linux terminals such as Remote SSH or WSL.
+The [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) folder also contains ready-to-import command collections in Chinese and English: Git, SVN, Linux utilities, C/C++ & CMake, network diagnostics, and Docker. [Full Chinese preset](presets/defaults.zh-CN.json) · [Full English preset](presets/defaults.en.json) · [Git-only Chinese preset](presets/git.zh-CN.json) · [Git-only English preset](presets/git.en.json).
+
+**Import replaces all current commands**, rather than merging them. Export your existing configuration first. No preset command runs automatically. Linux and networking examples target POSIX/Linux terminals such as Remote SSH or WSL.
 
 ## License
 
