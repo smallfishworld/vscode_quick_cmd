@@ -1,6 +1,6 @@
 # Quick Cmd 需求规格
 
-基线版本：0.11.2。本文件是当前需求的唯一来源；历史实现笔记不作为需求依据。
+基线版本：0.11.3。本文件是当前需求的唯一来源；历史实现笔记不作为需求依据。
 
 ## 1. 目标与边界
 
@@ -33,6 +33,7 @@
 | FR-21 | Marketplace 图标 | 顶层 manifest 配置 `icon: media/icon.png`；该图片必须为实际 128×128 PNG；构建和 VSIX 解包测试验证图片存在、尺寸和字节一致；原活动栏 SVG 不变 |
 | FR-20 | Marketplace 分类合法性 | `package.json` 的 `categories` 只能使用 VS Code 官方支持的分类；当前工具类插件使用 `Other`，构建和测试时检查，阻止无效分类进入 VSIX |
 | FR-22 | Marketplace 自动发布授权 | 仅在 main 和明确开启的 Actions 变量下自动上传唯一 VSIX；优先使用加密 Secret `VSCE_PAT`，未设置则使用 OIDC，严禁在仓库或日志中输出密钥；发布失败不伪称成功 |
+| FR-23 | 面向用户的 README | 中英文 README 作为 GitHub 和 Marketplace 的公开介绍，仅包含安装、使用说明、配置示例、预设和协议；不展示开发验证命令、构建/CI 或 PAT/OIDC/Secrets 等维护者发布流程，这些保留在既有设计文档与工作流中 |
 | FR-17 | 发布验证   | 唯一 VSIX 采用现有扩展标识，包含中英文资源且与源码一致；验证内容及 SHA-256 校验和后才能正式发布                                                     |
 
 ## 3. 交互约束
