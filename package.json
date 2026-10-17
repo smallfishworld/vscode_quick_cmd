@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.11.4",
+  "version": "0.11.5",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -345,7 +345,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/list.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js && node --check scripts/package-variants.js && node --check media/list-client.js",
+    "check": "node --check src/i18n.js && node --check media/i18n.js && node --check src/model.js && node --check src/store.js && node --check src/defaults.js && node --check src/list.js && node --check src/variables.js && node --check src/terminal.js && node --check src/transfer.js && node --check src/extension.js && node --check src/editor.js && node --check media/editor-client.js && node --check scripts/package-variants.js && node --check media/list-client.js",
     "package": "node scripts/package-variants.js"
   },
   "devDependencies": {
