@@ -451,6 +451,18 @@ function activate(context) {
       runner.stop(node.scope, cmd);
     }
   });
+  // Populate initial defaults only when no saved global commands exist.
+  // All reads wait for initialization, preventing empty initial views.
+  void store.initializeDefaults(vscode.env?.language || 'en')
+    .then((created) => {
+      if (created) {
+        return provider.refresh();
+      }
+      return undefined;
+    })
+    .catch((error) => {
+      void vscode.window.showErrorMessage(`Quick Cmd: ${errorText(error)}`);
+    });
   if (vscode.workspace.onDidChangeConfiguration) {
     context.subscriptions.push(
       vscode.workspace.onDidChangeConfiguration((event) => {
