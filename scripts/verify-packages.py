@@ -30,7 +30,7 @@ with zipfile.ZipFile(artifact) as archive:
     for resource in (
         'src/i18n.js', 'src/list.js', 'media/list.html', 'media/list-client.js',
         'media/codicons/codicon.css', 'media/codicons/codicon.ttf',
-        'media/editor.html', 'media/i18n.js', 'README.md', 'README.zh-CN.md',
+        'media/editor.html', 'media/i18n.js', 'README.zh-CN.md', 'readme.md',
     ):
         assert 'extension/' + resource in contents
     # Every runtime file must match the checkout (codicons are generated from npm).
