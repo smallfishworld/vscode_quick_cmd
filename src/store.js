@@ -27,55 +27,63 @@ class ConfigStore {
     const temporary = this.Uri.joinPath(this.coordinationUri, randomUUID() + '.tmp');
     try {
       await this.fs.writeFile(temporary, new TextEncoder().encode(JSON.stringify(owner)));
-      await this.fs.rename(temporary, uri, { overwrite: true });
+      await this.fs.rename(temporary, uri, { overwrite: false });
     } finally {
       try { await this.fs.delete(temporary); } catch { /* Already renamed, or write failed. */ }
     }
   }
   async participants() {
-    const result = [];
-    for (const [name] of await this.fs.readDirectory(this.coordinationUri)) {
-      if (!name.endsWith('.json')) continue;
-      const uri = this.Uri.joinPath(this.coordinationUri, name);
-      let owner;
-      try { owner = JSON.parse(new TextDecoder().decode(await this.fs.readFile(uri))); }
-      catch (error) { if (error.code === 'FileNotFound') continue; throw error; }
-      if (!Number.isSafeInteger(owner.pid) || owner.pid <= 0 ||
-          !Number.isSafeInteger(owner.ticket) || owner.ticket < 0 ||
-          typeof owner.choosing !== 'boolean') {
-        throw new Error('Invalid global command storage coordination file.');
+    // A choosing marker may disappear while its immutable ticket is published.
+    // Rescan in that case rather than accepting an incomplete directory snapshot.
+    while (true) {
+      const result = [];
+      let retry = false;
+      for (const [name] of await this.fs.readDirectory(this.coordinationUri)) {
+        if (!name.endsWith('.json')) continue;
+        const uri = this.Uri.joinPath(this.coordinationUri, name);
+        let owner;
+        try { owner = JSON.parse(new TextDecoder().decode(await this.fs.readFile(uri))); }
+        catch (error) { if (error.code === 'FileNotFound') { retry = true; break; } throw error; }
+        if (!Number.isSafeInteger(owner.pid) || owner.pid <= 0 ||
+            !Number.isSafeInteger(owner.ticket) || owner.ticket < 0 ||
+            typeof owner.choosing !== 'boolean') {
+          throw new Error('Invalid global command storage coordination file.');
+        }
+        let alive = true;
+        try { process.kill(owner.pid, 0); }
+        catch (error) { alive = error.code !== 'ESRCH'; }
+        if (alive) result.push({ ...owner, id: name.split('.')[0] });
+        else {
+          // UUID filenames are never reused, so cleanup cannot unlink a new owner.
+          try { await this.fs.delete(uri); }
+          catch (error) { if (error.code !== 'FileNotFound') throw error; }
+        }
       }
-      let alive = true;
-      try { process.kill(owner.pid, 0); }
-      catch (error) { alive = error.code !== 'ESRCH'; }
-      if (alive) result.push({ ...owner, name });
-      else {
-        // UUID filenames are never reused, so cleanup cannot unlink a new owner.
-        try { await this.fs.delete(uri); }
-        catch (error) { if (error.code !== 'FileNotFound') throw error; }
-      }
+      if (!retry) return result;
     }
-    return result;
   }
   async exclusive(job) {
     await this.fs.createDirectory(this.coordinationUri);
-    const name = randomUUID() + '.json';
-    const uri = this.Uri.joinPath(this.coordinationUri, name);
+    const id = randomUUID();
+    const choosingUri = this.Uri.joinPath(this.coordinationUri, id + '.choosing.json');
+    const ticketUri = this.Uri.joinPath(this.coordinationUri, id + '.ticket.json');
     const owner = { pid: process.pid, choosing: true, ticket: 0 };
     const deadline = Date.now() + 10000;
     try {
-      // Bakery protocol: announce intent before choosing a ticket. All records
-      // are atomically published, including the choosing -> ticket transition.
-      await this.publishParticipant(uri, owner);
+      // Publish distinct immutable records: workspace.fs providers need not
+      // replace an existing destination atomically. Keep choosing until the
+      // ticket exists, so another writer can never observe a transition gap.
+      await this.publishParticipant(choosingUri, owner);
       owner.ticket = Math.max(0, ...(await this.participants()).map(peer => peer.ticket)) + 1;
       if (!Number.isSafeInteger(owner.ticket)) {
         throw new Error('Invalid global command storage coordination file.');
       }
       owner.choosing = false;
-      await this.publishParticipant(uri, owner);
-      while ((await this.participants()).some(peer => peer.name !== name &&
+      await this.publishParticipant(ticketUri, owner);
+      await this.fs.delete(choosingUri);
+      while ((await this.participants()).some(peer => peer.id !== id &&
         (peer.choosing || peer.ticket < owner.ticket ||
-          (peer.ticket === owner.ticket && peer.name < name)))) {
+          (peer.ticket === owner.ticket && peer.id < id)))) {
         if (Date.now() >= deadline) {
           throw new Error('Another window is updating commands. Please retry.');
         }
@@ -83,8 +91,10 @@ class ConfigStore {
       }
       return await job();
     } finally {
-      try { await this.fs.delete(uri); }
-      catch (error) { if (error.code !== 'FileNotFound') throw error; }
+      for (const uri of [choosingUri, ticketUri]) {
+        try { await this.fs.delete(uri); }
+        catch (error) { if (error.code !== 'FileNotFound') throw error; }
+      }
     }
   }
   async exists() {

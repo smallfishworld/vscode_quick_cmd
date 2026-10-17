@@ -153,3 +153,37 @@ test('missing packaged defaults do not create empty JSON or overwrite it', async
   await assert.rejects(store.initializeDefaults('en'), /ENOENT/);
   assert.equal(storage.files.size, 0);
 });
+
+test('coordination rescans a disappearing choosing marker and never overwrites participant records', async () => {
+  const { store, storage } = fixture();
+  const directory = store.coordinationUri.fsPath;
+  const choosing = path.join(directory, 'peer.choosing.json');
+  const ticket = path.join(directory, 'peer.ticket.json');
+  const bytes = value => new TextEncoder().encode(JSON.stringify(value));
+  storage.files.set(choosing, bytes({ pid: process.pid, choosing: true, ticket: 0 }));
+  const readDirectory = storage.fs.readDirectory;
+  let first = true;
+  storage.fs.readDirectory = async uri => {
+    const listing = await readDirectory(uri);
+    if (first) {
+      first = false;
+      storage.files.set(ticket, bytes({ pid: process.pid, choosing: false, ticket: 7 }));
+      storage.files.delete(choosing);
+    }
+    return listing;
+  };
+  assert.deepEqual(await store.participants(), [{ pid: process.pid, choosing: false, ticket: 7, id: 'peer' }]);
+  storage.files.delete(ticket);
+  const rename = storage.fs.rename;
+  let publications = 0;
+  storage.fs.rename = async (from, to, options) => {
+    if (path.dirname(to.fsPath) === directory) {
+      publications++;
+      assert.equal(options.overwrite, false);
+      assert.equal(storage.files.has(to.fsPath), false);
+    }
+    return rename(from, to, options);
+  };
+  await store.update(store.scopes()[0], cfg => addGroup(cfg, 'Safe'));
+  assert.equal(publications, 2);
+});
