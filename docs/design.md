@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.11.4。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.11.5。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -8,7 +8,7 @@
 | -------------------------------------- | ----------------------------------------------- | -------------------------------------- |
 | `src/extension.js`                     | 装配 VS Code 接口、注册命令、参数解析与发送入口 | 不直接生成表单 HTML，不承担配置校验    |
 | `src/model.js`                         | 数据校验、分组/命令操作、排序                   | 纯模型，不依赖 VS Code                 |
-| `src/store.js`                         | 全局状态读写、串行更新                          | 不访问项目文件；读返回独立副本         |
+| `src/store.js`                         | 插件专属 JSON 文件读写、串行更新                          | 不访问项目文件；读返回独立副本         |
 | `src/list.js`、`media/list*` | 可移动 Webview 命令列表、字号、悬停行尾操作、拖拽及键盘操作 | ID 在宿主重新校验，视图不访问存储或执行 Shell |
 | `src/editor.js`                        | 编辑会话、草稿、保存冲突、侧栏/宽编辑器协调     | 对客户端消息校验，保存仍通过模型与存储 |
 | `media/editor-client.js`               | 表单、步骤、校验反馈、环境变量表格              | 通过消息交互，不直接操作终端或文件     |
@@ -18,19 +18,19 @@
 
 ## 2. 数据与一致性
 
-- `globalState` 的 `quickCmd.globalConfig` 保存唯一全局集合；版本字段保持 `1`。
-- `ConfigStore.update` 将所有读—修改—校验—写入串行化，失败后队列可继续；错误配置不写入。
+- `context.globalStorageUri/config.json` 是唯一持久化命令集合，版本字段保持 `1`。不支持自定义路径或旧版 `globalState` 迁移，不创建或访问项目下配置文件。
+- `ConfigStore.update` 对同一个扩展宿主中的读—修改—校验—写入串行化；`workspace.fs` 在 JSON 所在目录写临时文件、`rename(..., { overwrite: true })` 替换原文件，失败时清理临时文件；JSON 缺失才允许初始化，损坏 JSON / I/O 错误必须上报而不被重置。单实例串行更新不等价于跨窗口的文件锁。
 - 模型 ID 在重命名和组间移动后不变。树使用稳定标识，撤销前比较当前配置与操作后的快照，防止回滚其他修改。
 - 项目文件夹仅作为执行目录或文件变量上下文；不是配置保存范围。
 - JSON 导入先解析和校验，再请求替换确认，不主动执行导入的命令。
 
 ## 2.1 首次激活的安全预设初始化
 
-`ConfigStore.initializeDefaults(locale)` 仅在 `quickCmd.globalConfig` **键不存在**（`globalState.get(key) === undefined`）时读取随扩展打包的 `presets/defaults.zh-CN.json` 或 `presets/defaults.en.json`，经 `validateConfig` 校验后复制写入 `globalState`。语言取 `vscode.env.language`；匹配 `zh` 前缀即中文，否则为英文。预设不会发送到终端。初始化 Promise 并入已有串行写入队列；读配置须等待首次初始化完成，避免启动时列表闪空或并发编辑与预设覆盖。初始化成功或已有数据时仅执行一次；已有显式空配置也视为用户已初始化，不恢复默认命令。损坏的既有配置不被覆盖，仍走配置校验错误。卸载本身不主动删除用户数据；重装后是否恢复预设严格取决于 VS Code 全局状态是否仍保存该键，而非扩展版本或新安装标记。无需引入项目文件。
+`ConfigStore.initializeDefaults(locale)` 检测插件目录下的 `config.json` 是否存在；只有不存在时，才从安装包 `presets/defaults.zh-CN.json` 或 `presets/defaults.en.json` 读取完整预设，使用 `validateConfig` 校验后写入 JSON。语言来自 `vscode.env.language`；匹配 `zh` 前缀为中文，其余为英文。预设只保存不执行。初始化 Promise 和其他配置更新共享串行队列，早期视图读取等待初始化完成。已存在 JSON（包括显式空配置）绝不补齐或覆盖；现存文件读取失败或校验失败时报告错误，不自动覆盖。卸载不增加自定义数据保留逻辑，也无旧版 `globalState` 迁移；重装是否使用默认预设，只由文件是否仍在决定。
 
 ## 2.1 仓库级默认命令样例
 
-`presets/` 保存可选的双语 JSON 命令集合：完整 6 组及 Git 单组两个集合，每个集合均符合 `src/model.js` 的 `validateConfig` 约束，使用稳定唯一 ID、单步骤、`${workspaceFolder}` 工作目录以及 `reuse` 终端策略。`test/presets.test.js` 保障格式、双语命令等价和高风险操作确认标志。首次无全局配置时自动载入完整预设；有配置时不重复载入。用户仍可手动导入不同预设，`src/transfer.js` 的“确认后完整替换”语义不变。POSIX/Linux 专属命令在文档中标明平台限制。
+`presets/` 保存可选的双语 JSON 命令集合：完整 6 组及 Git 单组两个集合，每个集合均符合 `src/model.js` 的 `validateConfig` 约束，使用稳定唯一 ID、单步骤、`${workspaceFolder}` 工作目录以及 `reuse` 终端策略。`test/presets.test.js` 保障格式、双语命令等价和高风险操作确认标志。首次无 JSON 时自动载入完整预设；有 JSON 时不重复载入。用户仍可手动导入不同预设，`src/transfer.js` 的“确认后完整替换”语义不变。POSIX/Linux 专属命令在文档中标明平台限制。
 
 ## 3. 编辑会话与消息
 
@@ -86,7 +86,7 @@
 4. 调用锁定的 VSCE（Visual Studio Code Extensions 打包工具），只输出 `dist/quick-cmd-v<version>.vsix`，构建前清空旧 `dist/`，避免遗留文件上传。
 5. `scripts/verify-packages.py` 校验唯一 ZIP、版本、双语 NLS 资源、扩展标识、预设及运行时文件，检查扩展分类满足 Marketplace 官方枚举（当前仅 `Other`），并验证没有多余 VSIX 后生成仅一行的 `SHA256SUMS`。构建时也会提前检查分类，防止无效分类造成上传失败。扩展市场图标采用 `media/icon.png`（128×128 PNG），通过 `package.json` 顶层 `icon` 字段引用，与 `media/activitybar.svg` 独立；单包测试与解包测试校验 PNG 尺寸、路径及源文件一致。
 
-单包使用现有扩展标识 `smallfishworld.vscode-quick-cmd`，覆盖升级不会改变 `globalState` 键，也不自动执行或删除保存命令。
+单包使用现有扩展标识 `smallfishworld.vscode-quick-cmd`，持久化数据由独立 JSON 保存；不会主动执行或删除已保存命令。
 
 ## 7. 持续集成与发布
 

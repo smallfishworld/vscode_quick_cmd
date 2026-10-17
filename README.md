@@ -14,7 +14,7 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-Starting in **v0.11.0**, there is **one installer**; the current **v0.11.2** release provides `quick-cmd-v0.11.2.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity stays `smallfishworld.vscode-quick-cmd`, preserving saved commands when upgrading from an older edition. User-entered names, Shell code and variables are never translated.
+The current **v0.11.5** release provides a single bilingual installer, `quick-cmd-v0.11.5.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity remains `smallfishworld.vscode-quick-cmd`. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
@@ -62,7 +62,7 @@ Untrusted workspaces allow editing but cannot send commands. Startup and configu
 
 ## Configuration and variables
 
-Commands use global extension state. Import/export uses strict JSON; comments are unsupported. Project `.vscode/quick-cmd.json` files are not read or written, and no project-command migration is performed. Exported configuration has this structure:
+Commands are saved in a plain **`config.json`** under VS Code's Quick Cmd extension-specific global storage directory. The extension picks the location automatically; there is no path setting and no project configuration file. You can inspect or back up the JSON directly. Import/export uses strict JSON; comments are unsupported. Exported configuration has this structure:
 
 ```json
 {
@@ -107,7 +107,7 @@ Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"comman
 
 ## Ready-to-import command presets
 
-On first launch, if no commands have ever been saved, Quick Cmd automatically adds the complete **6-group / 43-command** preset, choosing Chinese or English according to the VS Code display language. Later restarts, updates, and reinstalls preserve existing commands (including an intentionally empty list). Presets are never executed automatically.
+On first launch, if `config.json` does not exist, Quick Cmd automatically adds the complete **6-group / 43-command** preset, choosing Chinese or English according to the VS Code display language. When the JSON already exists, it is never replaced automatically (even when its list is empty). No old database migration or special uninstall data retention is performed. Presets are never executed automatically.
 
 The [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) folder also contains ready-to-import command collections in Chinese and English: Git, SVN, Linux utilities, C/C++ & CMake, network diagnostics, and Docker. [Full Chinese preset](presets/defaults.zh-CN.json) · [Full English preset](presets/defaults.en.json) · [Git-only Chinese preset](presets/git.zh-CN.json) · [Git-only English preset](presets/git.en.json).
 

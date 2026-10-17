@@ -4,130 +4,152 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { ConfigStore } = require('../src/store');
 const { addGroup, addCommand } = require('../src/model');
-function fixture(state = new Map()) {
+const { memoryFs } = require('./helpers/memory-fs');
+
+function fixture(storage = memoryFs()) {
   const api = {
+    Uri: storage.vscodeUri,
     workspace: {
+      fs: storage.fs,
       workspaceFolders: [{ name: 'A' }, { name: 'B' }],
-      fs: new Proxy(
-        {},
-        {
-          get() {
-            throw Error('Project files must not be accessed');
-          },
-        },
-      ),
     },
   };
   const context = {
     extensionPath: path.join(__dirname, '..'),
+    globalStorageUri: storage.root,
     globalState: {
-      get: (key, fallback) => state.has(key) ? state.get(key) : fallback,
-      update: async (key, value) => state.set(key, structuredClone(value)),
+      get: () => { throw Error('Legacy globalState must not be read'); },
+      update: () => { throw Error('Legacy globalState must not be written'); },
     },
   };
-  return { store: new ConfigStore(api, context), state, context };
+  return { store: new ConfigStore(api, context), storage, context };
 }
-test('only one global collection exists regardless of open projects', async () => {
-  const { store, state } = fixture();
-  const scopes = store.scopes();
-  assert.equal(scopes.length, 1);
-  assert.equal(scopes[0].id, 'global');
-  await store.update(scopes[0], (config) => {
+
+test('one global JSON file persists commands regardless of open projects', async () => {
+  const { store, storage } = fixture();
+  const scope = store.scopes()[0];
+  assert.equal(store.scopes().length, 1);
+  assert.equal(scope.id, 'global');
+  await store.update(scope, config => {
     const group = addGroup(config, 'Build');
     addCommand(config, group.id, { title: 'Make', command: 'make' });
   });
   assert.equal((await store.read()).groups[0].commands[0].command, 'make');
-  assert.ok(state.has('quickCmd.globalConfig'));
-  assert.equal((await fixture(state).store.read()).groups[0].title, 'Build');
+  assert.equal(storage.readConfig().groups[0].commands[0].command, 'make');
+  assert.equal((await fixture(storage).store.read()).groups[0].title, 'Build');
+  assert.deepEqual([...storage.files.keys()], [storage.configPath]);
 });
-test('global writes serialize concurrent edits', async () => {
+
+test('serializes concurrent read-modify-write operations to JSON', async () => {
   const { store } = fixture();
   const scope = store.scopes()[0];
-  await Promise.all(
-    Array.from({ length: 10 }, (_, i) =>
-      store.update(scope, async (config) => {
-        await Promise.resolve();
-        addGroup(config, 'Group ' + i);
-      }),
-    ),
-  );
+  await Promise.all(Array.from({ length: 10 }, (_, i) =>
+    store.update(scope, async config => {
+      await Promise.resolve();
+      addGroup(config, 'Group ' + i);
+    })));
   assert.equal((await store.read()).groups.length, 10);
 });
-test('invalid global configuration is not overwritten and queue recovers', async () => {
-  const { store, state } = fixture();
+
+test('invalid mutation never replaces JSON and queue recovers', async () => {
+  const { store, storage } = fixture();
   const scope = store.scopes()[0];
-  await assert.rejects(
-    store.update(scope, (config) => {
-      config.groups = 'invalid';
-    }),
-    /Invalid Quick Cmd/,
-  );
-  assert.equal(state.size, 0);
-  await store.update(scope, (config) => addGroup(config, 'Valid'));
-  assert.equal((await store.read()).groups[0].title, 'Valid');
+  await store.update(scope, config => addGroup(config, 'Good'));
+  const before = storage.files.get(storage.configPath);
+  await assert.rejects(store.update(scope, config => { config.groups = 'invalid'; }), /Invalid Quick Cmd/);
+  assert.deepEqual(storage.files.get(storage.configPath), before);
+  await store.update(scope, config => addGroup(config, 'Still good'));
+  assert.equal((await store.read()).groups.length, 2);
 });
 
-test('first activation seeds 43 localized commands once and reads wait for initialization', async () => {
-  const { store, state } = fixture();
+test('first activation seeds 43 Chinese commands exactly once', async () => {
+  const { store, storage } = fixture();
   const first = store.initializeDefaults('zh-cn');
   const second = store.initializeDefaults('en');
-  const cfg = await store.read();
+  const config = await store.read();
   assert.equal(await first, true);
   assert.equal(await second, true);
-  assert.equal(cfg.groups.length, 6);
-  assert.equal(cfg.groups.reduce((sum, group) => sum + group.commands.length, 0), 43);
-  assert.equal(cfg.groups[0].title, require('../presets/defaults.zh-CN.json').groups[0].title);
-  assert.equal(state.has('quickCmd.globalConfig'), true);
-  const freshInstance = fixture(state).store;
-  assert.equal(await freshInstance.initializeDefaults('en'), false, 'reinstall must preserve stored data');
-  assert.deepEqual(await freshInstance.read(), cfg);
+  assert.equal(config.groups.length, 6);
+  assert.equal(config.groups.reduce((n, group) => n + group.commands.length, 0), 43);
+  assert.equal(config.groups[0].title, require('../presets/defaults.zh-CN.json').groups[0].title);
+  assert.deepEqual(storage.readConfig(), config);
+  const restarted = fixture(storage).store;
+  assert.equal(await restarted.initializeDefaults('en'), false);
+  assert.deepEqual(await restarted.read(), config);
 });
 
-test('non-Chinese VS Code locales receive the English preset', async () => {
+test('non-Chinese VS Code display language seeds English defaults', async () => {
   const { store } = fixture();
   assert.equal(await store.initializeDefaults('fr'), true);
   assert.equal((await store.read()).groups[0].title,
     require('../presets/defaults.en.json').groups[0].title);
 });
 
-test('an existing empty config is never reseeded, even across reloads', async () => {
-  const state = new Map([['quickCmd.globalConfig', { version: 1, groups: [] }]]);
-  const { store } = fixture(state);
+test('an intentionally empty JSON file never gets overwritten by defaults', async () => {
+  const storage = memoryFs();
+  storage.writeConfig({ version: 1, groups: [] });
+  const { store } = fixture(storage);
   assert.equal(await store.initializeDefaults('zh-cn'), false);
   assert.deepEqual(await store.read(), { version: 1, groups: [] });
-  const reinstalled = fixture(state).store;
-  assert.equal(await reinstalled.initializeDefaults('en'), false);
-  assert.deepEqual(await reinstalled.read(), { version: 1, groups: [] });
+  assert.equal(await fixture(storage).store.initializeDefaults('en'), false);
+  assert.deepEqual(storage.readConfig(), { version: 1, groups: [] });
 });
 
-test('initialization serializes with edits and does not overwrite concurrent writes', async () => {
+test('initialize and edit serialize without overwriting user data', async () => {
   const { store } = fixture();
   const seed = store.initializeDefaults('en');
-  const edit = store.update(store.scopes()[0], config => addGroup(config, 'My group'));
+  const edit = store.update(store.scopes()[0], config => addGroup(config, 'My commands'));
   await Promise.all([seed, edit]);
   assert.equal((await store.read()).groups.length, 7);
-  assert.equal((await store.read()).groups.at(-1).title, 'My group');
+  assert.equal((await store.read()).groups.at(-1).title, 'My commands');
 });
 
-test('initialization after earlier queued edits does not deadlock or overwrite them', async () => {
+test('earlier queued edit wins over a later initialization', async () => {
   const { store } = fixture();
-  const edit = store.update(store.scopes()[0], config => addGroup(config, 'Before init'));
-  const seed = store.initializeDefaults('zh-cn');
-  assert.equal(await seed, false);
+  const edit = store.update(store.scopes()[0], config => addGroup(config, 'Created first'));
+  const init = store.initializeDefaults('zh-cn');
+  assert.equal(await init, false);
   await edit;
-  assert.equal((await store.read()).groups[0].title, 'Before init');
+  assert.equal((await store.read()).groups[0].title, 'Created first');
 });
 
-test('a corrupted existing config is preserved and not replaced by defaults', async () => {
-  const state = new Map([['quickCmd.globalConfig', { version: 99, groups: [] }]]);
-  const { store } = fixture(state);
+test('malformed saved JSON fails loudly and is not replaced by defaults', async () => {
+  const storage = memoryFs(new Map());
+  storage.files.set(storage.configPath, new TextEncoder().encode('{broken json'));
+  const original = Uint8Array.from(storage.files.get(storage.configPath));
+  const { store } = fixture(storage);
+  await assert.rejects(store.initializeDefaults('zh-cn'), SyntaxError);
+  assert.deepEqual(storage.files.get(storage.configPath), original);
+});
+
+test('schema-invalid saved config is preserved and not reinitialized', async () => {
+  const storage = memoryFs();
+  storage.writeConfig({ version: 99, groups: [] });
+  const { store } = fixture(storage);
   await assert.rejects(store.initializeDefaults('zh-cn'), /Invalid Quick Cmd config/);
-  assert.deepEqual(state.get('quickCmd.globalConfig'), { version: 99, groups: [] });
+  assert.deepEqual(storage.readConfig(), { version: 99, groups: [] });
 });
 
-test('missing packaged default files must not create a placeholder config', async () => {
-  const { store, state, context } = fixture();
-  context.extensionPath = path.join(__dirname, 'missing-installation-root');
+test('filesystem stat errors do not silently initialize or delete data', async () => {
+  const { store, storage } = fixture();
+  storage.options.failStat = true;
+  await assert.rejects(store.initializeDefaults('en'), /Cannot stat storage/);
+  assert.equal(storage.files.size, 0);
+});
+
+test('atomic replacement failure preserves original JSON and cleans temp file', async () => {
+  const { store, storage } = fixture();
+  await store.initializeDefaults('en');
+  const original = Uint8Array.from(storage.files.get(storage.configPath));
+  storage.options.failRename = true;
+  await assert.rejects(store.update(store.scopes()[0], c => addGroup(c, 'Not saved')), /Cannot rename storage/);
+  assert.deepEqual(storage.files.get(storage.configPath), original);
+  assert.deepEqual([...storage.files.keys()], [storage.configPath]);
+});
+
+test('missing packaged defaults do not create empty JSON or overwrite it', async () => {
+  const { store, storage, context } = fixture();
+  context.extensionPath = path.join(__dirname, 'missing-extension-root');
   await assert.rejects(store.initializeDefaults('en'), /ENOENT/);
-  assert.equal(state.has('quickCmd.globalConfig'), false);
+  assert.equal(storage.files.size, 0);
 });

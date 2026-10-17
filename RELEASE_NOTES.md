@@ -1,17 +1,19 @@
-# Quick Cmd v0.11.4
+# Quick Cmd v0.11.5
 
 ## 中文
 
-- 首次激活且未保存过全局快捷命令配置时，自动导入完整的 6 组、43 条预设命令；使用 VS Code UI 语言选择简体中文或英文。
-- 若存在任何已保存配置，包括空列表和用户主动删除全部命令后的空配置，则绝不重复导入、追加或覆盖。插件重新安装后仍以全局配置是否存在为准。
-- 初始化与编辑写入共用串行队列，防止首屏显示空列表或并发操作覆盖用户配置；默认命令只保存，不会执行。
-- 预设文件缺失、现存配置损坏时明确报错而不清空数据；增加首次使用、重装、语言切换、并发及故障回归测试。
-- README 保持面向用户，保留简明的默认命令说明；沿用同一个中英文自动适配 VSIX 和原扩展 ID。
+- 将快捷命令持久化方式从 VS Code 全局状态数据库改为插件专属全局存储目录中的 `config.json`，可直接查看、复制和备份。
+- 不提供自定义配置路径；不导入旧版 `globalState` 数据，也不增加卸载时保留数据机制。
+- 仅当 `config.json` 不存在时，首次打开 Quick Cmd 自动创建文件并加载中文或英文的完整默认预设（6 组、43 条）。
+- 已有文件（即使命令列表为空）绝不自动覆盖；读取 JSON 后严格校验，文件损坏或访问失败时报告错误。
+- 写入采用同目录临时文件加重命名，读改写在扩展宿主内串行化；添加失败恢复、首次运行、文件持久化和编辑操作回归测试。
+- 保持原有双语 VSIX 和扩展 ID；Marketplace 继续由发布者手动上传。
 
 ## English
 
-- Automatically seed the full 6-group / 43-command collection on the first extension activation with no saved configuration, choosing Chinese or English from the VS Code display language.
-- Existing saved configurations, including intentionally empty ones, are never merged with or overwritten by presets. Reinstalls also respect any state still persisted by VS Code.
-- Serialize initialization with edits so views never see placeholder data while seeding; no preset executes automatically.
-- Preserve data and report errors for missing preset files or invalid existing configs; add first-run, reinstall, locale, concurrency and failure regression coverage.
-- Keep public README content user-focused and preserve the existing multilingual VSIX and extension identifier.
+- Save commands in a readable `config.json` under the extension's VS Code global storage directory instead of the VS Code `globalState` database.
+- No configurable path, legacy database migration or special retention when uninstalling.
+- Only if the JSON does not exist, initialize 6 groups/43 commands from the installed Chinese or English default presets.
+- Never overwrite an existing JSON file, even if intentionally empty; report malformed JSON or filesystem failures.
+- Use an adjacent temporary file and rename for writes, serialize modifications within the extension host and cover persistence, errors and first-run behavior with tests.
+- Preserve the existing extension identity and multilingual installer; Marketplace publication remains manual.

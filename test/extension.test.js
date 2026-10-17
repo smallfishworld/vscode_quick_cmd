@@ -3,11 +3,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const Module = require('node:module');
 const path = require('node:path');
+const { memoryFs } = require('./helpers/memory-fs');
 
 test('extension activates the embedded editor, saves a multi-step command, then runs it', async () => {
   const callbacks = new Map();
-  // Existing empty configuration must remain empty (never auto-seeded).
-  const state = new Map([['quickCmd.globalConfig', { version: 1, groups: [] }]]);
+  // An existing empty JSON collection must stay empty (never auto-seeded).
+  const storage = memoryFs();
+  storage.writeConfig({ version: 1, groups: [] });
   const inputs = ['Utilities'];
   const terminals = [];
   const modes = new Map();
@@ -90,6 +92,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
       },
     },
     workspace: {
+      fs: storage.fs,
       workspaceFolders: [],
       isTrusted: true,
       getConfiguration: () => ({ get: (key, fallback) => fallback }),
@@ -119,12 +122,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
         }
       },
     },
-    Uri: {
-      file: (fsPath) => ({ fsPath }),
-      joinPath: (uri, ...parts) => ({
-        fsPath: path.join(uri.fsPath, ...parts),
-      }),
-    },
+    Uri: storage.vscodeUri,
   };
   const originalLoad = Module._load;
   Module._load = function (request, parent, main) {
@@ -135,10 +133,11 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     const context = {
       extensionPath: path.join(__dirname, '..'),
       extensionUri: { fsPath: path.join(__dirname, '..') },
+      globalStorageUri: storage.root,
       subscriptions: [],
       globalState: {
-        get: (key, fallback) => state.get(key) || fallback,
-        update: async (key, value) => state.set(key, structuredClone(value)),
+        get: () => { throw Error('Old globalState must not be read'); },
+        update: () => { throw Error('Old globalState must not be written'); },
       },
     };
     activate(context);
@@ -169,7 +168,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
       groupId: latest.groupId,
       fields: raw,
     });
-    const cmd = state.get('quickCmd.globalConfig').groups[0].commands[0];
+    const cmd = storage.readConfig().groups[0].commands[0];
     assert.equal(cmd.command, undefined);
     assert.equal(cmd.steps.length, 2);
     assert.equal(callbacks.has('quickCmd.showEditor'), false);
@@ -230,7 +229,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     assert.equal(await callbacks.get('quickCmd.closeEditor')(), true);
     assert.equal(modes.get('quickCmd.editing'), false);
     assert.equal(
-      state.get('quickCmd.globalConfig').groups[0].commands[0].title,
+      storage.readConfig().groups[0].commands[0].title,
       'Dirty',
     );
     // 再次进入编辑并改脏，× 选择放弃后退出。
@@ -246,26 +245,30 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     assert.equal(await callbacks.get('quickCmd.closeEditorView')(), true);
     assert.equal(modes.get('quickCmd.editing'), false);
     assert.equal(
-      state.get('quickCmd.globalConfig').groups[0].commands[0].title,
+      storage.readConfig().groups[0].commands[0].title,
       'Dirty',
     );
     await callbacks.get('quickCmd.searchCommands')();
     assert.equal(terminals.length, 2);
+    const beforeCollapsePackets = listPackets.length;
     await callbacks.get('quickCmd.collapseAll')();
-    assert.equal(listPackets.at(-1).type, 'collapseAll');
+    assert.ok(
+      listPackets.slice(beforeCollapsePackets).some(packet => packet.type === 'collapseAll'),
+      'collapseAll should be sent even if an asynchronous model refresh follows it',
+    );
     await callbacks.get('quickCmd.runById')({ id: cmd.id });
     assert.equal(terminals.length, 3);
     answers.push('Cancel');
     await callbacks.get('quickCmd.deleteCommand')(nativeContext);
     assert.equal(warnings.at(-1)[1].modal, true);
     assert.equal(
-      state.get('quickCmd.globalConfig').groups[0].commands.length,
+      storage.readConfig().groups[0].commands.length,
       1,
     );
     answers.push('Delete');
     await callbacks.get('quickCmd.deleteCommand')(nativeContext);
     assert.equal(
-      state.get('quickCmd.globalConfig').groups[0].commands.length,
+      storage.readConfig().groups[0].commands.length,
       0,
     );
     assert.equal(
