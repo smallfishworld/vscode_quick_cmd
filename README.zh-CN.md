@@ -107,9 +107,11 @@
 
 ## 默认快捷命令预设
 
-仓库新增 [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) 目录，提供可选的中文、英文快捷命令模板，涵盖 Git、SVN、Linux 常用命令、C/C++ 与 CMake、网络诊断、Docker。可以下载 [完整中文预设](presets/defaults.zh-CN.json)、[完整英文预设](presets/defaults.en.json)、[仅 Git 中文预设](presets/git.zh-CN.json) 或 [仅 Git 英文预设](presets/git.en.json)，在面板右上角通过“导入”选择使用。
+首次启动时，如果还没有保存过快捷命令配置，插件会根据 VS Code 的显示语言自动导入完整的 **6 组、43 条默认命令**。之后升级或重装只要已有配置仍在，就不会覆盖或重复导入；即使用户主动清空命令列表也不会自动恢复。预设不会自行运行。
 
-**注意：当前导入会替换全部已有命令，不会追加合并。** 请先“导出”备份。预设不会在扩展启动时自动加载或执行；Linux/网络命令主要面向 Linux、Remote SSH 或 WSL 的 POSIX 终端。
+[预设目录](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/presets) 另外提供可手动导入的中文、英文快捷命令模板，涵盖 Git、SVN、Linux 常用命令、C/C++ 与 CMake、网络诊断、Docker。可以下载 [完整中文预设](presets/defaults.zh-CN.json)、[完整英文预设](presets/defaults.en.json)、[仅 Git 中文预设](presets/git.zh-CN.json) 或 [仅 Git 英文预设](presets/git.en.json)，在面板右上角通过“导入”选择使用。
+
+**注意：当前导入会替换全部已有命令，不会追加合并。** 请先“导出”备份。预设不会在扩展启动时自动执行；Linux/网络命令主要面向 Linux、Remote SSH 或 WSL 的 POSIX 终端。
 
 ## 协议
 

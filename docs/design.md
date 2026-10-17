@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.11.3。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.11.4。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -24,9 +24,13 @@
 - 项目文件夹仅作为执行目录或文件变量上下文；不是配置保存范围。
 - JSON 导入先解析和校验，再请求替换确认，不主动执行导入的命令。
 
+## 2.1 首次激活的安全预设初始化
+
+`ConfigStore.initializeDefaults(locale)` 仅在 `quickCmd.globalConfig` **键不存在**（`globalState.get(key) === undefined`）时读取随扩展打包的 `presets/defaults.zh-CN.json` 或 `presets/defaults.en.json`，经 `validateConfig` 校验后复制写入 `globalState`。语言取 `vscode.env.language`；匹配 `zh` 前缀即中文，否则为英文。预设不会发送到终端。初始化 Promise 并入已有串行写入队列；读配置须等待首次初始化完成，避免启动时列表闪空或并发编辑与预设覆盖。初始化成功或已有数据时仅执行一次；已有显式空配置也视为用户已初始化，不恢复默认命令。损坏的既有配置不被覆盖，仍走配置校验错误。卸载本身不主动删除用户数据；重装后是否恢复预设严格取决于 VS Code 全局状态是否仍保存该键，而非扩展版本或新安装标记。无需引入项目文件。
+
 ## 2.1 仓库级默认命令样例
 
-`presets/` 保存可选的双语 JSON 命令集合：完整 6 组及 Git 单组两个集合，每个集合均符合 `src/model.js` 的 `validateConfig` 约束，使用稳定唯一 ID、单步骤、`${workspaceFolder}` 工作目录以及 `reuse` 终端策略。`test/presets.test.js` 保障格式、双语命令等价和高风险操作确认标志。预设是仓库示例文件，不由 `src/store.js` 自动初始化，也不改变 `src/transfer.js` 的“确认后完整替换”语义；用户必须主动下载并导入。POSIX/Linux 专属命令在文档中标明平台限制。
+`presets/` 保存可选的双语 JSON 命令集合：完整 6 组及 Git 单组两个集合，每个集合均符合 `src/model.js` 的 `validateConfig` 约束，使用稳定唯一 ID、单步骤、`${workspaceFolder}` 工作目录以及 `reuse` 终端策略。`test/presets.test.js` 保障格式、双语命令等价和高风险操作确认标志。首次无全局配置时自动载入完整预设；有配置时不重复载入。用户仍可手动导入不同预设，`src/transfer.js` 的“确认后完整替换”语义不变。POSIX/Linux 专属命令在文档中标明平台限制。
 
 ## 3. 编辑会话与消息
 

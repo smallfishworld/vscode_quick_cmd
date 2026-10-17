@@ -4,7 +4,7 @@
 
 ## 简体中文
 
-本目录提供可直接导入 Quick Cmd v0.9.0 的标准 JSON 命令模板。**预设仅供用户主动导入，不会在扩展启动时自动安装或执行。**
+本目录提供 Quick Cmd 的标准 JSON 快捷命令模板。**从 v0.11.4 开始，首次启动且没有已保存配置时，插件自动载入与 VS Code 界面语言匹配的完整默认预设（6 组 43 条）；已有配置（包括空配置）不会被覆盖或再次初始化。** 命令不会自动执行；手动导入其他预设仍会替换现有命令。
 
 | 文件 | 内容 |
 | --- | --- |
@@ -26,7 +26,7 @@
 
 ## English
 
-These are ready-to-import JSON preset collections for Quick Cmd v0.9.0. They are **opt-in examples**, not automatic startup commands.
+These are bundled JSON preset collections for Quick Cmd. **Starting in v0.11.4, first activation with no saved configuration seeds all six groups (43 commands) in the VS Code display language. Existing configurations, including empty collections, are never overwritten or reseeded.** Commands are never executed automatically. Manual import of another preset still replaces the existing collection.
 
 | File | Contents |
 | --- | --- |
