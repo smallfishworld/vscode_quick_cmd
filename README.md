@@ -14,14 +14,14 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-The current **v0.11.5** release provides a single bilingual installer, `quick-cmd-v0.11.5.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity remains `smallfishworld.vscode-quick-cmd`. User-entered names, Shell code and variables are never translated.
+The current **v0.11.6** release provides a single bilingual installer, `quick-cmd-v0.11.6.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity remains `smallfishworld.vscode-quick-cmd`. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
 - Groups and commands use the same theme foreground, without command counts. Names and previews share the VS Code UI font and weight; commands are one pixel smaller than the host and groups are two pixels larger. `quickCmd.listFontSize=0` follows the host; positive values customize the command size (10–18 px).
 - An expanded group draws a vertical indent guide under its collapse arrow, so the command column stays visible.
 - Move the command view into Explorer or another container through the native view title **Move View** menu. Sizing only affects this extension.
-- The list starts directly at **group → command**. All commands use VS Code global extension state, without project/global root nodes.
+- The list starts directly at **group → command**. All commands use config.json in the extension-specific global storage directory, without project/global root nodes.
 - Drag groups or commands to reorder; drop a command onto a group to append it. Drop a group onto empty list space to move it to the end.
 - A move retains selection and offers Undo. Undo refuses to overwrite subsequent configuration changes.
 - Right-click a command or group to open a native menu beside the pointer, with duplication, deletion, movement and keybinding actions. Command deletion lives here rather than on the row. Import/export remain in the top-right toolbar.
@@ -32,7 +32,7 @@ The current **v0.11.5** release provides a single bilingual installer, `quick-cm
 The top-right toolbar provides New Group, New Command, Search, Import, Export, Collapse All, Refresh and Settings. Import uses a supported down-arrow icon. The editor stays hidden until creating a command or clicking its hover-revealed row pencil; there is no global edit-mode switch. The compact form reduces padding and control sizes. The editor title bar offers **Save and Finish Editing** (✓) and **×**. ✓ saves the draft and returns to the command list; × asks Save, Discard or Cancel when there are unsaved changes. Both return focus to the command list view rather than leaving you in the terminal.
 
 - **Protected drafts:** switching commands offers Save, Discard or Cancel. Drafts persist in the current VS Code workspace state and can recover after extension reload; they never execute or save commands automatically.
-- **Accurate save state:** edits made while a save is pending remain unsaved after that request completes.
+- **Accurate save state:** edits made while a save is pending remain unsaved after that request completes. Save and Finish Editing continues saving new edits before closing.
 - **Persistent footer:** Save and Save and Send stay visible while content scrolls. Use `Ctrl+S` / `Cmd+S` while the editor has focus.
 - **Wide editor:** open the same draft in the main editor area. While it is open, the sidebar mirrors the draft read-only; closing the wide editor restores sidebar editing.
 - **Steps:** drag, move, collapse and delete with undo. `Alt+Up` / `Alt+Down` inside command text moves a step. Narrow sidebars provide a More Actions menu.
@@ -55,14 +55,14 @@ Disabling trailing Enter **does not guarantee that no commands execute**: interm
 | Mode                              | Behavior                                                                                                                      |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | New terminal each time            | Default; creates a dedicated terminal and retains earlier output                                                              |
-| Prefer an idle dedicated terminal | Reuses only after Shell Integration confirms idle and directory/environment settings match; otherwise creates a new terminal  |
+| Prefer an idle dedicated terminal | Reuses only when Shell Integration confirms idle, no input is staged, and the actual directory and expanded environment match; otherwise creates a new terminal  |
 | Use the active terminal           | Uses its existing directory/environment; rejects custom directory/environment settings and asks when idle status is uncertain |
 
 Untrusted workspaces allow editing but cannot send commands. Startup and configuration changes never execute commands. Stop Command closes a dedicated terminal; it cannot stop a non-dedicated active terminal.
 
 ## Configuration and variables
 
-Commands are saved in a plain **`config.json`** under VS Code's Quick Cmd extension-specific global storage directory. The extension picks the location automatically; there is no path setting and no project configuration file. You can inspect or back up the JSON directly. Import/export uses strict JSON; comments are unsupported. Exported configuration has this structure:
+Commands are saved in a plain **`config.json`** under VS Code's Quick Cmd extension-specific global storage directory. The extension picks the location automatically; there is no path setting and no project configuration file. You can inspect or back up the JSON directly. Writes from separate extension windows are coordinated and serialized. Import/export uses strict JSON; comments are unsupported. Exported configuration has this structure:
 
 ```json
 {
@@ -101,7 +101,7 @@ Commands are saved in a plain **`config.json`** under VS Code's Quick Cmd extens
 
 Variables: `${workspaceFolder}`, `${file}`, `${fileDirname}`, `${fileBasename}`, `${fileBasenameNoExtension}`, `${relativeFile}`, `${env:NAME}`, `${input:name}`.
 
-Command variables are Shell-quoted automatically; do not add quotes around the placeholders. Directory and environment values use plain-text expansion. `quickCmd.shellType` supports `auto`, `posix`, `powershell` and `cmd`.
+Command variables are Shell-quoted automatically. Keep placeholders outside quotes and escapes, for example `python ${file}`. Templates containing command variables with nested shell expansions or here-documents are rejected; placeholders inside comments are also rejected. Directory and environment values use plain-text expansion. `quickCmd.shellType` supports `auto`, `posix`, `powershell` and `cmd`.
 
 Copy Keybinding Snippet creates a `quickCmd.runById` binding with `{"id":"command-id"}` arguments.
 

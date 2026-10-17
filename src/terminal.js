@@ -64,7 +64,10 @@ class TerminalRunner {
     if (vscode.window.onDidStartTerminalShellExecution) {
       this.disposables.push(
         vscode.window.onDidStartTerminalShellExecution((e) => {
-          this.states.set(e.terminal, { busy: true, monitored: true });
+          this.states.set(e.terminal, {
+            busy: true, monitored: true,
+            staged: this.states.get(e.terminal)?.staged || false,
+          });
           this.changed?.fire();
         }),
       );
@@ -76,6 +79,9 @@ class TerminalRunner {
             busy: false,
             monitored: true,
             exitCode: e.exitCode,
+            // An event may belong to an intermediate line of a pasted script;
+            // it cannot prove that its final, unsubmitted line was cleared.
+            staged: this.states.get(e.terminal)?.staged || false,
           });
           this.changed?.fire();
         }),
@@ -135,7 +141,10 @@ class TerminalRunner {
     }
     const mode = command.terminal || 'new';
     const key = `${scope.id || scope.type}:${command.id || command.title}`;
-    const signature = JSON.stringify({ cwd, env: command.env || {} });
+    const env = Object.fromEntries(Object.entries(command.env || {})
+      .map(([name, value]) => [name, expand(value, ctx, false)])
+      .sort(([a], [b]) => a.localeCompare(b)));
+    const signature = JSON.stringify({ cwd, env });
     if (
       mode === 'active' &&
       (command.cwd || Object.keys(command.env || {}).length)
@@ -153,6 +162,10 @@ class TerminalRunner {
         existing &&
         state?.monitored &&
         !state.busy &&
+        !state.staged &&
+        cwd &&
+        existing.shellIntegration?.cwd?.scheme === 'file' &&
+        path.resolve(existing.shellIntegration.cwd.fsPath) === path.resolve(cwd) &&
         this.signatures.get(key) === signature
       ) {
         terminal = existing;
@@ -169,16 +182,7 @@ class TerminalRunner {
       terminal = vscode.window.createTerminal({
         name: `Quick Cmd: ${command.title}`,
         cwd,
-        ...(command.env
-          ? {
-              env: Object.fromEntries(
-                Object.entries(command.env).map(([k, v]) => [
-                  k,
-                  expand(v, ctx, false),
-                ]),
-              ),
-            }
-          : {}),
+        ...(command.env ? { env } : {}),
       });
       if (mode === 'reuse') {
         this.terminals.set(key, terminal);
@@ -232,7 +236,7 @@ class TerminalRunner {
       return false;
     }
     const state = this.states.get(active);
-    return !state?.monitored || state.busy;
+    return !state?.monitored || state.busy || state.staged;
   }
 
   dispose() {

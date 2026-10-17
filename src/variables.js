@@ -25,9 +25,42 @@ function extractInputs(...templates) {
   return [...result];
 }
 
+// This is deliberately a restricted lexer, not a shell parser. Quote an entire
+// argument only when the template has not already changed its quoting context.
+function checkInterpolationContext(template, shell = 'posix') {
+  if (!/\$\{[^{}]+\}/.test(template)) return;
+  const unsafe = () => { throw new Error('Place command variables outside quotes, escapes, comments, and shell expansions.'); };
+  if (/\$\(|\$\[|\(\(|\[\[|`|<<|@['"]|--%/.test(template)) unsafe();
+  let quote, escaped = false, comment = false;
+  for (let i = 0; i < template.length; i++) {
+    const ch = template[i];
+    if (ch === '$' && template[i + 1] === '{') {
+      const end = template.indexOf('}', i + 2);
+      if (end !== -1) {
+        if (quote || escaped || comment || template.slice(i + 2, end).includes('${')) unsafe();
+        i = end;
+        continue;
+      }
+    }
+    if (escaped) { escaped = false; continue; }
+    if (comment) { if (ch === '\n') comment = false; continue; }
+    if ((shell === 'cmd' ? ch === '^' : ch === '\\' && shell !== 'powershell') && quote !== "'") {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"' || (ch === "'" && shell !== 'cmd')) {
+      if (quote === ch) quote = undefined;
+      else if (!quote) quote = ch;
+    } else if (!quote && ch === '#' && shell !== 'cmd') {
+      comment = true;
+    }
+  }
+}
+
 /** Expand placeholders from a trusted whitelist; command values are always shell-quoted. */
 function expand(template, ctx, quoted = true) {
   if (template === undefined || template === null) { return template; }
+  if (quoted) checkInterpolationContext(String(template), ctx.shell);
   const file = ctx.file;
   const root = ctx.workspaceFolder;
   const fileValues = () => {

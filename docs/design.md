@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.11.5。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.11.6。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -19,10 +19,14 @@
 ## 2. 数据与一致性
 
 - `context.globalStorageUri/config.json` 是唯一持久化命令集合，版本字段保持 `1`。不支持自定义路径或旧版 `globalState` 迁移，不创建或访问项目下配置文件。
-- `ConfigStore.update` 对同一个扩展宿主中的读—修改—校验—写入串行化；`workspace.fs` 在 JSON 所在目录写临时文件、`rename(..., { overwrite: true })` 替换原文件，失败时清理临时文件；JSON 缺失才允许初始化，损坏 JSON / I/O 错误必须上报而不被重置。单实例串行更新不等价于跨窗口的文件锁。
+- `ConfigStore.update` 对跨窗口、跨进程的读—修改—校验—写入串行化；`workspace.fs` 在 JSON 所在目录写临时文件、`rename(..., { overwrite: true })` 替换原文件，失败时清理临时文件；JSON 缺失才允许初始化，损坏 JSON / I/O 错误必须上报而不被重置。首次预设初始化共用相同的票号协调协议，详见下文。
 - 模型 ID 在重命名和组间移动后不变。树使用稳定标识，撤销前比较当前配置与操作后的快照，防止回滚其他修改。
 - 项目文件夹仅作为执行目录或文件变量上下文；不是配置保存范围。
 - JSON 导入先解析和校验，再请求替换确认，不主动执行导入的命令。
+
+### 2.0 跨窗口写入协调
+
+读取、`ConfigStore.update` 和首次预设初始化共用全局存储目录中的 Lamport bakery 票号协调协议：原子发布 choosing 标记，再发布递增票号，按票号和 UUID 顺序进入读—修改—校验—原子替换区间。每个参与文件名永不复用，已退出进程的文件可清理；活动进程超时则拒绝写入。协调不依赖窗口内缓存，也不读写 globalState。失败后移除自身参与记录，队列可继续。测试覆盖独立 Node 进程并发及写入者退出恢复。
 
 ## 2.1 首次激活的安全预设初始化
 
@@ -49,7 +53,7 @@
 
 表单把末尾回车作为组级设置，序列化时映射为中间步骤 `execute: true` 和最后一步的实际选项；布局操作不会改动选项。无效环境变量行通过草稿元数据保留，不作为有效环境变量写入。
 
-编辑栏仍由 `quickCmd.editing` 控制，启动为 false。行尾铅笔和新建操作打开编辑栏，命令主体始终按保存配置发送；不再使用全局编辑模式或在列表顶部切换点击含义。关闭编辑栏仍先等待保存并处理草稿，取消或失败保持编辑。标题栏提供两个关闭入口：`quickCmd.closeEditor`（保存并完成编辑，`$(check)`）调用 `editor.saveAndClose()`，先保存草稿再退出，保存失败保持编辑不丢输入；`quickCmd.closeEditorView`（关闭编辑，`$(close)`）调用 `editor.close()`，脏数据时弹保存/放弃/取消确认。两者退出都经 `teardown()`，除清除会话外还执行 `quickCmd.commands.focus`，把焦点交回命令列表视图，不停留在终端或空编辑视图。
+编辑栏仍由 `quickCmd.editing` 控制，启动为 false。行尾铅笔和新建操作打开编辑栏，命令主体始终按保存配置发送；不再使用全局编辑模式或在列表顶部切换点击含义。关闭编辑栏仍先等待保存并处理草稿，取消或失败保持编辑。标题栏提供两个关闭入口：`quickCmd.closeEditor`（保存并完成编辑，`$(check)`）调用 `editor.saveAndClose()`，循环保存直至当前草稿与保存基线一致再退出，保存期间新到达的草稿进入下一轮，保存失败保持编辑不丢输入；`quickCmd.closeEditorView`（关闭编辑，`$(close)`）调用 `editor.close()`，脏数据时弹保存/放弃/取消确认。两者退出都经 `teardown()`，除清除会话外还执行 `quickCmd.commands.focus`，把焦点交回命令列表视图，不停留在终端或空编辑视图。
 
 高级设置区（`<details id="advanced">`）默认展开。命令图标选择器渲染约 30 个 Codicon 预设加自定义名称，选项值与命令列表 `glyph()` 使用同一套 Codicon 字体（`media/codicons/codicon.css` 或 `node_modules/@vscode/codicons/dist`，经 `webview.asWebviewUri` 注入，CSP 放行 `font-src`），因此编辑表单与列表两处显示一致。
 
@@ -68,11 +72,11 @@
 
 ## 5. 终端与变量
 
-新建终端始终使用专用终端；复用仅在 Shell 集成确认空闲且目录/环境签名一致时进行。活动终端不能应用专用目录或环境，状态不确定时提示。关闭专用终端是停止操作的实现边界。
+新建终端始终使用专用终端；复用仅在 Shell 集成确认空闲、无 staged 输入、实际目录与目标目录一致，且展开后的环境签名一致时进行；缺少可靠目录信息时新建终端。每次先展开环境变量再比较签名。活动终端不能应用专用目录或环境，状态不确定时提示。关闭专用终端是停止操作的实现边界。
 
 跟踪最近文本编辑器 URI（Uniform Resource Identifier，统一资源标识符），避免宽 Webview 激活后文件变量丢失。全局命令在多根工作区中按最近文本文件确定目录，缺省取第一个目录。
 
-命令变量按 `posix`、`powershell` 或 `cmd` 规则引用；目录和环境使用纯文本展开。步骤合并发送保持明确边界，不承诺独立步骤进程管理。
+命令变量按 `posix`、`powershell` 或 `cmd` 规则引用；保守词法检查要求占位符位于未引用、未转义的普通命令上下文，拒绝引号、Shell 展开、注释、here-document 等改变引用语义的上下文。拒绝发生在发送之前；目录和环境使用纯文本展开。步骤合并发送保持明确边界，不承诺独立步骤进程管理。
 
 ## 6. 多语言单包构建
 
