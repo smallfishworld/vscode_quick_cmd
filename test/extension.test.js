@@ -6,7 +6,8 @@ const path = require('node:path');
 
 test('extension activates the embedded editor, saves a multi-step command, then runs it', async () => {
   const callbacks = new Map();
-  const state = new Map();
+  // Existing empty configuration must remain empty (never auto-seeded).
+  const state = new Map([['quickCmd.globalConfig', { version: 1, groups: [] }]]);
   const inputs = ['Utilities'];
   const terminals = [];
   const modes = new Map();
