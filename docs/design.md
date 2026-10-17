@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.10.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.11.0。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -70,33 +70,29 @@
 
 命令变量按 `posix`、`powershell` 或 `cmd` 规则引用；目录和环境使用纯文本展开。步骤合并发送保持明确边界，不承诺独立步骤进程管理。
 
-## 6. 中英文构建
+## 6. 多语言单包构建
 
-源树默认目录保持不变：`package.nls.json` 为英文，`package.nls.zh-cn.json` 为中文；共享运行时目录维护翻译。开发模式随 VS Code 语言，发行模式由包元数据固定语言。
+源树保留 `package.nls.json`（默认英文）与 `package.nls.zh-cn.json`（简体中文）；VS Code 自动根据界面语言解析贡献项（命令、菜单和设置）。运行时代码和 Webview 使用 `vscode.env.language` 初始化共享词典（`media/i18n.js`），支持 `zh` 前缀的中文语言代码，其他语言回退英文；不再使用 `quickCmdBuildLanguage` 固定语言。切换 VS Code 显示语言并重载后生效，用户创建的命令内容不参与翻译。
 
-`scripts/package-variants.js` 在 `.build/zh-cn` 和 `.build/en` 建立隔离目录：
+`scripts/package-variants.js` 在 `.build/unified` 建立唯一隔离目录（保留脚本路径作为内部构建入口）：
 
 1. 复制运行时代码和所需说明，不复制测试、开发依赖、工程文档或构建脚本。
-2. 保持 `publisher`、`name`、`version` 相同，写入 `quickCmdBuildLanguage`。
-3. 只放入目标语言的默认 `package.nls.json`，防止宿主语言覆盖所选版本。
-4. 调用锁定的 VSCE（Visual Studio Code Extensions 打包工具），输出 `dist/quick-cmd-v<version>-zh-cn.vsix` 和 `dist/quick-cmd-v<version>-en.vsix`。
-5. `scripts/verify-packages.py` 检查 ZIP、版本、语言、扩展标识和运行时文件，排除依赖泄漏，再生成 `SHA256SUMS`。
+2. 保持原始 `publisher`、`name`、`version`，不写入语言固定字段 `quickCmdBuildLanguage`。
+3. 同时放入英文默认 `package.nls.json` 与简体中文 `package.nls.zh-cn.json`。
+4. 调用锁定的 VSCE（Visual Studio Code Extensions 打包工具），只输出 `dist/quick-cmd-v<version>.vsix`，构建前清空旧 `dist/`，避免遗留文件上传。
+5. `scripts/verify-packages.py` 校验唯一 ZIP、版本、双语 NLS 资源、扩展标识、预设及运行时文件，并验证没有多余 VSIX 后生成仅一行的 `SHA256SUMS`。
 
-两包使用同一扩展标识，用户选择其一安装；同一宿主/配置档案中切换语言包保留全局命令，不支持两包同时安装。
-
-### Marketplace 打包
-
-发布脚本另构建一个 `marketplace` 安装包，保留英文默认 `package.nls.json` 与中文 `package.nls.zh-cn.json`，不设置 `quickCmdBuildLanguage`，因此运行时界面语言与 VS Code 一致。三个包都包含 `presets/`；校验对三个包进行运行时代码比对，并核对身份与校验和。GitHub 上的中英文固定包保持原有行为，不允许以两个语言包发布同一 Marketplace 版本。
+单包使用现有扩展标识 `smallfishworld.vscode-quick-cmd`，覆盖升级不会改变 `globalState` 键，也不自动执行或删除保存命令。
 
 ## 7. 持续集成与发布
 
-CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、三包打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含三包和校验和的草稿发布，最后转为正式发布。商店发布步骤需要 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED=true` 且已配置 Marketplace 信任的 GitHub OIDC 发布策略；它仅上传 `marketplace` 版本。
+CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、单包打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含唯一安装包和校验和的草稿发布，最后转为正式发布。商店发布步骤需要 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED=true` 且已配置 Marketplace 信任的 GitHub OIDC 发布策略；它上传与 GitHub Release 相同的多语言 VSIX。
 
 v0.6.0 按用户要求执行一次历史重置：仅删除已核实的旧版本 `v0.2.0`、`v0.3.0`、`v0.3.1`、`v0.4.0`、`v0.5.0` 及其标签。清理发生在新包通过验证并上传草稿之后。固定白名单不会匹配未来版本或其他标签；普通版本发布不清理历史。已正式发布的同版本不会在重复运行时被覆盖。
 
 ## 8. 测试边界
 
-模型测试验证约束与排序，存储测试验证全局单集合和并发，终端测试验证发送/状态边界，会话与 DOM 测试验证草稿和表单。构建测试验证跨宿主语言固定发行语言、同扩展标识与源树不被改写；列表 DOM 测试验证同色、字号层级、悬停操作、不显示计数、消息隔离及折叠/拖拽/键盘交互。
+模型测试验证约束与排序，存储测试验证全局单集合和并发，终端测试验证发送/状态边界，会话与 DOM 测试验证草稿和表单。构建测试验证单包内同时具备中文及英文资源、扩展标识稳定与源树不被改写；列表 DOM 测试验证同色、字号层级、悬停操作、不显示计数、消息隔离及折叠/拖拽/键盘交互。
 
 实际 VS Code 的深浅色、高对比度、选中行对比度、原生拖拽和不同侧栏宽度需要单独人工或图形宿主验收，不以 DOM 测试冒充已完成。
 
