@@ -111,35 +111,6 @@ The [presets/](https://github.com/smallfishworld/vscode_quick_cmd/tree/main/pres
 
 **Import replaces all current commands**, rather than merging them. Export your existing configuration first. No preset is automatically loaded or executed. Linux and networking examples target POSIX/Linux terminals such as Remote SSH or WSL.
 
-## Development
-
-Node.js 22 is recommended:
-
-```bash
-npm ci
-npm run check
-npm test
-npm run package
-python3 scripts/verify-packages.py
-```
-
-Tests cover configuration, terminal sending, draft sessions, list interactions and editor interactions executed in Happy DOM. Happy DOM is a development-only dependency and is excluded from the extension package. DOM tests do not replace visual, font, drag-and-drop or sizing checks in a real VS Code window.
-
-Outputs in `dist/` contain only `quick-cmd-v0.11.2.vsix` and its one-entry `SHA256SUMS`. GitHub Actions verifies both before publishing the same installer to GitHub Releases; Marketplace publishing requires publisher authorization. See [Marketplace publishing](#marketplace-publishing).
-
-The only engineering specifications are [requirements](docs/spec.md) and [design](docs/design.md). Follow [agent.md](agent.md) for constraints and change procedures.
-
-## Marketplace publishing
-
-The **single** `quick-cmd-v0.11.2.vsix` installer is used for GitHub Releases and VS Code Marketplace. It detects VS Code's display language (Chinese / English fallback) and keeps the existing `smallfishworld.vscode-quick-cmd` extension identity. Separate language-specific packages are no longer built.
-
-The release workflow supports **two authentication methods** without committing secrets:
-
-1. **GitHub Actions PAT (Personal Access Token) fallback:** Generate an Azure DevOps PAT with `Marketplace (Manage)` scope (see [Microsoft's instructions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)). In GitHub repository **Settings → Secrets and variables → Actions → New repository secret**, save it as `VSCE_PAT`. Never paste the token into an issue, a commit or a chat. The workflow automatically uses this secret if present.
-2. **OIDC trusted publishing:** If the Marketplace publisher offers trusted-publishing policy configuration, allow `smallfishworld/vscode_quick_cmd` and workflow `.github/workflows/release.yml`. When `VSCE_PAT` is absent, the workflow uses `vsce publish --oidc`. See [official vsce instructions](https://github.com/microsoft/vscode-vsce#trusted-publishing).
-
-After configuring authentication, set repository Actions **variable** `MARKETPLACE_PUBLISH_ENABLED=true` and re-run [Release Quick Cmd](https://github.com/smallfishworld/vscode_quick_cmd/actions/workflows/release.yml). Without the variable, GitHub Releases still work and Marketplace upload is skipped. Azure DevOps **global PATs are scheduled to retire on December 1, 2026**; prefer OIDC or Microsoft Entra ID for long-term publishing.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
