@@ -24,6 +24,6 @@ for (const [name, internalSections, licenseHeading] of [
     ]) {
       assert.ok(!text.includes(privateConfig), `Maintainer config leaked into ${name}: ${privateConfig}`);
     }
-    assert.match(text.trimEnd(), /LICENSE\]\(LICENSE\)\.?$/);
+    assert.match(text.trimEnd(), /LICENSE\]\(LICENSE\)[.。]?$/);
   });
 }
