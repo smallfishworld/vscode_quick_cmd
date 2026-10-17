@@ -406,7 +406,7 @@ class CommandEditorProvider {
         if (this.saving) {
           await this.saving;
         }
-        if (this.dirty()) {
+        while (this.dirty()) {
           await this.save(this.session.raw, this.selection.groupId);
         }
         await this.teardown();

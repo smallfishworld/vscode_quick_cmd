@@ -278,6 +278,12 @@
     'Command id not found: {0}': '找不到命令标识：{0}',
     'Ambiguous command id: {0}. Specify a scope id.':
       '命令标识 {0} 存在于多个范围，请指定范围标识。',
+    'Place command variables outside quotes, escapes, comments, and shell expansions.':
+      '请将命令变量放在引号、转义、注释及 Shell 展开之外。',
+    'Invalid global command storage coordination file.':
+      '全局命令存储的写入协调文件无效。',
+    'Another window is updating commands. Please retry.':
+      '其他窗口正在更新命令，请稍后重试。',
     'Unable to complete this operation. Check the configuration and try again.':
       '无法完成操作，请检查配置后重试。',
   };

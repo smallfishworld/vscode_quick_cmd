@@ -3,6 +3,7 @@ const { randomUUID } = require('node:crypto');
 const { t } = require('./i18n');
 const { emptyConfig, validateConfig } = require('./model');
 const { loadDefaultConfig } = require('./defaults');
+const { setTimeout: delay } = require('node:timers/promises');
 
 /**
  * One JSON-backed global command collection, isolated to this extension's
@@ -14,12 +15,87 @@ class ConfigStore {
     this.context = context;
     this.baseUri = context.globalStorageUri;
     this.configUri = vscode.Uri.joinPath(this.baseUri, 'config.json');
+    this.coordinationUri = vscode.Uri.joinPath(this.baseUri, 'command-writers');
     this.Uri = vscode.Uri;
     this.pending = Promise.resolve();
     this.initialization = null;
   }
   scopes() {
     return [{ type: 'global', id: 'global', label: t('Global commands') }];
+  }
+  async publishParticipant(uri, owner) {
+    const temporary = this.Uri.joinPath(this.coordinationUri, randomUUID() + '.tmp');
+    try {
+      await this.fs.writeFile(temporary, new TextEncoder().encode(JSON.stringify(owner)));
+      await this.fs.rename(temporary, uri, { overwrite: false });
+    } finally {
+      try { await this.fs.delete(temporary); } catch { /* Already renamed, or write failed. */ }
+    }
+  }
+  async participants() {
+    // A choosing marker may disappear while its immutable ticket is published.
+    // Rescan in that case rather than accepting an incomplete directory snapshot.
+    while (true) {
+      const result = [];
+      let retry = false;
+      for (const [name] of await this.fs.readDirectory(this.coordinationUri)) {
+        if (!name.endsWith('.json')) continue;
+        const uri = this.Uri.joinPath(this.coordinationUri, name);
+        let owner;
+        try { owner = JSON.parse(new TextDecoder().decode(await this.fs.readFile(uri))); }
+        catch (error) { if (error.code === 'FileNotFound') { retry = true; break; } throw error; }
+        if (!Number.isSafeInteger(owner.pid) || owner.pid <= 0 ||
+            !Number.isSafeInteger(owner.ticket) || owner.ticket < 0 ||
+            typeof owner.choosing !== 'boolean') {
+          throw new Error('Invalid global command storage coordination file.');
+        }
+        let alive = true;
+        try { process.kill(owner.pid, 0); }
+        catch (error) { alive = error.code !== 'ESRCH'; }
+        if (alive) result.push({ ...owner, id: name.split('.')[0] });
+        else {
+          // UUID filenames are never reused, so cleanup cannot unlink a new owner.
+          try { await this.fs.delete(uri); }
+          catch (error) { if (error.code !== 'FileNotFound') throw error; }
+        }
+      }
+      if (!retry) return result;
+    }
+  }
+  async exclusive(job) {
+    await this.fs.createDirectory(this.coordinationUri);
+    const id = randomUUID();
+    const choosingUri = this.Uri.joinPath(this.coordinationUri, id + '.choosing.json');
+    const ticketUri = this.Uri.joinPath(this.coordinationUri, id + '.ticket.json');
+    const owner = { pid: process.pid, choosing: true, ticket: 0 };
+    const deadline = Date.now() + 10000;
+    try {
+      // Publish distinct immutable records: workspace.fs providers need not
+      // replace an existing destination atomically. Keep choosing until the
+      // ticket exists, so another writer can never observe a transition gap.
+      await this.publishParticipant(choosingUri, owner);
+      owner.ticket = Math.max(0, ...(await this.participants()).map(peer => peer.ticket)) + 1;
+      if (!Number.isSafeInteger(owner.ticket)) {
+        throw new Error('Invalid global command storage coordination file.');
+      }
+      owner.choosing = false;
+      await this.publishParticipant(ticketUri, owner);
+      await this.fs.delete(choosingUri);
+      while ((await this.participants()).some(peer => peer.id !== id &&
+        (peer.choosing || peer.ticket < owner.ticket ||
+          (peer.ticket === owner.ticket && peer.id < id)))) {
+        if (Date.now() >= deadline) {
+          throw new Error('Another window is updating commands. Please retry.');
+        }
+        await delay(20);
+      }
+      return await job();
+    } finally {
+      for (const uri of [choosingUri, ticketUri]) {
+        try { await this.fs.delete(uri); }
+        catch (error) { if (error.code !== 'FileNotFound') throw error; }
+      }
+    }
   }
   async exists() {
     try {
@@ -71,7 +147,7 @@ class ConfigStore {
     if (this.initialization) {
       return this.initialization;
     }
-    const task = this.pending.catch(() => {}).then(async () => {
+    const task = this.pending.catch(() => {}).then(() => this.exclusive(async () => {
       if (await this.exists()) {
         await this.readStored(); // Report malformed files rather than replacing.
         return false;
@@ -79,7 +155,7 @@ class ConfigStore {
       const preset = loadDefaultConfig(this.context.extensionPath, locale);
       await this.writeStored(preset);
       return true;
-    });
+    }));
     this.initialization = task;
     this.pending = task;
     return task;
@@ -88,16 +164,16 @@ class ConfigStore {
     if (this.initialization) {
       await this.initialization;
     }
-    return this.readStored();
+    return this.exclusive(() => this.readStored());
   }
-  /** Serialize read, modification and atomic JSON replacement in this host. */
+  /** Serialize read, modification and atomic replacement across host processes. */
   async update(scope, transform) {
-    const current = this.pending.catch(() => {}).then(async () => {
+    const current = this.pending.catch(() => {}).then(() => this.exclusive(async () => {
       const config = await this.readStored();
       const result = await transform(config);
       await this.writeStored(config);
       return result;
-    });
+    }));
     this.pending = current;
     return current;
   }

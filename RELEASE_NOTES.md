@@ -1,19 +1,21 @@
-# Quick Cmd v0.11.5
+# Quick Cmd v0.11.6
 
 ## 中文
 
-- 将快捷命令持久化方式从 VS Code 全局状态数据库改为插件专属全局存储目录中的 `config.json`，可直接查看、复制和备份。
-- 不提供自定义配置路径；不导入旧版 `globalState` 数据，也不增加卸载时保留数据机制。
-- 仅当 `config.json` 不存在时，首次打开 Quick Cmd 自动创建文件并加载中文或英文的完整默认预设（6 组、43 条）。
-- 已有文件（即使命令列表为空）绝不自动覆盖；读取 JSON 后严格校验，文件损坏或访问失败时报告错误。
-- 写入采用同目录临时文件加重命名，读改写在扩展宿主内串行化；添加失败恢复、首次运行、文件持久化和编辑操作回归测试。
-- 保持原有双语 VSIX 和扩展 ID；Marketplace 继续由发布者手动上传。
+- 修复命令变量在双引号中被错误转义、导致输入中的 Shell 表达式执行的问题。占位符须放在引号和转义之外；包含嵌套展开或 here-document 的变量模板会在发送前拒绝。
+- “保存并完成编辑”继续保存写入期间到达的新草稿，直至全部保存；后续保存失败则保留编辑会话。
+- 全局 JSON 更新和首次默认预设初始化增加跨窗口、跨进程写入协调，避免不同窗口的修改互相覆盖；写入者退出后可恢复。
+- 终端复用比较展开后的环境变量及 Shell 集成报告的实际工作目录；缺少目录信息或配置不匹配时新建终端。
+- 存在未提交文本的终端不再复用；多步骤的中间执行事件也不会把末行预填误判为空闲。
+- 保留 v0.11.5 的 config.json 存储、首次预设和单个中英文自适应安装包。
 
 ## English
 
-- Save commands in a readable `config.json` under the extension's VS Code global storage directory instead of the VS Code `globalState` database.
-- No configurable path, legacy database migration or special retention when uninstalling.
-- Only if the JSON does not exist, initialize 6 groups/43 commands from the installed Chinese or English default presets.
-- Never overwrite an existing JSON file, even if intentionally empty; report malformed JSON or filesystem failures.
-- Use an adjacent temporary file and rename for writes, serialize modifications within the extension host and cover persistence, errors and first-run behavior with tests.
-- Preserve the existing extension identity and multilingual installer; Marketplace publication remains manual.
+- Reject command-variable interpolation inside quotes or escapes, and variable templates containing nested shell expansion or here-documents, before sending text to a shell.
+- Save and Finish Editing continues saving drafts received during pending writes; failures preserve the editor session.
+- Coordinate JSON updates and first-run preset initialization across windows and extension host processes, with recovery after a writer exits.
+- Reuse terminals only when expanded environment values and the actual Shell Integration working directory match; otherwise create a new terminal.
+- Never reuse terminals with staged text. Intermediate multiline execution events cannot clear the final line's staged state.
+- Preserve v0.11.5 JSON storage, first-run presets and the single multilingual installer.
+
+Validation covers automated tests, independent Node processes, shell argument handling, and VSIX content verification. Actual VS Code multi-window, Remote SSH and graphical host acceptance have not been performed. Marketplace publication follows the existing repository workflow settings.

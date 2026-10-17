@@ -34,7 +34,7 @@ function harness() {
       onDidStartTerminalShellExecution: fn => { events.start = fn; return { dispose() {} }; },
       onDidEndTerminalShellExecution: fn => { events.end = fn; return { dispose() {} }; },
       onDidCloseTerminal: fn => { events.close = fn; return { dispose() {} }; },
-      createTerminal: opts => { const t = { opts, lines: [], show() {}, sendText(line) { this.lines.push(line); },
+      createTerminal: opts => { const t = { opts, shellIntegration: { cwd: folder.uri }, lines: [], show() {}, sendText(line) { this.lines.push(line); },
         dispose() { this.closed = true; } }; terminals.push(t); return t; }
     }
   };
@@ -63,4 +63,61 @@ test('active mode uses selected terminal and reports potential busy state', () =
   assert.equal(result.terminal, active);
   assert.deepEqual(active.lines, ['echo hi']);
   runner.dispose();
+});
+
+test('reuse compares resolved environment values before choosing a terminal', () => {
+  const h = harness();
+  const runner = new TerminalRunner(h.api);
+  const scope = { type: 'global', id: 'global' };
+  const cmd = { id: 'target', title: 'Target', command: 'printenv TARGET', terminal: 'reuse', env: { TARGET: '${input:target}' } };
+  const run = value => runner.run(scope, cmd, { context: { inputs: { target: value } } }).terminal;
+  const first = run('staging');
+  h.events.end({ terminal: first, exitCode: 0 });
+  const second = run('production');
+  assert.notEqual(second, first);
+  assert.equal(second.opts.env.TARGET, 'production');
+  h.events.end({ terminal: second, exitCode: 0 });
+  assert.equal(run('production'), second);
+});
+
+test('staged text prevents reuse and requires an active-terminal warning', () => {
+  const h = harness();
+  const runner = new TerminalRunner(h.api);
+  const scope = { type: 'global', id: 'global' };
+  const cmd = { id: 'draft', title: 'Draft', command: 'echo draft', terminal: 'reuse' };
+  const first = runner.run(scope, cmd).terminal;
+  h.events.end({ terminal: first, exitCode: 0 });
+  assert.equal(runner.run(scope, { ...cmd, execute: false }).terminal, first);
+  h.api.window.activeTerminal = first;
+  assert.equal(runner.isActiveTerminalUnsafe(), true);
+  const next = runner.run(scope, cmd).terminal;
+  assert.notEqual(next, first);
+  assert.deepEqual(first.lines, ['echo draft', 'echo draft']);
+});
+
+test('reuse rejects changed or unreported terminal cwd', () => {
+  for (const reported of [undefined, { scheme: 'file', fsPath: '/elsewhere' }]) {
+    const h = harness();
+    const runner = new TerminalRunner(h.api);
+    const scope = { type: 'global', id: 'global' };
+    const cmd = { id: 'cwd', title: 'Cwd', command: 'pwd', terminal: 'reuse' };
+    const first = runner.run(scope, cmd).terminal;
+    h.events.end({ terminal: first, exitCode: 0 });
+    first.shellIntegration.cwd = reported;
+    assert.notEqual(runner.run(scope, cmd).terminal, first);
+  }
+});
+
+test('intermediate multiline execution events cannot clear staged input', () => {
+  const h = harness();
+  const runner = new TerminalRunner(h.api);
+  const scope = { type: 'global', id: 'global' };
+  const cmd = { id: 'multi', title: 'Multi', terminal: 'reuse', steps: [
+    { command: 'echo first', execute: true }, { command: 'echo pending', execute: false }
+  ] };
+  const first = runner.run(scope, cmd).terminal;
+  h.events.start({ terminal: first });
+  h.events.end({ terminal: first, exitCode: 0 });
+  assert.equal(runner.status(scope, cmd).staged, true);
+  assert.notEqual(runner.run(scope, cmd).terminal, first);
 });

@@ -244,3 +244,41 @@ test('save and finish writes the draft and leaves the editor without a prompt', 
   await assert.rejects(f.editor.saveAndClose(), /Invalid environment/);
   assert.equal(f.editor.session.raw.envText, '{broken');
 });
+
+test('save and finish also saves drafts received while the first write is pending', async () => {
+  const f = fixture();
+  await f.editor.open(f.scope, f.group.id, f.a.id);
+  f.editor.session.raw.title = 'Submitted';
+  let release, entered;
+  const gate = new Promise(resolve => { release = resolve; });
+  const started = new Promise(resolve => { entered = resolve; });
+  const update = f.store.update;
+  let writes = 0;
+  f.store.update = async (...args) => {
+    if (++writes === 1) { entered(); await gate; }
+    return update(...args);
+  };
+  const closing = f.editor.saveAndClose();
+  await started;
+  f.editor.session.raw = { ...f.editor.session.raw, title: 'Typed during save' };
+  f.editor.session.revision++;
+  release();
+  await closing;
+  assert.equal(writes, 2);
+  assert.equal((await f.store.read()).groups[0].commands[0].title, 'Typed during save');
+  assert.equal(f.editor.session, undefined);
+});
+
+test('a later draft that cannot be saved stays open when finishing', async () => {
+  const f = fixture();
+  await f.editor.open(f.scope, f.group.id, f.a.id);
+  f.editor.session.raw.title = 'Submitted';
+  const update = f.store.update;
+  f.store.update = async (...args) => {
+    f.editor.session.raw = { ...f.editor.session.raw, envText: '{invalid' };
+    f.editor.session.revision++;
+    return update(...args);
+  };
+  await assert.rejects(f.editor.saveAndClose(), /Invalid environment/);
+  assert.equal(f.editor.session.raw.envText, '{invalid');
+});

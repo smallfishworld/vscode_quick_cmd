@@ -27,6 +27,9 @@ function memoryFs(initial = new Map()) {
       if (!files.has(file.fsPath)) { throw notFound(); }
       return Uint8Array.from(files.get(file.fsPath));
     },
+    readDirectory: async (directory) => [...files.keys()]
+      .filter(name => path.dirname(name) === directory.fsPath)
+      .map(name => [path.basename(name), 1]),
     writeFile: async (file, bytes) => {
       if (options.failWrite) { throw new Error('Cannot write storage'); }
       if (!file.fsPath.startsWith(defaultRoot + path.sep)) {
