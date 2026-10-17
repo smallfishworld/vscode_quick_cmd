@@ -22,6 +22,13 @@ with zipfile.ZipFile(artifact) as archive:
     assert (manifest['publisher'], manifest['name']) == (source_manifest['publisher'], source_manifest['name'])
     assert 'quickCmdBuildLanguage' not in manifest, 'The installer must not pin a language.'
     assert manifest.get('categories') == ['Other'], 'Unsupported Marketplace categories in VSIX.'
+    assert manifest.get('icon') == 'media/icon.png', 'Missing extension icon declaration.'
+    icon_path = 'extension/media/icon.png'
+    assert icon_path in contents, 'Marketplace icon file missing from VSIX.'
+    icon = archive.read(icon_path)
+    assert icon[1:4] == b'PNG', 'Marketplace icon is not a PNG.'
+    assert (int.from_bytes(icon[16:20], 'big'), int.from_bytes(icon[20:24], 'big')) == (128, 128)
+    assert icon == (root / 'media/icon.png').read_bytes(), 'Packaged icon differs from source.'
     assert english['quickCmd.commands'] == 'Groups'
     assert chinese['quickCmd.commands'] == '分组'
     assert set(english) == set(chinese), 'Missing translated manifest keys.'
