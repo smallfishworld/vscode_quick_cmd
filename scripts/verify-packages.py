@@ -21,6 +21,7 @@ with zipfile.ZipFile(artifact) as archive:
     assert manifest['version'] == version
     assert (manifest['publisher'], manifest['name']) == (source_manifest['publisher'], source_manifest['name'])
     assert 'quickCmdBuildLanguage' not in manifest, 'The installer must not pin a language.'
+    assert manifest.get('categories') == ['Other'], 'Unsupported Marketplace categories in VSIX.'
     assert english['quickCmd.commands'] == 'Groups'
     assert chinese['quickCmd.commands'] == '分组'
     assert set(english) == set(chinese), 'Missing translated manifest keys.'
