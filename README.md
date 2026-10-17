@@ -133,7 +133,12 @@ The only engineering specifications are [requirements](docs/spec.md) and [design
 
 The **single** `quick-cmd-v0.11.2.vsix` installer is used for GitHub Releases and VS Code Marketplace. It detects VS Code's display language (Chinese / English fallback) and keeps the existing `smallfishworld.vscode-quick-cmd` extension identity. Separate language-specific packages are no longer built.
 
-Create or access Marketplace publisher `smallfishworld`, configure a trusted GitHub OIDC publishing policy for `smallfishworld/vscode_quick_cmd` and workflow `.github/workflows/release.yml`, and set repository Actions variable `MARKETPLACE_PUBLISH_ENABLED=true`. Then re-run the Release Quick Cmd workflow for the version you want to publish. The publish step uses `vsce publish --oidc` without long-lived credentials. See [official vsce trusted publishing instructions](https://github.com/microsoft/vscode-vsce#trusted-publishing). Until publisher trust is configured, GitHub Releases work as usual but Marketplace publication is skipped.
+The release workflow supports **two authentication methods** without committing secrets:
+
+1. **GitHub Actions PAT (Personal Access Token) fallback:** Generate an Azure DevOps PAT with `Marketplace (Manage)` scope (see [Microsoft's instructions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)). In GitHub repository **Settings → Secrets and variables → Actions → New repository secret**, save it as `VSCE_PAT`. Never paste the token into an issue, a commit or a chat. The workflow automatically uses this secret if present.
+2. **OIDC trusted publishing:** If the Marketplace publisher offers trusted-publishing policy configuration, allow `smallfishworld/vscode_quick_cmd` and workflow `.github/workflows/release.yml`. When `VSCE_PAT` is absent, the workflow uses `vsce publish --oidc`. See [official vsce instructions](https://github.com/microsoft/vscode-vsce#trusted-publishing).
+
+After configuring authentication, set repository Actions **variable** `MARKETPLACE_PUBLISH_ENABLED=true` and re-run [Release Quick Cmd](https://github.com/smallfishworld/vscode_quick_cmd/actions/workflows/release.yml). Without the variable, GitHub Releases still work and Marketplace upload is skipped. Azure DevOps **global PATs are scheduled to retire on December 1, 2026**; prefer OIDC or Microsoft Entra ID for long-term publishing.
 
 ## License
 

@@ -93,9 +93,18 @@ jobs:
           fi
           gh release edit "$TAG" --draft=false --latest
       - name: Publish multilingual installer to VS Code Marketplace
-        # Enable only after configuring trusted publishing at the Marketplace.
-        if: vars.MARKETPLACE_PUBLISH_ENABLED == 'true'
+        # A VSCE_PAT secret works on publisher accounts without OIDC policy UI.
+        # When no PAT is configured, use Marketplace GitHub OIDC trust.
+        if: github.ref == 'refs/heads/main' && vars.MARKETPLACE_PUBLISH_ENABLED == 'true'
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           VERSION="$(node -p "require('./package.json').version")"
-          node node_modules/@vscode/vsce/vsce publish --oidc --skip-duplicate \
-            --packagePath "dist/quick-cmd-v${VERSION}.vsix"
+          PACKAGE="dist/quick-cmd-v${VERSION}.vsix"
+          if [ -n "$VSCE_PAT" ]; then
+            echo "Publishing with GitHub Secret VSCE_PAT."
+            node node_modules/@vscode/vsce/vsce publish --skip-duplicate --packagePath "$PACKAGE"
+          else
+            echo "No VSCE_PAT secret; attempting trusted publishing via OIDC."
+            node node_modules/@vscode/vsce/vsce publish --oidc --skip-duplicate --packagePath "$PACKAGE"
+          fi

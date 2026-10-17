@@ -108,3 +108,14 @@ test('rerunning preserves a different published release and guards changed old t
     absent.calls.some((line) => line.startsWith('release create v0.7.1')),
   );
 });
+
+test('Marketplace publishing stays main-only and uses secret PAT or trusted OIDC', () => {
+  const step = workflow.split('      - name: Publish multilingual installer to VS Code Marketplace\n')[1];
+  assert.ok(step, 'Missing Marketplace publishing step');
+  assert.match(step, /if: github\.ref == 'refs\/heads\/main' && vars\.MARKETPLACE_PUBLISH_ENABLED == 'true'/);
+  assert.ok(step.includes('VSCE_PAT: ${{ secrets.VSCE_PAT }}'), 'PAT must use a repository secret');
+  assert.match(step, /if \[ -n "\$VSCE_PAT" \]; then/);
+  assert.ok(step.includes('publish --skip-duplicate --packagePath "$PACKAGE"'), 'PAT auth path is missing');
+  assert.ok(step.includes('publish --oidc --skip-duplicate --packagePath "$PACKAGE"'), 'OIDC auth path is missing');
+  assert.ok(!step.includes('echo "$VSCE_PAT"'), 'Never print the PAT');
+});

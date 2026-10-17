@@ -86,7 +86,7 @@
 
 ## 7. 持续集成与发布
 
-CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、单包打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含唯一安装包和校验和的草稿发布，最后转为正式发布。商店发布步骤需要 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED=true` 且已配置 Marketplace 信任的 GitHub OIDC 发布策略；它上传与 GitHub Release 相同的多语言 VSIX。
+CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、单包打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含唯一安装包和校验和的草稿发布，最后转为正式发布。商店发布步骤仅在 `main` 分支且 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED=true` 时运行，上传与 GitHub Release 相同的多语言 VSIX。优先使用加密 GitHub Secret `VSCE_PAT` 进行认证（仅以环境变量传入，无明文输出），否则尝试 Marketplace 信任的 GitHub OIDC；验证和构建步骤仍不依赖密钥。Azure DevOps 全局 PAT 计划于 2026-12-01 退休，长期迁移至 OIDC/Entra 身份认证。
 
 v0.6.0 按用户要求执行一次历史重置：仅删除已核实的旧版本 `v0.2.0`、`v0.3.0`、`v0.3.1`、`v0.4.0`、`v0.5.0` 及其标签。清理发生在新包通过验证并上传草稿之后。固定白名单不会匹配未来版本或其他标签；普通版本发布不清理历史。已正式发布的同版本不会在重复运行时被覆盖。
 

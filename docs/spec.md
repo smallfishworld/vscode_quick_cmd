@@ -32,6 +32,7 @@
 | FR-19 | 单包发行及 Marketplace | GitHub Release 和 VS Code Marketplace 使用同一个 VSIX：`quick-cmd-v<version>.vsix`；内含英文默认及简体中文 NLS 资源、预设 JSON；不再构建固定中英文包；需要发布者授权才能上传 Marketplace |
 | FR-21 | Marketplace 图标 | 顶层 manifest 配置 `icon: media/icon.png`；该图片必须为实际 128×128 PNG；构建和 VSIX 解包测试验证图片存在、尺寸和字节一致；原活动栏 SVG 不变 |
 | FR-20 | Marketplace 分类合法性 | `package.json` 的 `categories` 只能使用 VS Code 官方支持的分类；当前工具类插件使用 `Other`，构建和测试时检查，阻止无效分类进入 VSIX |
+| FR-22 | Marketplace 自动发布授权 | 仅在 main 和明确开启的 Actions 变量下自动上传唯一 VSIX；优先使用加密 Secret `VSCE_PAT`，未设置则使用 OIDC，严禁在仓库或日志中输出密钥；发布失败不伪称成功 |
 | FR-17 | 发布验证   | 唯一 VSIX 采用现有扩展标识，包含中英文资源且与源码一致；验证内容及 SHA-256 校验和后才能正式发布                                                     |
 
 ## 3. 交互约束
