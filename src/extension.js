@@ -23,6 +23,8 @@ function activate(context) {
   setLocale(vscode.env?.language || 'en');
   void vscode.commands.executeCommand('setContext', 'quickCmd.editing', false);
   const store = new ConfigStore(vscode, context);
+  // Start before registering views so early reads always await initial seeding.
+  const initialConfig = store.initializeDefaults(vscode.env?.language || 'en');
   const runner = new TerminalRunner(vscode);
   let selectedNode;
   const provider = new CommandListProvider(
@@ -453,7 +455,7 @@ function activate(context) {
   });
   // Populate initial defaults only when no saved global commands exist.
   // All reads wait for initialization, preventing empty initial views.
-  void store.initializeDefaults(vscode.env?.language || 'en')
+  void initialConfig
     .then((created) => {
       if (created) {
         return provider.refresh();
