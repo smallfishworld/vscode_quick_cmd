@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { stageExtension } = require('../scripts/package-variants');
+const { stageExtension, validateCategories } = require('../scripts/package-variants');
 const root = path.resolve(__dirname, '..');
 
 test('one installer has both languages, preserves the extension ID and does not modify source', () => {
@@ -18,6 +18,8 @@ test('one installer has both languages, preserves the extension ID and does not 
     const zh = JSON.parse(fs.readFileSync(path.join(stage, 'package.nls.zh-cn.json'), 'utf8'));
     assert.equal(manifest.publisher + '.' + manifest.name, 'smallfishworld.vscode-quick-cmd');
     assert.equal(manifest.quickCmdBuildLanguage, undefined);
+    assert.deepEqual(manifest.categories, ['Other']);
+    assert.doesNotThrow(() => validateCategories(manifest.categories));
     assert.equal(manifest.devDependencies, undefined);
     assert.equal(en['quickCmd.commands'], 'Groups');
     assert.equal(zh['quickCmd.commands'], '分组');
@@ -55,4 +57,11 @@ test('one installer has both languages, preserves the extension ID and does not 
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// Marketplace rejects unsupported category names even when the VSIX built.
+test('reject invalid Marketplace categories before packaging', () => {
+  assert.doesNotThrow(() => validateCategories(['Other']));
+  assert.throws(() => validateCategories(['Other', 'Productivity']), /Unsupported VS Code Marketplace category/);
+  assert.throws(() => validateCategories(['Productivity']), /Unsupported VS Code Marketplace category/);
 });

@@ -4,6 +4,25 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
+// Marketplace category names must match the VS Code extension manifest enum.
+// https://code.visualstudio.com/api/references/extension-manifest
+const SUPPORTED_CATEGORIES = new Set([
+  'Programming Languages', 'Snippets', 'Linters', 'Themes', 'Debuggers',
+  'Formatters', 'Keymaps', 'SCM Providers', 'Other', 'Extension Packs',
+  'Language Packs', 'Data Science', 'Machine Learning', 'Visualization',
+  'Notebooks', 'Education', 'Testing',
+]);
+
+function validateCategories(categories) {
+  if (categories === undefined) return;
+  if (!Array.isArray(categories) ||
+      categories.some(category => typeof category !== 'string' ||
+        !SUPPORTED_CATEGORIES.has(category))) {
+    throw new Error('Unsupported VS Code Marketplace category: ' +
+      JSON.stringify(categories));
+  }
+}
+
 /**
  * Build one VSIX with both English and Chinese localizations. Staging is
  * isolated so neither the source manifest nor translated catalogs are changed.
@@ -33,6 +52,7 @@ function stageExtension(root, buildRoot) {
   }
 
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  validateCategories(manifest.categories);
   delete manifest.quickCmdBuildLanguage;
   manifest.files = [
     'src/**', 'media/**', 'presets/**', 'README*.md', 'LICENSE',
@@ -70,4 +90,4 @@ function packageExtension(root) {
 if (require.main === module) {
   packageExtension(path.resolve(__dirname, '..'));
 }
-module.exports = { stageExtension, packageExtension };
+module.exports = { stageExtension, packageExtension, validateCategories };

@@ -2,7 +2,7 @@
   "name": "vscode-quick-cmd",
   "displayName": "Quick Cmd",
   "description": "%description%",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "publisher": "smallfishworld",
   "license": "MIT",
   "repository": {
@@ -14,8 +14,7 @@
     "vscode": "^1.93.0"
   },
   "categories": [
-    "Other",
-    "Productivity"
+    "Other"
   ],
   "keywords": [
     "commands",
