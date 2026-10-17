@@ -14,7 +14,7 @@
 4. **单击命令主体按配置发送；鼠标移入命令行时，最右侧显示编辑、运行按钮；删除改由右键命令弹出的原生菜单完成，删除前仍确认。编辑只打开表单。键盘聚焦时也显示这些按钮。** 在编辑栏工具栏点击“完成编辑”或右上角 × 关闭，处理草稿后收起。
 5. 搜索按钮或 `Ctrl+Alt+Q`（macOS：`Cmd+Alt+Q`）可查找命令，选择后直接发送。
 
-从 **v0.11.0** 开始统一为 **一个安装包**，当前 **v0.11.1** 对应 `quick-cmd-v0.11.1.vsix`，同时包含简体中文和英文资源，自动读取 VS Code 的界面语言。修改 VS Code 显示语言并重载后，插件界面也随之切换；非中文语言默认使用英文。扩展标识保持 `smallfishworld.vscode-quick-cmd` 不变，从旧中文或英文版直接升级会保留已保存命令。用户自定义命令名称、Shell 内容和变量不会自动翻译。
+从 **v0.11.0** 开始统一为 **一个安装包**，当前 **v0.11.2** 对应 `quick-cmd-v0.11.2.vsix`，同时包含简体中文和英文资源，自动读取 VS Code 的界面语言。修改 VS Code 显示语言并重载后，插件界面也随之切换；非中文语言默认使用英文。扩展标识保持 `smallfishworld.vscode-quick-cmd` 不变，从旧中文或英文版直接升级会保留已保存命令。用户自定义命令名称、Shell 内容和变量不会自动翻译。
 
 ## 命令列表
 
@@ -125,13 +125,13 @@ python3 scripts/verify-packages.py
 
 测试包括配置、终端发送、草稿会话以及通过 Happy DOM 运行的命令列表和编辑器交互。Happy DOM 仅用于开发测试，不打入扩展运行包。界面测试不能代替实际 VS Code 中的主题、字体、拖拽和尺寸验收。
 
-构建只输出 `dist/quick-cmd-v0.11.1.vsix` 和对应的单行 `SHA256SUMS` 校验文件。GitHub Actions 验证同一个安装包，然后将其发布到 GitHub Releases；Marketplace 上传同一文件。
+构建只输出 `dist/quick-cmd-v0.11.2.vsix` 和对应的单行 `SHA256SUMS` 校验文件。GitHub Actions 验证同一个安装包，然后将其发布到 GitHub Releases；Marketplace 上传同一文件。
 
 工程文档仅保留 [需求规格](docs/spec.md) 和 [设计说明](docs/design.md)；修改项目遵循根目录 [agent.md](agent.md)。
 
 ## VS Code Marketplace 发布
 
-商店和 GitHub Release 使用同一个 `quick-cmd-v0.11.1.vsix`；插件会根据 VS Code 的 UI 语言自动显示中文或英文。不再发布固定中文包或固定英文包。
+商店和 GitHub Release 使用同一个 `quick-cmd-v0.11.2.vsix`；插件会根据 VS Code 的 UI 语言自动显示中文或英文。不再发布固定中文包或固定英文包。
 
 首次上架需要在 [Marketplace 发布者管理页](https://marketplace.visualstudio.com/manage/publishers/) 创建或取得 `smallfishworld` 发布者权限，并按 [vsce 官方可信发布说明](https://github.com/microsoft/vscode-vsce#trusted-publishing) 为仓库 `smallfishworld/vscode_quick_cmd`、工作流 `.github/workflows/release.yml` 设置 GitHub OIDC（OpenID Connect，开放身份连接）可信发布策略。完成后将仓库 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED` 设为 `true`，重新运行 Release Quick Cmd 工作流即可发布。未完成授权之前仍会正常创建 GitHub Release，自动跳过商店发布，且无需存储长期 PAT 令牌。
 

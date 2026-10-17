@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.11.1。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.11.2。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -80,7 +80,7 @@
 2. 保持原始 `publisher`、`name`、`version`，不写入语言固定字段 `quickCmdBuildLanguage`。
 3. 同时放入英文默认 `package.nls.json` 与简体中文 `package.nls.zh-cn.json`。
 4. 调用锁定的 VSCE（Visual Studio Code Extensions 打包工具），只输出 `dist/quick-cmd-v<version>.vsix`，构建前清空旧 `dist/`，避免遗留文件上传。
-5. `scripts/verify-packages.py` 校验唯一 ZIP、版本、双语 NLS 资源、扩展标识、预设及运行时文件，检查扩展分类满足 Marketplace 官方枚举（当前仅 `Other`），并验证没有多余 VSIX 后生成仅一行的 `SHA256SUMS`。构建时也会提前检查分类，防止无效分类造成上传失败。
+5. `scripts/verify-packages.py` 校验唯一 ZIP、版本、双语 NLS 资源、扩展标识、预设及运行时文件，检查扩展分类满足 Marketplace 官方枚举（当前仅 `Other`），并验证没有多余 VSIX 后生成仅一行的 `SHA256SUMS`。构建时也会提前检查分类，防止无效分类造成上传失败。扩展市场图标采用 `media/icon.png`（128×128 PNG），通过 `package.json` 顶层 `icon` 字段引用，与 `media/activitybar.svg` 独立；单包测试与解包测试校验 PNG 尺寸、路径及源文件一致。
 
 单包使用现有扩展标识 `smallfishworld.vscode-quick-cmd`，覆盖升级不会改变 `globalState` 键，也不自动执行或删除保存命令。
 

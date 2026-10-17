@@ -19,6 +19,12 @@ test('one installer has both languages, preserves the extension ID and does not 
     assert.equal(manifest.publisher + '.' + manifest.name, 'smallfishworld.vscode-quick-cmd');
     assert.equal(manifest.quickCmdBuildLanguage, undefined);
     assert.deepEqual(manifest.categories, ['Other']);
+    assert.equal(manifest.icon, 'media/icon.png');
+    const icon = fs.readFileSync(path.join(stage, manifest.icon));
+    assert.equal(icon.subarray(1, 4).toString('ascii'), 'PNG');
+    assert.equal(icon.readUInt32BE(16), 128);
+    assert.equal(icon.readUInt32BE(20), 128);
+    assert.deepEqual(icon, fs.readFileSync(path.join(root, 'media/icon.png')));
     assert.doesNotThrow(() => validateCategories(manifest.categories));
     assert.equal(manifest.devDependencies, undefined);
     assert.equal(en['quickCmd.commands'], 'Groups');
