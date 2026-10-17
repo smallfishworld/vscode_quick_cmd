@@ -41,6 +41,9 @@ class ConfigStore {
     if (this.initialization) {
       await this.initialization;
     }
+    return this.readStored();
+  }
+  readStored() {
     return validateConfig(
       structuredClone(this.context.globalState.get(GLOBAL_KEY, emptyConfig())),
     );
@@ -54,7 +57,7 @@ class ConfigStore {
     const current = this.pending
       .catch(() => {})
       .then(async () => {
-        const config = await this.read();
+        const config = this.readStored();
         const result = await transform(config);
         await this.write(scope, config);
         return result;
