@@ -133,7 +133,12 @@ python3 scripts/verify-packages.py
 
 商店和 GitHub Release 使用同一个 `quick-cmd-v0.11.2.vsix`；插件会根据 VS Code 的 UI 语言自动显示中文或英文。不再发布固定中文包或固定英文包。
 
-首次上架需要在 [Marketplace 发布者管理页](https://marketplace.visualstudio.com/manage/publishers/) 创建或取得 `smallfishworld` 发布者权限，并按 [vsce 官方可信发布说明](https://github.com/microsoft/vscode-vsce#trusted-publishing) 为仓库 `smallfishworld/vscode_quick_cmd`、工作流 `.github/workflows/release.yml` 设置 GitHub OIDC（OpenID Connect，开放身份连接）可信发布策略。完成后将仓库 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED` 设为 `true`，重新运行 Release Quick Cmd 工作流即可发布。未完成授权之前仍会正常创建 GitHub Release，自动跳过商店发布，且无需存储长期 PAT 令牌。
+自动更新 Marketplace 支持两种认证方式，均不在代码中保存密钥：
+
+1. **PAT（Personal Access Token，个人访问令牌）过渡方案：** 在 Azure DevOps 创建具有 `Marketplace (Manage)` 权限的 PAT，参考 [微软官方指南](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)。进入 GitHub 仓库 **Settings → Secrets and variables → Actions → New repository secret**，名称填写 `VSCE_PAT`，值为令牌本身。不要把 PAT 发到聊天、Issue 或提交中；工作流在该 Secret 存在时自动使用它。
+2. **OIDC（OpenID Connect，开放身份连接）可信发布：** 如果 Marketplace 管理后台支持配置可信发布策略，则授权 `smallfishworld/vscode_quick_cmd` 仓库与 `.github/workflows/release.yml` 工作流。不配置 `VSCE_PAT` 时工作流尝试 `vsce publish --oidc`，详见 [vsce 官方说明](https://github.com/microsoft/vscode-vsce#trusted-publishing)。
+
+授权配置完成后，在仓库 Actions **Variables** 新建 `MARKETPLACE_PUBLISH_ENABLED=true`，再运行 [Release Quick Cmd](https://github.com/smallfishworld/vscode_quick_cmd/actions/workflows/release.yml)。未打开开关时仍正常发布 GitHub Release，但跳过市场上传。**微软计划于 2026 年 12 月 1 日停用 Azure DevOps 全局 PAT**，因此长期应优先使用 OIDC 或 Microsoft Entra ID。
 
 ## 协议
 
