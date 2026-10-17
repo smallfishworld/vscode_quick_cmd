@@ -250,8 +250,12 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     );
     await callbacks.get('quickCmd.searchCommands')();
     assert.equal(terminals.length, 2);
+    const beforeCollapsePackets = listPackets.length;
     await callbacks.get('quickCmd.collapseAll')();
-    assert.equal(listPackets.at(-1).type, 'collapseAll');
+    assert.ok(
+      listPackets.slice(beforeCollapsePackets).some(packet => packet.type === 'collapseAll'),
+      'collapseAll should be sent even if an asynchronous model refresh follows it',
+    );
     await callbacks.get('quickCmd.runById')({ id: cmd.id });
     assert.equal(terminals.length, 3);
     answers.push('Cancel');
