@@ -14,7 +14,7 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-Starting in **v0.11.0**, there is **one installer**; the current **v0.11.1** release provides `quick-cmd-v0.11.1.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity stays `smallfishworld.vscode-quick-cmd`, preserving saved commands when upgrading from an older edition. User-entered names, Shell code and variables are never translated.
+Starting in **v0.11.0**, there is **one installer**; the current **v0.11.2** release provides `quick-cmd-v0.11.2.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity stays `smallfishworld.vscode-quick-cmd`, preserving saved commands when upgrading from an older edition. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
@@ -125,13 +125,13 @@ python3 scripts/verify-packages.py
 
 Tests cover configuration, terminal sending, draft sessions, list interactions and editor interactions executed in Happy DOM. Happy DOM is a development-only dependency and is excluded from the extension package. DOM tests do not replace visual, font, drag-and-drop or sizing checks in a real VS Code window.
 
-Outputs in `dist/` contain only `quick-cmd-v0.11.1.vsix` and its one-entry `SHA256SUMS`. GitHub Actions verifies both before publishing the same installer to GitHub Releases; Marketplace publishing requires publisher authorization. See [Marketplace publishing](#marketplace-publishing).
+Outputs in `dist/` contain only `quick-cmd-v0.11.2.vsix` and its one-entry `SHA256SUMS`. GitHub Actions verifies both before publishing the same installer to GitHub Releases; Marketplace publishing requires publisher authorization. See [Marketplace publishing](#marketplace-publishing).
 
 The only engineering specifications are [requirements](docs/spec.md) and [design](docs/design.md). Follow [agent.md](agent.md) for constraints and change procedures.
 
 ## Marketplace publishing
 
-The **single** `quick-cmd-v0.11.1.vsix` installer is used for GitHub Releases and VS Code Marketplace. It detects VS Code's display language (Chinese / English fallback) and keeps the existing `smallfishworld.vscode-quick-cmd` extension identity. Separate language-specific packages are no longer built.
+The **single** `quick-cmd-v0.11.2.vsix` installer is used for GitHub Releases and VS Code Marketplace. It detects VS Code's display language (Chinese / English fallback) and keeps the existing `smallfishworld.vscode-quick-cmd` extension identity. Separate language-specific packages are no longer built.
 
 Create or access Marketplace publisher `smallfishworld`, configure a trusted GitHub OIDC publishing policy for `smallfishworld/vscode_quick_cmd` and workflow `.github/workflows/release.yml`, and set repository Actions variable `MARKETPLACE_PUBLISH_ENABLED=true`. Then re-run the Release Quick Cmd workflow for the version you want to publish. The publish step uses `vsce publish --oidc` without long-lived credentials. See [official vsce trusted publishing instructions](https://github.com/microsoft/vscode-vsce#trusted-publishing). Until publisher trust is configured, GitHub Releases work as usual but Marketplace publication is skipped.
 
