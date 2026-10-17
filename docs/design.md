@@ -1,6 +1,6 @@
 # Quick Cmd 设计说明
 
-基线版本：0.11.2。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
+基线版本：0.11.3。需求来源为 [spec.md](spec.md)，开发流程和项目约束见 [agent.md](../agent.md)。界面视觉稿见 [ui-preview/index.html](ui-preview/index.html)（由扩展自身的 webview 模板与客户端脚本渲染，非手绘，说明见 [ui-preview/README.md](ui-preview/README.md)）。
 
 ## 1. 架构与职责
 
@@ -89,6 +89,12 @@
 CI（Continuous Integration，持续集成）在合并请求和主分支执行安装、检查、测试、单包打包与解包验证。发布工作流使用同一命令，先上传工作流产物，再创建含唯一安装包和校验和的草稿发布，最后转为正式发布。商店发布步骤仅在 `main` 分支且 Actions 变量 `MARKETPLACE_PUBLISH_ENABLED=true` 时运行，上传与 GitHub Release 相同的多语言 VSIX。优先使用加密 GitHub Secret `VSCE_PAT` 进行认证（仅以环境变量传入，无明文输出），否则尝试 Marketplace 信任的 GitHub OIDC；验证和构建步骤仍不依赖密钥。Azure DevOps 全局 PAT 计划于 2026-12-01 退休，长期迁移至 OIDC/Entra 身份认证。
 
 v0.6.0 按用户要求执行一次历史重置：仅删除已核实的旧版本 `v0.2.0`、`v0.3.0`、`v0.3.1`、`v0.4.0`、`v0.5.0` 及其标签。清理发生在新包通过验证并上传草稿之后。固定白名单不会匹配未来版本或其他标签；普通版本发布不清理历史。已正式发布的同版本不会在重复运行时被覆盖。
+
+### README 与发布配置分离
+
+`README.md`、`README.zh-CN.md` 会作为 VSIX 的扩展介绍上传到 Marketplace，必须只面向终端用户，保留安装使用、预设导入注意事项与 MIT 协议。开发验证命令和内部测试说明保存在 `agent.md` 与本设计文档；Marketplace 自动发布的身份认证和开关仅记录在本设计文档与 `.github/workflows/release.yml`，不能放在扩展详情介绍中。
+
+维护者首次设置发布授权：若启用 PAT，在 Azure DevOps 为发布者创建具备 Marketplace Manage 权限的令牌，在 GitHub Actions **Secrets** 中保存为 `VSCE_PAT`；在仓库 Actions **Variables** 中设置 `MARKETPLACE_PUBLISH_ENABLED=true`。工作流使用 PAT（若存在）或尝试 OIDC；不应把令牌值写进代码、README、GitHub Issues 或日志。发布失败必须保留可诊断的结果。旧版本发布不会被文档编辑自动覆盖，每次更新 Marketplace 的公开 README 需发布新版本。
 
 ## 8. 测试边界
 
