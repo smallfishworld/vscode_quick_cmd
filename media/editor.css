@@ -96,9 +96,25 @@ textarea.is-invalid {
 .context {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--muted);
   font-size: 0.9em;
   overflow-wrap: anywhere;
+}
+/* The header group picker replaces the pre-entry group dialog; compact, not full width. */
+.context select {
+  width: auto;
+  max-width: 60%;
+  padding: 2px 4px;
+  color: var(--vscode-foreground);
+}
+.context select:disabled {
+  opacity: 0.6;
+}
+#mode {
+  white-space: nowrap;
 }
 main {
   flex: 1;

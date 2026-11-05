@@ -150,11 +150,10 @@
     'Stored in .vscode/quick-cmd.json':
       '保存在项目的 .vscode/quick-cmd.json 中',
     'Choose configuration scope': '选择命令保存位置',
+    'Command group': '命令分组',
     'Group name': '分组名称',
     'Name cannot be blank': '请输入名称',
     'Maximum 128 characters': '名称不能超过 128 个字符',
-    'Create new group...': '新建分组…',
-    'Choose a command group': '选择命令分组',
     'Input parameter: {0}': '输入参数：{0}',
     'Send "{0}"?\n{1}': '将“{0}”发送到终端？\n{1}',
     'The active terminal may be busy. Sending text could interfere with an interactive program.':
@@ -193,8 +192,6 @@
     'The selected workspace is no longer open.': '所选工作区已关闭。',
     'The workspace is no longer open.': '工作区已关闭。',
     'Choose a command first.': '请先选择命令。',
-    'Command group changed. Reopen the editor.':
-      '命令分组已变化，请重新打开编辑器。',
     'Invalid command fields.': '命令字段无效。',
     'Stale editor request. Please retry.': '编辑状态已变化，请重试。',
     'Global commands are edited from the sidebar, not JSON.':

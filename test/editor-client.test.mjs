@@ -49,6 +49,11 @@ function ui(locale = 'zh-CN') {
     raw: baseline,
     baseline,
     groupId: 'group',
+    baselineGroupId: 'group',
+    groups: [
+      { id: 'group', title: 'Build' },
+      { id: 'other', title: 'Other' },
+    ],
     scopeLabel: locale.startsWith('zh') ? '全局命令' : 'Global commands',
     groupTitle: 'Build',
     isEdit: true,
@@ -100,6 +105,34 @@ test('English locale does not contain fixed Chinese UI text', async () => {
   try {
     assert.equal(f.$('save').textContent.trim(), 'Save command');
     assert.ok(!/[\u3400-\u9fff]/.test(f.w.document.body.textContent));
+  } finally {
+    await f.close();
+  }
+});
+
+test('changing the header group marks the draft dirty and saves the choice', async () => {
+  const f = ui();
+  try {
+    assert.equal(f.$('mode').textContent, '编辑命令');
+    assert.equal(f.$('group').value, 'group');
+    assert.equal(f.$('save').disabled, true);
+    f.$('group').value = 'other';
+    f.$('group').dispatchEvent(new f.w.Event('change', { bubbles: true }));
+    const draft = f.messages.filter((m) => m.type === 'draft').at(-1);
+    assert.equal(draft.groupId, 'other');
+    assert.equal(f.$('saveState').textContent.trim(), '未保存');
+    assert.equal(f.$('save').disabled, false);
+    f.$('save').click();
+    const save = f.messages.filter((m) => m.type === 'save').at(-1);
+    assert.equal(save.groupId, 'other');
+    f.send({
+      type: 'saved',
+      token: 'session',
+      baseline: save.fields,
+      groupId: 'other',
+    });
+    assert.equal(f.$('group').value, 'other');
+    assert.equal(f.$('save').disabled, true);
   } finally {
     await f.close();
   }
@@ -186,6 +219,28 @@ test('environment table detects duplicate names without losing invalid row value
     });
     assert.equal(f.$('envTable').children.length, 2);
     assert.equal(f.$('envTable').children[1].children[1].value, 'b');
+  } finally {
+    await f.close();
+  }
+});
+
+test('a load whose chosen group vanished shows the fallback and stays clean', async () => {
+  const f = ui();
+  try {
+    f.send({
+      type: 'load',
+      token: 'gone',
+      revision: 0,
+      raw: f.baseline,
+      baseline: f.baseline,
+      groupId: 'missing',
+      baselineGroupId: 'group',
+      groups: [{ id: 'group', title: 'Build' }],
+      isEdit: true,
+    });
+    assert.equal(f.$('group').value, 'group');
+    assert.equal(f.$('save').disabled, true);
+    assert.equal(f.$('saveState').textContent.trim(), '已保存');
   } finally {
     await f.close();
   }

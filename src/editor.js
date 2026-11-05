@@ -121,6 +121,9 @@ class CommandEditorProvider {
               message.baseRevision === this.session.revision
             ) {
               this.session.raw = message.fields;
+              if (typeof message.groupId === 'string' && message.groupId) {
+                this.session.groupId = message.groupId;
+              }
               this.session.revision++;
               this.persist();
               this.broadcast(
@@ -130,6 +133,8 @@ class CommandEditorProvider {
                   raw: this.session.raw,
                   baseline: this.session.baseline,
                   revision: this.session.revision,
+                  groupId: this.session.groupId,
+                  baselineGroupId: this.selection.groupId,
                 },
                 surface,
               );
@@ -243,9 +248,13 @@ class CommandEditorProvider {
     return result;
   }
   dirty() {
+    // Drafts persisted before the group picker existed carry no groupId;
+    // only a real choice (a defined one) counts as an unsaved change.
     return (
       this.session &&
-      JSON.stringify(this.session.raw) !== JSON.stringify(this.session.baseline)
+      (JSON.stringify(this.session.raw) !== JSON.stringify(this.session.baseline) ||
+        (this.session.groupId !== undefined &&
+          this.session.groupId !== this.selection?.groupId))
     );
   }
   persist() {
@@ -267,11 +276,16 @@ class CommandEditorProvider {
     if (this.saving) {
       await this.saving;
     }
+    // The slot a new-command draft occupies is the group its picker targets,
+    // not necessarily the group the session opened in.
+    const openGroupId = this.session?.groupId ?? this.selection?.groupId;
     const same =
       this.selection?.scopeId === scope.id &&
       this.selection?.commandId === commandId &&
-      (commandId || this.selection?.groupId === groupId);
-    if (same && this.session && commandId && !force) {
+      (commandId || openGroupId === groupId);
+    // Adding and editing share one rule: an already-open target just regains
+    // focus with its draft; only a real switch prompts to save or discard.
+    if (same && this.session && !force) {
       if (focus || !this.view) {
         await this.focus();
       } else {
@@ -292,7 +306,7 @@ class CommandEditorProvider {
         t('Cancel'),
       );
       if (answer === t('Save')) {
-        await this.save(this.session.raw, this.selection.groupId);
+        await this.save(this.session.raw, this.session.groupId || this.selection.groupId);
       } else if (answer === t('Discard')) {
         break;
       } else {
@@ -322,6 +336,7 @@ class CommandEditorProvider {
       original: original ? structuredClone(original) : undefined,
       scopeLabel: scope.label,
       groupTitle: group.title,
+      groupId,
     };
     this.persist();
     // Ensure the sidebar is created for selection, then return focus to the tree when requested.
@@ -346,12 +361,43 @@ class CommandEditorProvider {
     this.view?.show?.(true);
   }
   async load(surface) {
+    let groups;
+    if (this.session) {
+      const scope = this.store
+        .scopes()
+        .find((s) => s.id === this.selection.scopeId);
+      if (scope) {
+        const config = await this.store.read(scope);
+        groups = config.groups.map((group) => ({
+          id: group.id,
+          title: group.title,
+        }));
+        // A group deleted after the picker chose it is void: fall back to the
+        // baseline group (or the first group) and sync the session so the
+        // picker shows a real target instead of a phantom unsaved choice.
+        const has = (id) => groups.some((group) => group.id === id);
+        const groupId = has(this.session.groupId)
+          ? this.session.groupId
+          : has(this.selection.groupId)
+            ? this.selection.groupId
+            : groups[0]?.id;
+        if (groupId !== undefined && groupId !== this.session.groupId) {
+          this.session.groupId = groupId;
+          if (!has(this.selection.groupId)) {
+            this.selection.groupId = groupId;
+          }
+          this.persist();
+        }
+      }
+    }
     const message = this.session
       ? {
           type: 'load',
           ...this.session,
           command: this.session.raw,
-          groupId: this.selection.groupId,
+          groupId: this.session.groupId || this.selection.groupId,
+          baselineGroupId: this.selection.groupId,
+          groups,
           isEdit: !!this.selection.commandId,
         }
       : { type: 'empty' };
@@ -385,7 +431,10 @@ class CommandEditorProvider {
             t('Cancel'),
           );
           if (answer === t('Save')) {
-            await this.save(this.session.raw, this.selection.groupId);
+            await this.save(
+              this.session.raw,
+              this.session.groupId || this.selection.groupId,
+            );
           } else if (answer === t('Discard')) {
             break;
           } else {
@@ -407,7 +456,10 @@ class CommandEditorProvider {
           await this.saving;
         }
         while (this.dirty()) {
-          await this.save(this.session.raw, this.selection.groupId);
+          await this.save(
+            this.session.raw,
+            this.session.groupId || this.selection.groupId,
+          );
         }
         await this.teardown();
         return true;
@@ -477,8 +529,9 @@ class CommandEditorProvider {
     if (!scope) {
       throw new Error('The workspace is no longer open.');
     }
-    if (targetGroupId !== groupId) {
-      throw new Error('Command group changed. Reopen the editor.');
+    // The group the editor form targets: an explicit picker choice wins.
+    if (typeof targetGroupId !== 'string' || !targetGroupId) {
+      targetGroupId = groupId;
     }
     if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
       throw new Error('Invalid command fields.');
@@ -508,6 +561,15 @@ class CommandEditorProvider {
           );
         }
         const command = found.command;
+        resultingGroup = found.group;
+        if (targetGroupId !== groupId && found.group.id !== targetGroupId) {
+          // An explicit picker choice moves the command; an untouched picker
+          // follows the command instead, so external moves are preserved.
+          const target = requireGroup(cfg, targetGroupId);
+          found.group.commands.splice(found.group.commands.indexOf(command), 1);
+          target.commands.push(command);
+          resultingGroup = target;
+        }
         for (const field of [
           'command',
           'execute',
@@ -523,11 +585,10 @@ class CommandEditorProvider {
         }
         Object.assign(command, clean);
         result = command;
-        resultingGroup = found.group;
       } else {
-        requireGroup(cfg, groupId);
-        result = addCommand(cfg, groupId, clean);
-        resultingGroup = requireGroup(cfg, groupId);
+        requireGroup(cfg, targetGroupId);
+        result = addCommand(cfg, targetGroupId, clean);
+        resultingGroup = requireGroup(cfg, targetGroupId);
       }
     });
     if (
@@ -540,6 +601,7 @@ class CommandEditorProvider {
         session.original = structuredClone(result);
         session.baseline = savedRaw;
         session.groupTitle = resultingGroup.title;
+        session.groupId = resultingGroup.id;
         if (!request.token && session.revision === revisionAtStart) {
           session.raw = structuredClone(savedRaw);
         }

@@ -15,6 +15,7 @@ test('extension activates the embedded editor, saves a multi-step command, then 
   const modes = new Map();
   const answers = [];
   const warnings = [];
+  const quickPicks = [];
   let loads = 0;
   let editorProvider, listProvider;
   let onMessage;
@@ -70,7 +71,10 @@ test('extension activates the embedded editor, saves a multi-step command, then 
         return event();
       },
       showInputBox: async () => inputs.shift(),
-      showQuickPick: async (choices) => choices[0],
+      showQuickPick: async (choices) => {
+        quickPicks.push(choices);
+        return choices[0];
+      },
       showWarningMessage: async (...args) => {
         warnings.push(args);
         return answers.shift();
@@ -146,7 +150,14 @@ test('extension activates the embedded editor, saves a multi-step command, then 
     assert.equal(modes.get('quickCmd.editing'), false);
     await callbacks.get('quickCmd.addGroup')();
     await callbacks.get('quickCmd.addCommand')();
+    assert.equal(quickPicks.length, 0, 'adding enters the editor directly');
     assert.equal(latest.groupTitle, 'Utilities');
+    assert.equal(latest.isEdit, false);
+    assert.deepEqual(
+      latest.groups.map((group) => group.title),
+      ['Utilities'],
+    );
+    assert.equal(latest.baselineGroupId, latest.groupId);
     const raw = {
       ...latest.raw,
       title: 'Combined',

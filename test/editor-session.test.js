@@ -65,6 +65,125 @@ test('switching cancels, discards, or saves a dirty command explicitly', async (
   assert.equal((await f.store.read(scope)).groups[0].commands[1].title, 'B');
 });
 
+test('re-adding to the open group focuses the pending draft like editing does', async () => {
+  const f = fixture();
+  const { editor, scope, group } = f;
+  const focused = [];
+  f.vscode.commands.executeCommand = async (id) => {
+    if (id === 'quickCmd.editor.focus') focused.push(id);
+  };
+  await editor.open(scope, group.id);
+  editor.session.raw.title = 'Unfinished';
+  const token = editor.session.token;
+  await editor.open(scope, group.id);
+  assert.equal(focused.length, 2, 'both opens focus the editor view');
+  assert.equal(editor.session.token, token);
+  assert.equal(editor.session.raw.title, 'Unfinished');
+  assert.equal(f.answers.length, 0, 'no switch prompt for the same target');
+});
+
+test('a group chosen in the editor marks the draft dirty and moves the command', async () => {
+  const f = fixture();
+  const { editor, scope, group, a } = f;
+  let other;
+  await f.store.update(scope, (cfg) => {
+    other = addGroup(cfg, 'Other');
+  });
+  await editor.open(scope, group.id, a.id);
+  assert.equal(editor.dirty(), false);
+  editor.session.groupId = other.id;
+  assert.equal(editor.dirty(), true);
+  f.answers.push('Save');
+  assert.equal(await editor.close(), true);
+  const cfg = await f.store.read(scope);
+  assert.equal(cfg.groups[0].commands.length, 1);
+  assert.equal(cfg.groups[1].commands[0].id, a.id);
+  assert.equal(editor.session, undefined);
+});
+
+test('a picker move wins over an intervening external move', async () => {
+  const f = fixture();
+  const { editor, scope, group, a } = f;
+  let other, third;
+  await editor.open(scope, group.id, a.id);
+  await f.store.update(scope, (cfg) => {
+    other = addGroup(cfg, 'Other');
+    third = addGroup(cfg, 'Third');
+    third.commands.push(cfg.groups[0].commands.shift());
+  });
+  editor.session.groupId = other.id;
+  await editor.save(editor.session.raw, other.id);
+  const cfg = await f.store.read(scope);
+  assert.equal(cfg.groups[1].commands[0].id, a.id);
+  assert.equal(cfg.groups[2].commands.length, 0);
+  assert.equal(editor.selection.groupId, other.id);
+});
+
+test('the open add slot follows the picker group, not the opening group', async () => {
+  const f = fixture();
+  const { editor, scope, group } = f;
+  let other;
+  await f.store.update(scope, (cfg) => {
+    other = addGroup(cfg, 'Other');
+  });
+  await editor.open(scope, group.id);
+  editor.session.groupId = other.id;
+  const token = editor.session.token;
+  // Adding again in the group the draft targets: focus, keep draft, no prompt.
+  await editor.open(scope, other.id);
+  assert.equal(editor.session.token, token);
+  assert.equal(f.answers.length, 0);
+  // Adding in the original group is a real switch and prompts for the draft.
+  editor.session.raw.title = 'Pending';
+  f.answers.push('Cancel');
+  await editor.open(scope, group.id);
+  assert.equal(editor.session.token, token);
+  assert.equal(editor.session.raw.title, 'Pending');
+});
+
+test('drafts persisted before the group picker existed count as clean', async () => {
+  const f = fixture();
+  const { editor, scope, group, a } = f;
+  await editor.open(scope, group.id, a.id);
+  delete editor.session.groupId;
+  editor.persist();
+  await editor.persistQueue;
+  const restored = new CommandEditorProvider(
+    f.vscode,
+    f.context,
+    f.store,
+    () => {},
+  );
+  assert.equal(restored.dirty(), false);
+  assert.equal(await restored.close(), true);
+  assert.equal(f.answers.length, 0, 'clean legacy drafts close without a prompt');
+});
+
+test('a group deleted while its draft targeted it falls back at reload', async () => {
+  const f = fixture();
+  const { editor, scope, group } = f;
+  let other;
+  await f.store.update(scope, (cfg) => {
+    other = addGroup(cfg, 'Other');
+  });
+  await editor.open(scope, group.id);
+  editor.session.groupId = other.id;
+  await f.store.update(scope, (cfg) => {
+    cfg.groups.splice(
+      cfg.groups.findIndex((g) => g.id === other.id),
+      1,
+    );
+  });
+  let message;
+  await editor.load({
+    webview: { postMessage: async (msg) => (message = msg) },
+  });
+  assert.equal(message.groupId, group.id);
+  assert.equal(message.baselineGroupId, group.id);
+  assert.equal(editor.session.groupId, group.id);
+  assert.equal(editor.dirty(), false);
+});
+
 test('draft survives provider recreation without being executed or written to config', async () => {
   const f = fixture();
   await f.editor.open(f.scope, f.group.id, f.a.id);

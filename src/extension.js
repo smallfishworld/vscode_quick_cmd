@@ -104,23 +104,6 @@ function activate(context) {
     provider.refresh();
     return group;
   }
-  async function pickGroup(scope) {
-    const config = await store.read(scope);
-    if (!config.groups.length) {
-      return createGroup(scope);
-    }
-    const selected = await vscode.window.showQuickPick(
-      [
-        ...config.groups.map((group) => ({ label: group.title, group })),
-        { label: '$(add) ' + t('Create new group...'), create: true },
-      ],
-      { placeHolder: t('Choose a command group') },
-    );
-    if (!selected) {
-      return undefined;
-    }
-    return selected.create ? createGroup(scope) : selected.group;
-  }
 
   async function execute(scope, cmd) {
     runner.ensureTrusted();
@@ -208,13 +191,28 @@ function activate(context) {
     if (!scope) {
       return;
     }
-    const group = ['group', 'command'].includes(node?.kind)
-      ? { id: node.groupId }
-      : await pickGroup(scope);
-    if (!group) {
-      return;
+    // Same entry as editing: open the editor window directly. The target
+    // group defaults to the invoked group, the open editor session, or the
+    // first group, and stays changeable from the editor's group picker.
+    const config = await store.read(scope);
+    let groupId;
+    if (['group', 'command'].includes(node?.kind)) {
+      groupId = node.groupId;
     }
-    await editor.open(scope, group.id);
+    if (!groupId && editor.selection?.scopeId === scope.id) {
+      groupId = editor.selection.groupId;
+    }
+    if (!groupId || !config.groups.some((group) => group.id === groupId)) {
+      groupId = config.groups[0]?.id;
+    }
+    if (!groupId) {
+      const group = await createGroup(scope);
+      if (!group) {
+        return;
+      }
+      groupId = group.id;
+    }
+    await editor.open(scope, groupId);
   });
   register('quickCmd.run', async (node) => {
     const cmd = await commandFromNode(node);

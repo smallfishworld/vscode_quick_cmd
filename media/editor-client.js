@@ -10,6 +10,8 @@ let pendingEnvRows;
 let token,
   revision = 0,
   baseline,
+  baselineGroupId,
+  submittedGroupId,
   busy = false,
   jsonMode = false,
   applying = false;
@@ -89,7 +91,11 @@ function raw() {
   };
 }
 function dirty() {
-  return baseline && JSON.stringify(raw()) !== JSON.stringify(baseline);
+  return (
+    baseline &&
+    (JSON.stringify(raw()) !== JSON.stringify(baseline) ||
+      byId('group').value !== baselineGroupId)
+  );
 }
 function setState(success = false) {
   const changed = dirty();
@@ -106,6 +112,7 @@ function setState(success = false) {
   byId('save').disabled = busy || !changed || readOnly;
   byId('saveRun').disabled = busy || readOnly;
   byId('editorFields').disabled = readOnly;
+  byId('group').disabled = readOnly;
   byId('readOnlyHint').hidden = !readOnly;
   byId('enterHint').textContent = t(
     byId('trailingEnter').checked
@@ -121,7 +128,13 @@ function changed() {
   byId('error').hidden = true;
   const fields = raw();
   vscode.setState({ token, raw: fields, baseline, revision });
-  vscode.postMessage({ type: 'draft', token, fields, baseRevision: revision });
+  vscode.postMessage({
+    type: 'draft',
+    token,
+    fields,
+    groupId: byId('group').value,
+    baseRevision: revision,
+  });
   revision++;
 }
 function resize(input) {
@@ -314,6 +327,29 @@ function renderSteps(steps) {
   stepsElement.replaceChildren();
   for (const step of steps) makeStep(step);
   renumber();
+}
+// The header picker replaces the pre-entry group dialog; adding and editing
+// pick the target group in the same window.
+function renderGroups(groups, selectedId, fallbackId) {
+  const select = byId('group');
+  select.replaceChildren();
+  for (const group of groups || []) {
+    const option = document.createElement('option');
+    option.value = group.id;
+    option.textContent = group.title;
+    select.append(option);
+  }
+  // An id deleted elsewhere must not leave the picker on an empty phantom value.
+  const known = (id) => [...select.options].some((option) => option.value === id);
+  const value = known(selectedId)
+    ? selectedId
+    : known(fallbackId)
+      ? fallbackId
+      : select.options[0]?.value || '';
+  if (value) {
+    select.value = value;
+  }
+  form.dataset.groupId = select.value;
 }
 function renderEnv() {
   byId('envTable').replaceChildren();
@@ -528,11 +564,12 @@ function save(run = false) {
   if (readOnly || busy || !validate()) return;
   busy = true;
   setState();
+  submittedGroupId = byId('group').value;
   vscode.postMessage({
     type: 'save',
     token,
     revision,
-    groupId: form.dataset.groupId,
+    groupId: submittedGroupId,
     fields: raw(),
     run,
   });
@@ -600,6 +637,9 @@ function updateIcons() {
 byId('new').addEventListener('click', () =>
   vscode.postMessage({ type: 'new' }),
 );
+byId('group').addEventListener('change', () => {
+  form.dataset.groupId = byId('group').value;
+});
 byId('reopen').addEventListener('click', () =>
   vscode.postMessage({ type: 'reopen', token }),
 );
@@ -696,6 +736,8 @@ window.addEventListener('message', (event) => {
     form.hidden = true;
     byId('empty').hidden = false;
     token = undefined;
+    baselineGroupId = undefined;
+    submittedGroupId = undefined;
     return;
   }
   if (msg.type === 'readOnly') {
@@ -708,9 +750,12 @@ window.addEventListener('message', (event) => {
     token = msg.token;
     revision = msg.revision || 0;
     baseline = msg.baseline;
-    form.dataset.groupId = msg.groupId;
-    byId('context').textContent =
-      msg.groupTitle + ' · ' + t(msg.isEdit ? 'Edit command' : 'New command');
+    baselineGroupId = msg.baselineGroupId || msg.groupId;
+    submittedGroupId = undefined;
+    renderGroups(msg.groups, msg.groupId, msg.baselineGroupId);
+    byId('mode').textContent = t(
+      msg.isEdit ? 'Edit command' : 'New command',
+    );
     form.hidden = false;
     byId('empty').hidden = true;
     busy = false;
@@ -724,12 +769,27 @@ window.addEventListener('message', (event) => {
   if (msg.type === 'draft') {
     revision = msg.revision;
     baseline = msg.baseline;
+    if (msg.baselineGroupId) {
+      baselineGroupId = msg.baselineGroupId;
+    }
+    if (msg.groupId) {
+      byId('group').value = msg.groupId;
+      form.dataset.groupId = msg.groupId;
+    }
     render(msg.raw);
   }
   if (msg.type === 'saved') {
     busy = false;
     baseline = msg.baseline;
-    form.dataset.groupId = msg.groupId || form.dataset.groupId;
+    if (msg.groupId) {
+      baselineGroupId = msg.groupId;
+      form.dataset.groupId = msg.groupId;
+      // Follow the saved group unless the picker was changed during the save.
+      if (!submittedGroupId || byId('group').value === submittedGroupId) {
+        byId('group').value = msg.groupId;
+      }
+    }
+    byId('mode').textContent = t('Edit command');
     setState(true);
     vscode.setState({ token, raw: raw(), baseline, revision });
     clearTimeout(savedTimer);
