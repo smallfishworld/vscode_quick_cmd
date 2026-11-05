@@ -14,7 +14,7 @@ Requires **VS Code 1.93+**. Download a `.vsix` from [Releases](https://github.co
 4. **Click a command to send using its saved Enter option. Hover a command to reveal Edit and Run at its far right; right-click a command to delete it from the native context menu, which still asks for confirmation. Edit opens the form without sending. Keyboard focus also reveals the actions.** Close the editor from its toolbar — either **Done Editing** or the **×** — after handling the draft.
 5. Search with `Ctrl+Alt+Q` (`Cmd+Alt+Q` on macOS), then select a command to send it.
 
-The current **v0.11.6** release provides a single bilingual installer, `quick-cmd-v0.11.6.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity remains `smallfishworld.vscode-quick-cmd`. User-entered names, Shell code and variables are never translated.
+The current **v0.11.7** release provides a single bilingual installer, `quick-cmd-v0.11.7.vsix`. It contains both English and Simplified Chinese resources and follows the VS Code display language automatically. Change the display language and reload VS Code to update the interface. Other display languages fall back to English. The extension identity remains `smallfishworld.vscode-quick-cmd`. User-entered names, Shell code and variables are never translated.
 
 ## Command list
 
